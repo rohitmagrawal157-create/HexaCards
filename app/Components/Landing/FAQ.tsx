@@ -11,7 +11,7 @@ export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(1);
 
   return (
-    <section id="faqs" className="scroll-mt-20 bg-[#FBF3E4] py-16 sm:py-24">
+    <section id="faqs" className="scroll-mt-20 bg-[#FFFCF6] py-16 sm:py-24">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-16">
           {/* ── Left: heading + CTA ─────────────────── */}

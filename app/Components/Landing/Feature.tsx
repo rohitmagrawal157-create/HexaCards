@@ -73,6 +73,74 @@ const callouts = [
   { label: "Your Social icons", top: "78%" },
 ];
 
+/** Right-side hex nest — different from hero (pointy-top, gold tint, right-anchored) */
+function FeatureRightBackground() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-y-0 right-0 z-0 w-full overflow-hidden sm:w-[58%] lg:w-[52%]"
+      aria-hidden
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_65%_at_78%_45%,#ffffff_0%,transparent_72%)]" />
+
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.4]"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMaxYMid slice"
+      >
+        <defs>
+          <pattern
+            id="featureHexTile"
+            width="92"
+            height="106"
+            patternUnits="userSpaceOnUse"
+          >
+            {/* Pointy-top hex — different orientation from hero */}
+            <path
+              d="M46 4 L84 26 L84 70 L46 92 L8 70 L8 26 Z"
+              fill="none"
+              stroke="#64748b"
+              strokeOpacity="0.28"
+              strokeWidth="1.1"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M46 4 L84 26 L84 70 L46 92 L8 70 L8 26 Z"
+              fill="#BC7C10"
+              fillOpacity="0.03"
+            />
+            <path
+              d="M92 57 L130 79 L130 123 L92 145 L54 123 L54 79 Z"
+              fill="none"
+              stroke="#64748b"
+              strokeOpacity="0.18"
+              strokeWidth="1"
+              strokeLinejoin="round"
+              transform="translate(-46 -53)"
+            />
+          </pattern>
+
+          <linearGradient id="featureHexFadeL" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#FFFCF6" stopOpacity="1" />
+            <stop offset="28%" stopColor="#FFFCF6" stopOpacity="0.55" />
+            <stop offset="55%" stopColor="#FFFCF6" stopOpacity="0" />
+          </linearGradient>
+
+          <linearGradient id="featureHexFadeY" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FFFCF6" stopOpacity="0.9" />
+            <stop offset="18%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="82%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="100%" stopColor="#FFFCF6" stopOpacity="0.9" />
+          </linearGradient>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#featureHexTile)" />
+        <rect width="100%" height="100%" fill="url(#featureHexFadeL)" />
+        <rect width="100%" height="100%" fill="url(#featureHexFadeY)" />
+      </svg>
+    </div>
+  );
+}
+
 function PhoneMockup() {
   return (
     <div className="relative w-[260px] shrink-0 sm:w-[280px]">
@@ -163,9 +231,11 @@ export default function Feature() {
   return (
     <section
       id="features"
-      className="scroll-mt-20 overflow-hidden bg-[#FBF3E4] py-16 sm:py-24"
+      className="relative scroll-mt-20 overflow-hidden bg-[#FFFCF6] py-16 sm:py-24"
     >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <FeatureRightBackground />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-10 xl:gap-16">
           {/* Copy */}
           <div className="max-w-xl">

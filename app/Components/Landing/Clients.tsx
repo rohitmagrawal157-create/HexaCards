@@ -25,7 +25,7 @@ export default function Clients() {
   return (
     <section
       aria-label="Trusted by companies"
-      className="bg-[#FBF3E4] pt-8 pb-6 sm:pt-10 sm:pb-8"
+      className="bg-[#FFFCF6] pt-8 pb-6 sm:pt-10 sm:pb-8"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <p className="text-center text-xs font-bold tracking-[0.15em] text-[#BC7C10] uppercase sm:text-sm">
@@ -34,8 +34,8 @@ export default function Clients() {
       </div>
 
       <div className="group relative mt-5 overflow-hidden sm:mt-6">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#FBF3E4] to-transparent sm:w-28" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#FBF3E4] to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#FFFCF6] to-transparent sm:w-28" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#FFFCF6] to-transparent sm:w-28" />
 
         <div className="clients-marquee flex w-max items-center gap-14 group-hover:[animation-play-state:paused] sm:gap-20">
           {marqueeItems.map((client, index) => {

@@ -100,7 +100,7 @@ export default function WhyHexaCards() {
 
           {/* ── Right: copy ────────────────────────────────── */}
           <div>
-            <span className="inline-flex items-center rounded-full bg-[#FBF3E4] px-4 py-1.5 text-sm font-semibold text-[#BC7C10]">
+            <span className="inline-flex items-center rounded-full bg-[#FFFCF6] px-4 py-1.5 text-sm font-semibold text-[#BC7C10]">
               The premium business card everyone is talking about
             </span>
 

@@ -29,53 +29,94 @@ import {
 // defined together so there's no risk of index drift if this list is
 // reordered later.
 const industries = [
-  { name: "Real Estate", Icon: Building2, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Doctors", Icon: Stethoscope, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Lawyers", Icon: Scale, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "CA / Finance", Icon: Landmark, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Students", Icon: GraduationCap, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Influencers", Icon: Sparkles, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Hotels", Icon: Hotel, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Manufacturers", Icon: Factory, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Consultants", Icon: Briefcase, bg: "#FBF3E4", fg: "#BC7C10" },
-  { name: "Corporate Teams", Icon: Users, bg: "#FBF3E4", fg: "#BC7C10" },
+  { name: "Real Estate", Icon: Building2, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Doctors", Icon: Stethoscope, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Lawyers", Icon: Scale, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "CA / Finance", Icon: Landmark, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Students", Icon: GraduationCap, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Influencers", Icon: Sparkles, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Hotels", Icon: Hotel, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Manufacturers", Icon: Factory, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Consultants", Icon: Briefcase, bg: "#FFFCF6", fg: "#BC7C10" },
+  { name: "Corporate Teams", Icon: Users, bg: "#FFFCF6", fg: "#BC7C10" },
 ];
 
-const sidebarNav = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Users", icon: UserRound },
-  { label: "Cards", icon: CreditCard },
-  { label: "Leads", icon: Target },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
-  { label: "Billing", icon: Receipt },
-  { label: "Support", icon: LifeBuoy },
-];
 
-const stats = [
-  { label: "Total Users", value: "256", Icon: Users },
-  { label: "Profile Views", value: "15,632", Icon: Globe },
-  { label: "Leads Collected", value: "1,256", Icon: MessageSquare },
-  { label: "QR Scans", value: "8,865", Icon: ShoppingBag },
-];
 
-const topPerformers = [
-  { name: "Rohit Sharma", role: "Sales Manager", value: "1,296" },
-  { name: "Priya Mehta", role: "Marketing Lead", value: "1,135" },
-  { name: "Ankit Verma", role: "Field Executive", value: "980" },
-  { name: "Neha Singh", role: "HR Manager", value: "875" },
-];
+/** Left-side nest — dashed hexes + nodes (not hero/feature style) */
+function IndustriesLeftBackground() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-y-0 left-0 z-0 w-full overflow-hidden sm:w-[55%] lg:w-[48%]"
+      aria-hidden
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_65%_60%_at_18%_42%,#ffffff_0%,transparent_70%)]" />
 
-const chartPoints = [40, 65, 35, 70, 45, 80, 50, 90, 60, 100, 75, 95];
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.38]"
+        xmlns="http://www.w3.org/2000/svg"
+        preserveAspectRatio="xMinYMid slice"
+      >
+        <defs>
+          <pattern
+            id="industriesHexTile"
+            width="128"
+            height="111"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(-8 64 55)"
+          >
+            {/* Flat-top but dashed + larger — distinct from hero solid lines & feature pointy */}
+            <path
+              d="M64 6 L118 37 L118 79 L64 110 L10 79 L10 37 Z"
+              fill="none"
+              stroke="#64748b"
+              strokeOpacity="0.32"
+              strokeWidth="1.15"
+              strokeDasharray="5 4"
+              strokeLinejoin="round"
+            />
+            <circle cx="64" cy="6" r="2.2" fill="#BC7C10" fillOpacity="0.22" />
+            <circle cx="118" cy="37" r="1.8" fill="#64748b" fillOpacity="0.2" />
+            <circle cx="10" cy="37" r="1.8" fill="#64748b" fillOpacity="0.2" />
+            <circle cx="64" cy="58" r="1.4" fill="#BC7C10" fillOpacity="0.12" />
+          </pattern>
+
+          <linearGradient id="industriesHexFadeR" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="45%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="72%" stopColor="#FFFCF6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#FFFCF6" stopOpacity="1" />
+          </linearGradient>
+
+          <linearGradient id="industriesHexFadeY" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FFFCF6" stopOpacity="0.95" />
+            <stop offset="16%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="84%" stopColor="#FFFCF6" stopOpacity="0" />
+            <stop offset="100%" stopColor="#FFFCF6" stopOpacity="0.95" />
+          </linearGradient>
+        </defs>
+
+        <rect width="100%" height="100%" fill="url(#industriesHexTile)" />
+        <rect width="100%" height="100%" fill="url(#industriesHexFadeR)" />
+        <rect width="100%" height="100%" fill="url(#industriesHexFadeY)" />
+      </svg>
+    </div>
+  );
+}
 
 export default function Industries() {
   return (
     <>
       {/* Industry grid */}
-      <section id="industries" className="scroll-mt-20 bg-[#FBF3E4] py-20 sm:py-24">
-        <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <section
+        id="industries"
+        className="relative scroll-mt-20 overflow-hidden bg-[#FFFCF6] py-20 sm:py-24"
+      >
+        <IndustriesLeftBackground />
+
+        <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
           <div className="text-center">
-            <span className="inline-flex items-center rounded-full bg-[#FBF3E4] px-4 py-1.5 text-sm font-semibold text-[#BC7C10]">
+            <span className="inline-flex items-center rounded-full border border-[#BC7C10]/20 bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#BC7C10] backdrop-blur-sm">
               Trusted Across Industries
             </span>
 
@@ -93,7 +134,7 @@ export default function Industries() {
             {industries.map(({ name, Icon, bg, fg }) => (
               <li
                 key={name}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-black/[0.06] bg-white px-4 py-6 text-center transition-all duration-200 hover:-translate-y-1 hover:border-[#BC7C10]/20 hover:shadow-lg hover:shadow-[#BC7C10]/[0.08]"
+                className="group flex flex-col items-center gap-3 rounded-2xl border border-black/[0.06] bg-white/90 px-4 py-6 text-center backdrop-blur-[2px] transition-all duration-200 hover:-translate-y-1 hover:border-[#BC7C10]/20 hover:shadow-lg hover:shadow-[#BC7C10]/[0.08]"
               >
                 <span
                   className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110"
@@ -123,173 +164,7 @@ export default function Industries() {
         </div>
       </section>
 
-      {/* Enterprise solution panel */}
-      <section className="bg-[#FBF3E4] pb-20 sm:pb-24">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="overflow-hidden rounded-3xl bg-[#171412] shadow-2xl shadow-black/20 lg:flex">
-            {/* Left: copy */}
-            <div className="p-8 sm:p-10 lg:w-[42%] lg:shrink-0">
-              <p className="text-xs font-bold tracking-[0.2em] text-[#BC7C10] uppercase">
-                Enterprise Solution
-              </p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl">
-                Powerful Networking
-                <br />
-                For Your Entire Team
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-[#c9c1b3]">
-                Manage, track and grow your team&apos;s networking from one
-                powerful dashboard.
-              </p>
-
-              <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {[
-                  "Centralized Dashboard",
-                  "Custom Branding",
-                  "Bulk Ordering & Management",
-                  "Lead Management",
-                  "Team Analytics & Reports",
-                  "Dedicated Account Manager",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#BC7C10]">
-                      <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
-                    </span>
-                    <span className="text-sm text-[#e9e4d9]">{item}</span>
-                  </li>
-                ))}
-              </ul>
-
-              
-                <a href="#"
-                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#BC7C10] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-black/30 transition-transform active:scale-[0.98]"
-              >
-                <span>Book Enterprise Demo</span>
-                <ArrowRight className="h-4 w-4" strokeWidth={2.25} />
-              </a>
-            </div>
-
-            {/* Right: dashboard mockup */}
-            <div className="p-4 lg:w-[58%] lg:p-6">
-              <div className="flex h-full overflow-hidden rounded-2xl bg-white shadow-xl shadow-black/10 ring-1 ring-black/5">
-                {/* Sidebar */}
-                <div className="hidden w-36 shrink-0 border-r border-black/[0.06] p-3 sm:block">
-                  <div className="flex items-center gap-1.5 px-2 py-2 text-[11px] font-medium text-[#8a8a92]">
-                    <Info className="h-3 w-3" />
-                    Dashboard
-                  </div>
-                  <nav className="mt-1 flex flex-col gap-0.5">
-                    {sidebarNav.map((item) => (
-                      <div
-                        key={item.label}
-                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] font-medium ${
-                          item.active
-                            ? "bg-[#FBF3E4] text-[#BC7C10]"
-                            : "text-[#a0a0a8]"
-                        }`}
-                      >
-                        <item.icon className="h-3.5 w-3.5" />
-                        {item.label}
-                      </div>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Main panel */}
-                <div className="flex-1 p-4 sm:p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#1a1a1a]">Overview</h3>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f7ec] px-2 py-0.5 text-[9px] font-semibold text-[#16a34a]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#16a34a]" />
-                        Live
-                      </span>
-                    </div>
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FBF3E4] text-[#BC7C10]">
-                      <Settings className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    </span>
-                  </div>
-
-                  {/* Stat cards */}
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {stats.map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="rounded-xl border border-black/[0.06] p-2.5 transition-colors hover:border-[#BC7C10]/20"
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <stat.Icon className="h-3.5 w-3.5 text-[#BC7C10]" />
-                          <span className="text-sm font-bold text-[#1a1a1a]">
-                            {stat.value}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[9px] leading-tight text-[#a0a0a8]">
-                          {stat.label}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Table + chart */}
-                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-xl border border-black/[0.06] p-3">
-                      <p className="text-[10px] font-semibold text-[#8a8a92]">
-                        Top Performers
-                      </p>
-                      <ul className="mt-2 flex flex-col gap-2.5">
-                        {topPerformers.map((person) => (
-                          <li
-                            key={person.name}
-                            className="flex items-center justify-between"
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="h-6 w-6 rounded-full bg-[#BC7C10]" />
-                              <div>
-                                <p className="text-[10px] font-semibold text-[#1a1a1a]">
-                                  {person.name}
-                                </p>
-                                <p className="text-[9px] text-[#a0a0a8]">
-                                  {person.role}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="text-[10px] font-semibold text-[#1a1a1a]">
-                              {person.value}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="rounded-xl border border-black/[0.06] p-3">
-                      <p className="text-[10px] font-semibold text-[#8a8a92]">
-                        Profile Views
-                      </p>
-                      <svg
-                        viewBox="0 0 220 90"
-                        className="mt-2 h-20 w-full"
-                        preserveAspectRatio="none"
-                      >
-                        <polyline
-                          fill="none"
-                          stroke="#BC7C10"
-                          strokeWidth="2"
-                          points={chartPoints
-                            .map(
-                              (p, i) =>
-                                `${(i / (chartPoints.length - 1)) * 220},${90 - p * 0.8}`
-                            )
-                            .join(" ")}
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    
     </>
   );
 }

@@ -3,7 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #141414;
-  --surface: #fbf3e4;
+  --surface: #fffcf6;
   --muted: #5c5346;
   --accent: #bc7c10;
   --ink: #141414;
@@ -229,7 +229,7 @@ body {
 }
 
 .hero-hex-mesh {
-  opacity: 0.55;
+  opacity: 0.35;
   animation: hero-hex-pan 120s linear infinite;
   will-change: transform;
 }

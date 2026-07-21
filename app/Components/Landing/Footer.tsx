@@ -106,7 +106,7 @@ export default function Footer() {
                 Call
               </p>
               <p className="mt-1 text-lg text-white">
-                +91 98765 43210
+              +91 9226286898
                 <br />
                 +91 91234 56789
               </p>

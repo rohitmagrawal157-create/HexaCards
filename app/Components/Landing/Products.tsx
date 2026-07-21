@@ -13,31 +13,31 @@ type Product = {
 
 const products: Product[] = [
   {
-    title: "Digital Profile + QR",
+    title: "Digital Business Card",
     description:
       "Your full digital identity on NFC and QR — share contacts, links, and leads in one tap.",
-    image: "/Images/Products/digitalCard.png",
+    image: "/Images/Products/digitalCard.jpg",
     href: "#digital-profile",
   },
   {
-    title: "QR Code",
+    title: "Digital Profile + QR",
     description:
       "Print-ready QR that opens your profile instantly. No app, no friction, works on every phone.",
-    image: "/Images/Products/QR.png",
+    image: "/Images/Products/digitalQR.jpg",
     href: "#qr-code",
   },
   {
     title: "Google Review Cards",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan.",
-    image: "/Images/Products/googleReview.png",
+    image: "/Images/Products/googleReview.jpg",
     href: "#google-review-cards",
   },
   {
-    title: "Review Stand",
+    title: "Google Review Standy",
     description:
       "Countertop standee for your desk or counter — collect Google reviews on autopilot.",
-    image: "/Images/Products/reviewStandy.png",
+    image: "/Images/Products/reviewStandy.jpg",
     href: "#review-stand",
   },
 ];
@@ -111,13 +111,13 @@ function ProductCard({ item }: { item: Product }) {
       href={item.href}
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BC7C10] focus-visible:ring-offset-2"
     >
-      <div className="relative mx-2 mt-2 aspect-[4/5] overflow-hidden rounded-2xl bg-[#FBF3E4] sm:aspect-square sm:mx-2.5 sm:mt-2.5">
+      <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-square">
         <Image
           src={item.image}
           alt={item.title}
           fill
           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 45vw, 25vw"
-          className="object-contain p-2.5 transition-transform duration-500 ease-out group-hover:scale-105 sm:p-4 lg:p-5"
+          className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
       </div>
 
@@ -185,9 +185,19 @@ export default function Products() {
     <>
       <section
         id="products"
-        className="scroll-mt-20 bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
+        className="relative scroll-mt-20 overflow-hidden bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
       >
-        <ProductsGrid />
+        {/* Side gradients — from left & right edges only (not center) */}
+        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
+          <div className="absolute inset-y-0 left-0 w-[42%] max-w-md bg-gradient-to-r from-[#F3EDE3] via-[#F8F4EC]/85 to-transparent" />
+          <div className="absolute inset-y-0 right-0 w-[42%] max-w-md bg-gradient-to-l from-[#F3EDE3] via-[#F8F4EC]/85 to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#BC7C10]/[0.12] to-transparent sm:w-40" />
+          <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#BC7C10]/[0.12] to-transparent sm:w-40" />
+        </div>
+
+        <div className="relative z-10">
+          <ProductsGrid />
+        </div>
       </section>
 
       <Feature />

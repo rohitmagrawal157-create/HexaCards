@@ -36,7 +36,7 @@ type Slide = {
 };
 
 const slide: Slide = {
-  badgeBg: "bg-[#FBF3E4]",
+  badgeBg: "bg-[#FFFCF6]",
   badgeText: "text-[#BC7C10]",
   badgeDotBg: "bg-[#BC7C10]",
   badgeLabel: "Premium NFC Contact Cards",
@@ -54,7 +54,7 @@ const slide: Slide = {
   sub: "Share your contact with unlimited people by tapping on their phone. Explore all your information in one tap.",
   ctaHref: "#products",
   ctaLabel: "Get Your Card",
-  ctaBg: "bg-[#FBF3E4] hover:bg-[#F5E6C8]",
+  ctaBg: "bg-[#FFFCF6] hover:bg-[#F5E6C8]",
   ctaText: "text-[#BC7C10]",
   stats: [...DEFAULT_STATS],
 };
