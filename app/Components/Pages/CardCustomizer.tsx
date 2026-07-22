@@ -501,10 +501,16 @@ export default function CardCustomizer() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="flex items-start gap-3 rounded-2xl border border-[#25D366]/25 bg-[#e9fbe9]/80 p-4 shadow-sm"
+            className="flex items-start gap-3 rounded-2xl border border-[#BC7C10]/25 bg-[#FFFCF7] p-4 shadow-sm"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15 text-[#25D366]">
-              <MessageCircle className="h-5 w-5" />
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
+              style={{
+                background:
+                  "linear-gradient(135deg,#9B6F18 0%,#C9982C 35%,#D8A83A 70%,#B8841D 100%)",
+              }}
+            >
+              <MessageCircle className="h-5 w-5" strokeWidth={2} />
             </span>
             <p className="text-sm leading-relaxed text-[#141414]">
               Need a free custom mockup? Chat with our designer on WhatsApp —
@@ -513,7 +519,7 @@ export default function CardCustomizer() {
                 href="https://api.whatsapp.com/send?phone=919971420130"
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold text-[#128C7E] underline decoration-[#128C7E]/40 underline-offset-2 transition-colors hover:text-[#0b6b5a]"
+                className="font-bold text-[#BC7C10] underline decoration-[#BC7C10]/35 underline-offset-2 transition-colors hover:text-[#9a650d]"
               >
                 Open WhatsApp
               </a>
