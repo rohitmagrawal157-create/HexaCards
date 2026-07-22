@@ -161,17 +161,9 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative scroll-mt-20 overflow-hidden bg-white py-16 sm:py-20"
+      className="scroll-mt-20 bg-white py-16 sm:py-20"
     >
-      {/* Gradients: top-left + bottom-right */}
-      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-        <div className="absolute -top-16 -left-16 h-[55%] w-[50%] max-w-lg rounded-full bg-[radial-gradient(ellipse_at_center,#F3EDE3_0%,rgba(188,124,16,0.10)_35%,transparent_70%)]" />
-        <div className="absolute -right-16 -bottom-16 h-[55%] w-[50%] max-w-lg rounded-full bg-[radial-gradient(ellipse_at_center,#F3EDE3_0%,rgba(188,124,16,0.10)_35%,transparent_70%)]" />
-        <div className="absolute top-0 left-0 h-40 w-40 bg-gradient-to-br from-[#BC7C10]/[0.08] to-transparent sm:h-56 sm:w-56" />
-        <div className="absolute right-0 bottom-0 h-40 w-40 bg-gradient-to-tl from-[#BC7C10]/[0.08] to-transparent sm:h-56 sm:w-56" />
-      </div>
-
-      <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="mx-auto max-w-6xl px-5 sm:px-8">
         <h2 className="text-center text-2xl font-extrabold tracking-[0.06em] text-[#141414] uppercase sm:text-3xl">
           How It Works
         </h2>

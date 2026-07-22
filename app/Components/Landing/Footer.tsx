@@ -1,13 +1,14 @@
+import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Mail, Phone } from "lucide-react";
 
 const navLinks = [
-  { label: "Home", href: "#top" },
-  { label: "About Us", href: "#about" },
-  { label: "Products", href: "#products" },
-  { label: "Solutions", href: "#solutions" },
-  { label: "Blog", href: "#blog" },
-  { label: "Contact Us", href: "#footer" },
+  { label: "Home", href: "/" },
+  { label: "About Us", href: "/#about" },
+  { label: "Products", href: "/#products" },
+  { label: "Solutions", href: "/#solutions" },
+  { label: "Blog", href: "/#blog" },
+  { label: "Contact Us", href: "/#footer" },
 ];
 
 type IconProps = { className?: string };
@@ -116,8 +117,8 @@ export default function Footer() {
 
         <div className="mt-16 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03]">
           <div className="grid grid-cols-1 items-center gap-8 p-8 sm:p-10 lg:grid-cols-[auto_1fr]">
-            <a
-              href="#top"
+            <Link
+              href="/"
               className="relative block h-12 w-[180px] shrink-0"
               aria-label="HexaCards home"
             >
@@ -128,7 +129,7 @@ export default function Footer() {
                 sizes="180px"
                 className="object-contain object-left"
               />
-            </a>
+            </Link>
 
             <p className="text-lg leading-relaxed text-white/60 sm:text-xl">
               &ldquo;Hexa Cards completely changed the way I network — my

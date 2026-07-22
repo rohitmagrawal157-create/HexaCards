@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ShoppingCart } from "lucide-react";
@@ -15,9 +16,9 @@ export default function Navbar() {
       <div className="px-4 pt-4 pb-2 sm:px-6 lg:px-8">
         {/* Pill bar */}
         <div className="nav-pill mx-auto grid w-full max-w-[1280px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-full border border-[#e8e8e8] bg-white py-2.5 pr-3 pl-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:gap-4 sm:py-3 sm:pr-4 sm:pl-5 lg:pr-5 lg:pl-6">
-          {/* Left: logo — larger & clearer */}
-          <a
-            href="#top"
+          {/* Left: logo → home */}
+          <Link
+            href="/"
             className="relative h-11 w-[160px] shrink-0 sm:h-12 sm:w-[190px] lg:h-[52px] lg:w-[210px]"
             aria-label="HexaCards home"
           >
@@ -29,7 +30,7 @@ export default function Navbar() {
               sizes="210px"
               className="object-contain object-left"
             />
-          </a>
+          </Link>
 
           {/* Center: links — no overflow scroll (prevents bottom scrollbar) */}
           <nav

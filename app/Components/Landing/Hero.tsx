@@ -1,8 +1,10 @@
 "use client";
 
 import { type ReactNode } from "react";
+import Link from "next/link";
 import { Playfair_Display } from "next/font/google";
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 import HeroHexBackground from "./HeroHexBackground";
 
 const playfair = Playfair_Display({
@@ -59,22 +61,6 @@ const slide: Slide = {
   stats: [...DEFAULT_STATS],
 };
 
-function HeroWayCompare() {
-  return (
-    <div className="hero-way mt-7" role="presentation">
-      <div className="hero-way-highlight" aria-hidden />
-      <div className="hero-way-btn text-[#6b7280]">
-        <span>The old way</span>
-        <small>Paper · lost in 24h</small>
-      </div>
-      <div className="hero-way-btn text-[#1a1a1a]">
-        <span>The Hexa way</span>
-        <small>One tap · always live</small>
-      </div>
-    </div>
-  );
-}
-
 export default function Hero() {
   return (
     <section
@@ -101,7 +87,15 @@ export default function Hero() {
               {slide.headline}
             </h1>
 
-            <HeroWayCompare />
+            <div className="mt-7">
+              <Link
+                href="/design-your-card"
+                className="inline-flex items-center gap-2 rounded-full bg-[#BC7C10] px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.98] sm:px-8 sm:py-4 sm:text-lg"
+              >
+                Design Your Card
+                <ArrowRight className="h-5 w-5" strokeWidth={2.25} />
+              </Link>
+            </div>
 
             <p className="mt-6 max-w-md text-lg leading-relaxed text-[#4F5B72] sm:text-xl">
               {slide.sub}

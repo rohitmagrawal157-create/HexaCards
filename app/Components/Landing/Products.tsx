@@ -185,19 +185,9 @@ export default function Products() {
     <>
       <section
         id="products"
-        className="relative scroll-mt-20 overflow-hidden bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
+        className="scroll-mt-20 bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
       >
-        {/* Side gradients — from left & right edges only (not center) */}
-        <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-          <div className="absolute inset-y-0 left-0 w-[42%] max-w-md bg-gradient-to-r from-[#F3EDE3] via-[#F8F4EC]/85 to-transparent" />
-          <div className="absolute inset-y-0 right-0 w-[42%] max-w-md bg-gradient-to-l from-[#F3EDE3] via-[#F8F4EC]/85 to-transparent" />
-          <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#BC7C10]/[0.12] to-transparent sm:w-40" />
-          <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#BC7C10]/[0.12] to-transparent sm:w-40" />
-        </div>
-
-        <div className="relative z-10">
-          <ProductsGrid />
-        </div>
+        <ProductsGrid />
       </section>
 
       <Feature />
