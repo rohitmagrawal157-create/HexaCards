@@ -1,6 +1,6 @@
 /** Silver metallic gradient (foil finish) */
 export const SILVER_GRADIENT =
-  "linear-gradient(90deg,#6E7276 0%,#9CA0A4 15%,#E6E8EA 30%,#FAFBFC 40%,#B4B8BC 55%,#787D82 72%,#A8ACB0 100%)";
+  "linear-gradient(90deg,#6E7276 0%,#9CA0A4 15%,#E6E8EA 30%,#FAFBFC 10%,#B4B8BC 55%,#787D82 72%,#A8ACB0 100%)";
 
 /** Mid-tone for swatches / fallbacks that need a solid color */
 export const SILVER_SOLID = "#9CA0A4";

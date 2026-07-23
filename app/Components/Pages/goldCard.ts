@@ -1,6 +1,6 @@
 /** Gold metallic gradient (foil finish) */
 export const GOLD_GRADIENT =
-  "linear-gradient(90deg,#9B6F18 0%,#C9982C 15%,#F7DFA7 30%,#FFF3D7 40%,#D8A83A 55%,#B8841D 72%,#D4A133 100%)";
+  "linear-gradient(90deg,#9B6F18 0%,#C9982C 15%,#F7DFA7 30%,#FFF3D7 10%,#D8A83A 55%,#B8841D 72%,#D4A133 100%)";
 
 /** Mid-tone for swatches / fallbacks that need a solid color */
 export const GOLD_SOLID = "#C9982C";

@@ -6,7 +6,6 @@ import {
   MessageCircle,
   Upload,
   Wifi,
-  QrCode,
   Check,
   ImageIcon,
   Palette,
@@ -22,9 +21,10 @@ import {
   ArrowUp,
 } from "lucide-react";
 import {
-  CARD_MODES,
+  METAL_MODES,
   getMetalPreset,
   type CardMode,
+  type MetalMode,
 } from "./cardFinishes";
 import { GOLD_GRADIENT } from "./goldCard";
 import { SILVER_GRADIENT } from "./silverCard";
@@ -37,23 +37,29 @@ type LogoLayout = {
   y: number;
 };
 
-/** Customize mode: card body black/white · accent pickers for wifi & QR */
-const cardColors = [
-  "#141414",
-  "#FFFFFF",
-];
+type CardBody = "black" | "white";
 
-const accentColors = [
-  "#C9982C", // gold mid
-  "#9CA0A4", // silver mid
-  "#FFFFFF",
-  "#141414",
-  "#00BFFF",
-  "#00B813",
-  "#FF8E00",
-  "#EE0000",
-  "#FD0095",
-];
+const CARD_BODY = {
+  black: "#141414",
+  white: "#FFFFFF",
+} as const;
+
+/** White card accents — requested 5 + existing customize colors */
+const whiteCardAccents = [
+  { label: "Red", color: "#E53935" },
+  { label: "Dark Pink", color: "#C2185B" },
+  { label: "Royal Blue", color: "#1565C0" },
+  { label: "Light Green", color: "#7CB342" },
+  { label: "Yellow", color: "#FDD835" },
+  { label: "Gold", color: "#C9982C" },
+  // { label: "Silver", color: "#9CA0A4" },
+  // { label: "White", color: "#FFFFFF" },
+  { label: "Black", color: "#141414" },
+  { label: "Sky Blue", color: "#00BFFF" },
+  { label: "Green", color: "#00B813" },
+  { label: "Orange", color: "#FF8E00" },
+  { label: "Hot Pink", color: "#FD0095" },
+] as const;
 
 const CARD_W = 244;
 const CARD_H = 154;
@@ -121,43 +127,6 @@ function SectionLabel({
         </div>
       </div>
     </div>
-  );
-}
-
-function ColorSwatch({
-  color,
-  selected,
-  onSelect,
-  label,
-}: {
-  color: string;
-  selected: boolean;
-  onSelect: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={selected}
-      onClick={onSelect}
-      className={`relative h-10 w-10 rounded-full border transition-all duration-200 hover:scale-110 ${
-        selected
-          ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-[#FFFCF7]"
-          : "border-black/10 hover:border-black/25"
-      }`}
-      style={{ backgroundColor: color }}
-    >
-      {selected ? (
-        <span className="absolute inset-0 flex items-center justify-center">
-          <Check
-            className="h-4 w-4 drop-shadow"
-            style={{ color: readableTextColor(color) }}
-            strokeWidth={3}
-          />
-        </span>
-      ) : null}
-    </button>
   );
 }
 
@@ -329,9 +298,11 @@ function PlacedLogo({
 
 export default function CardCustomizer() {
   const [side, setSide] = useState<Side>("front");
+  const [cardBody, setCardBody] = useState<CardBody>("black");
   const [cardMode, setCardMode] = useState<CardMode>("gold");
-  const [cardColor, setCardColor] = useState(cardColors[0]);
-  const [accentColor, setAccentColor] = useState(accentColors[0]);
+  const [accentColor, setAccentColor] = useState<string>(
+    whiteCardAccents[0].color,
+  );
   const [title, setTitle] = useState("");
   const [subTitle, setSubTitle] = useState("");
   const [moreDetails, setMoreDetails] = useState("");
@@ -341,25 +312,26 @@ export default function CardCustomizer() {
   const [logoEditing, setLogoEditing] = useState(false);
   const [logoConfirmed, setLogoConfirmed] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [flipPulse, setFlipPulse] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
-  // const customColorInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const logoObjectUrl = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(PREVIEW_MAX_W / CARD_W);
 
-  const isCustomize = cardMode === "customize";
+  const isBlackCard = cardBody === "black";
+  const isCustomize = !isBlackCard; // white card → customize accents only
   const metalPreset =
-    cardMode === "gold" || cardMode === "silver"
+    isBlackCard && (cardMode === "gold" || cardMode === "silver")
       ? getMetalPreset(cardMode)
       : null;
 
-  /** Body always from picker (black / white) */
-  const displayCardColor = cardColor;
+  const displayCardColor = CARD_BODY[cardBody];
   const metalGradient = metalPreset?.gradient ?? null;
-  /** Customize: auto contrast. Gold/Silver: foil gradient text */
+  // White card: selected accent drives name, details, wifi & QR
   const displayTextColor = isCustomize
-    ? readableTextColor(cardColor)
+    ? accentColor
     : (metalPreset?.contentColor ?? "#C9982C");
   const displayTextStyle: CSSProperties = metalGradient
     ? metalTextStyle(metalGradient)
@@ -367,34 +339,28 @@ export default function CardCustomizer() {
   const displayAccentColor = isCustomize
     ? accentColor
     : (metalPreset?.accentColor ?? accentColor);
-  /** Gold/Silver tint uploaded logo with foil gradient; Customize keeps original */
   const logoTint = metalGradient
     ? { fill: metalGradient, isGradient: true as const }
     : null;
 
-  /**
-   * QR plate background:
-   * - Black card → always black plate
-   * - Silver finish on white card → silver foil plate
-   * - Otherwise → match card body
-   */
-  const isBlackBody = displayCardColor === "#141414";
+  const isBlackBody = displayCardColor === CARD_BODY.black;
   const qrPlateBg = isBlackBody
-    ? "#141414"
-    : cardMode === "silver"
-      ? (metalPreset?.gradient ?? "#9CA0A4")
+    ? CARD_BODY.black
+    : cardMode === "silver" && metalPreset
+      ? (metalPreset.gradient ?? "#9CA0A4")
       : displayCardColor;
-  /** QR modules: gold/silver foil on black; dark modules on silver plate; white on black customize */
   const qrModuleTint =
-    cardMode === "gold"
+    metalPreset && cardMode === "gold"
       ? { fill: metalGradient!, isGradient: true as const }
-      : cardMode === "silver"
+      : metalPreset && cardMode === "silver"
         ? isBlackBody
           ? { fill: metalGradient!, isGradient: true as const }
           : { fill: "#141414", isGradient: false as const }
-        : isBlackBody
-          ? { fill: "#FFFFFF", isGradient: false as const }
-          : null;
+        : isCustomize
+          ? { fill: accentColor, isGradient: false as const }
+          : isBlackBody
+            ? { fill: "#FFFFFF", isGradient: false as const }
+            : null;
 
   const hasExtraLine = moreDetails.trim().length > 0;
 
@@ -441,6 +407,16 @@ export default function CardCustomizer() {
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const isPng =
+      file.type === "image/png" || file.name.toLowerCase().endsWith(".png");
+    if (!isPng) {
+      setLogoError("Only PNG files are accepted. Please upload a .png logo.");
+      if (logoInputRef.current) logoInputRef.current.value = "";
+      return;
+    }
+
+    setLogoError(null);
     if (logoObjectUrl.current) URL.revokeObjectURL(logoObjectUrl.current);
     const url = URL.createObjectURL(file);
     logoObjectUrl.current = url;
@@ -450,12 +426,21 @@ export default function CardCustomizer() {
     setSide("back");
     setLogoEditing(true);
     setLogoConfirmed(false);
+    // Draw attention to side switch so front is easy to find after auto-flip
+    setFlipPulse(true);
+    window.setTimeout(() => setFlipPulse(false), 4500);
+  }
+
+  function flipTo(next: Side) {
+    setSide(next);
+    setFlipPulse(false);
   }
 
   function removeLogo() {
     if (logoObjectUrl.current) URL.revokeObjectURL(logoObjectUrl.current);
     logoObjectUrl.current = null;
     setLogoUrl(null);
+    setLogoError(null);
     setFrontLogo(FRONT_LOGO_DEFAULT);
     setBackLogo(BACK_LOGO_DEFAULT);
     setLogoEditing(false);
@@ -465,24 +450,29 @@ export default function CardCustomizer() {
 
   function resetDesign() {
     setSide("front");
+    setCardBody("black");
     setCardMode("gold");
-    setCardColor(cardColors[0]);
-    setAccentColor(accentColors[0]);
+    setAccentColor(whiteCardAccents[0].color);
     setTitle("");
     setSubTitle("");
     setMoreDetails("");
     removeLogo();
   }
 
-  function selectCardMode(mode: CardMode) {
-    setCardMode(mode);
-    if (mode === "gold" || mode === "silver") {
-      const preset = getMetalPreset(mode);
-      setAccentColor(preset.accentColor);
-      if (cardColor !== "#141414" && cardColor !== "#FFFFFF") {
-        setCardColor(preset.bodyColors[0]);
-      }
+  function selectCardBody(body: CardBody) {
+    setCardBody(body);
+    if (body === "black") {
+      setCardMode("gold");
+      setAccentColor(getMetalPreset("gold").accentColor);
+    } else {
+      setCardMode("customize");
+      setAccentColor(whiteCardAccents[0].color);
     }
+  }
+
+  function selectMetalMode(mode: MetalMode) {
+    setCardMode(mode);
+    setAccentColor(getMetalPreset(mode).accentColor);
   }
 
   function handleSubmit() {
@@ -490,7 +480,8 @@ export default function CardCustomizer() {
     window.setTimeout(() => setSavedFlash(false), 2200);
     console.log("Submitting design:", {
       side,
-      cardMode,
+      cardBody,
+      cardMode: isBlackCard ? cardMode : "customize",
       cardColor: displayCardColor,
       accentColor: displayAccentColor,
       textColor: displayTextColor,
@@ -557,21 +548,53 @@ export default function CardCustomizer() {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="mt-6 rounded-3xl border border-black/[0.06] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:p-7"
           >
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[#BC7C10]" />
                 <p className="text-sm font-semibold text-[#141414]">
-                  Live preview · {side === "front" ? "Front" : "Back"}
+                  Live preview
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setSide((s) => (s === "front" ? "back" : "front"))}
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 px-3 py-1.5 text-xs font-semibold text-[#141414] transition-colors hover:border-[#BC7C10]/40 hover:text-[#BC7C10]"
+              <motion.div
+                animate={
+                  flipPulse
+                    ? {
+                        boxShadow: [
+                          "0 0 0 0 rgba(188,124,16,0)",
+                          "0 0 0 4px rgba(188,124,16,0.35)",
+                          "0 0 0 0 rgba(188,124,16,0)",
+                        ],
+                      }
+                    : { boxShadow: "0 0 0 0 rgba(188,124,16,0)" }
+                }
+                transition={
+                  flipPulse
+                    ? { duration: 1.1, repeat: 3, ease: "easeInOut" }
+                    : { duration: 0.2 }
+                }
+                className="inline-flex w-full rounded-full bg-[#141414] p-1 sm:w-auto"
+                role="group"
+                aria-label="Card side"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Flip card
-              </button>
+                {(["front", "back"] as const).map((value) => {
+                  const active = side === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => flipTo(value)}
+                      aria-pressed={active}
+                      className={`relative flex-1 rounded-full px-5 py-2 text-xs font-bold tracking-wide uppercase transition-colors sm:flex-none ${
+                        active
+                          ? "bg-[#BC7C10] text-white"
+                          : "text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </motion.div>
             </div>
 
             <div className="relative overflow-hidden rounded-2xl border border-black/[0.04] bg-[#FFFCF7]">
@@ -884,22 +907,32 @@ export default function CardCustomizer() {
                     }}
                     confirmed={logoConfirmed}
                   />
+                  <button
+                    type="button"
+                    onClick={() => flipTo("front")}
+                    className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all ${
+                      flipPulse
+                        ? "bg-[#BC7C10] text-white shadow-md shadow-[#BC7C10]/30 ring-2 ring-[#BC7C10]/40 ring-offset-2 ring-offset-[#FFFCF7]"
+                        : "border border-black/10 bg-white text-[#141414] hover:border-[#BC7C10]/35 hover:text-[#BC7C10]"
+                    }`}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    View front side
+                  </button>
                 </motion.div>
               ) : null}
             </AnimatePresence>
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#5c5346]">
               <span className="rounded-full bg-[#FFFCF7] px-2.5 py-1 ring-1 ring-black/5 capitalize">
-                {cardMode} card
-              </span>
-              <span className="rounded-full bg-[#FFFCF7] px-2.5 py-1 ring-1 ring-black/5">
-                Body {displayCardColor}
+                {isBlackCard ? `${cardMode} black` : "white"} card
               </span>
               <span className="rounded-full bg-[#FFFCF7] px-2.5 py-1 ring-1 ring-black/5 capitalize">
                 Text {metalGradient ? `${cardMode} foil` : displayTextColor}
               </span>
               <span className="rounded-full bg-[#FFFCF7] px-2.5 py-1 ring-1 ring-black/5">
-                Accent {metalGradient ? `${cardMode} foil` : displayAccentColor}
+                Accent{" "}
+                {metalGradient ? `${cardMode} foil` : displayAccentColor}
               </span>
             </div>
 
@@ -938,7 +971,7 @@ export default function CardCustomizer() {
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setSide(value)}
+                  onClick={() => flipTo(value)}
                   className={`rounded-lg px-4 py-2.5 text-sm font-semibold capitalize transition-all duration-200 ${
                     side === value
                       ? "bg-[#141414] text-white shadow-md"
@@ -951,35 +984,29 @@ export default function CardCustomizer() {
             </div>
           </div>
 
-          {/* Gold · Silver · Customize */}
+          {/* Card type: Black | White */}
           <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
             <SectionLabel
               icon={Palette}
-              title="Card finish"
-              hint="Tap a circle — Gold, Silver, or Customize"
+              title="Card type"
+              hint="Black → gold/silver foil · White → custom accent colors"
             />
             <div className="flex flex-wrap items-start gap-6 sm:gap-8">
-              {CARD_MODES.map((mode) => {
-                const selected = cardMode === mode.id;
-                const swatchStyle =
-                  mode.id === "gold"
-                    ? { background: GOLD_GRADIENT }
-                    : mode.id === "silver"
-                      ? { background: SILVER_GRADIENT }
-                      : {
-                          backgroundColor: "#FFFFFF",
-                          border: "1.5px solid rgba(20,20,20,0.18)",
-                          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.9)",
-                        };
-
+              {(
+                [
+                  { id: "black" as const, label: "Black Card", color: CARD_BODY.black },
+                  { id: "white" as const, label: "White Card", color: CARD_BODY.white },
+                ] as const
+              ).map((type) => {
+                const selected = cardBody === type.id;
                 return (
                   <button
-                    key={mode.id}
+                    key={type.id}
                     type="button"
-                    onClick={() => selectCardMode(mode.id)}
+                    onClick={() => selectCardBody(type.id)}
                     aria-pressed={selected}
-                    aria-label={mode.label}
-                    className="group flex flex-col items-center gap-2"
+                    aria-label={type.label}
+                    className="flex flex-col items-center gap-2"
                   >
                     <span
                       className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
@@ -987,14 +1014,19 @@ export default function CardCustomizer() {
                           ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
                           : "ring-1 ring-black/10"
                       }`}
-                      style={swatchStyle}
+                      style={{
+                        backgroundColor: type.color,
+                        border:
+                          type.id === "white"
+                            ? "1.5px solid rgba(20,20,20,0.18)"
+                            : undefined,
+                      }}
                     >
                       {selected ? (
                         <Check
                           className="h-4 w-4 drop-shadow"
                           style={{
-                            color:
-                              mode.id === "customize" ? "#141414" : "#FFFFFF",
+                            color: type.id === "white" ? "#141414" : "#FFFFFF",
                           }}
                           strokeWidth={3}
                         />
@@ -1005,103 +1037,114 @@ export default function CardCustomizer() {
                         selected ? "text-[#BC7C10]" : "text-[#5c5346]"
                       }`}
                     >
-                      {mode.label}
+                      {type.label}
                     </span>
                   </button>
                 );
               })}
             </div>
 
-            {/* Body: black / white — for Gold, Silver & Customize */}
-            <div className="mt-4">
-              <p className="mb-2 text-xs font-semibold text-[#5c5346]">
-                Card body
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {cardColors.map((color) => (
-                  <ColorSwatch
-                    key={color}
-                    color={color}
-                    selected={cardColor === color}
-                    onSelect={() => setCardColor(color)}
-                    label={
-                      color === "#141414" ? "Black card" : "White card"
-                    }
-                  />
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-[#5c5346]/75">
-                {isCustomize
-                  ? "Black card → white text · White card → black text"
-                  : `${metalPreset?.label ?? ""} accents stay on wifi, QR & name`}
-              </p>
-            </div>
-
-            {metalPreset ? (
-              <div className="mt-4 space-y-2 rounded-xl border border-black/[0.05] bg-[#FFFCF7] p-3.5 text-sm">
-                <p className="text-xs font-semibold tracking-wide text-[#BC7C10] uppercase">
-                  {metalPreset.label} card fields
+            {/* Black card → Gold / Silver only */}
+            {isBlackCard ? (
+              <div className="mt-5">
+                <p className="mb-3 text-xs font-semibold text-[#5c5346]">
+                  Finish color
                 </p>
-                <ul className="space-y-1.5 text-[#5c5346]">
-                  <li className="flex items-center justify-between gap-3">
-                    <span>Card body</span>
-                    <span className="inline-flex items-center gap-2 font-medium text-[#141414]">
-                      <span
-                        className="h-3.5 w-3.5 rounded-full border border-black/10"
-                        style={{ backgroundColor: cardColor }}
-                      />
-                      {cardColor === "#141414" ? "Black" : "White"}
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <span>Name / text</span>
-                    <span className="inline-flex items-center gap-2 font-medium text-[#141414]">
-                      <span
-                        className="h-3.5 w-3.5 rounded-full border border-black/10"
-                        style={{ background: metalPreset.gradient }}
-                      />
-                      {metalPreset.label} foil
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <span>Wifi & QR border</span>
-                    <span className="inline-flex items-center gap-2 font-medium text-[#141414]">
-                      <span
-                        className="h-3.5 w-3.5 rounded-full border border-black/10"
-                        style={{ background: metalPreset.gradient }}
-                      />
-                      {metalPreset.label} foil
-                    </span>
-                  </li>
-                </ul>
-                <p className="pt-1 text-xs text-[#5c5346]/80">
-                  {metalPreset.description}
-                </p>
+                <div className="flex flex-wrap items-start gap-6 sm:gap-8">
+                  {METAL_MODES.map((mode) => {
+                    const selected = cardMode === mode.id;
+                    const swatchStyle =
+                      mode.id === "gold"
+                        ? { background: GOLD_GRADIENT }
+                        : { background: SILVER_GRADIENT };
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => selectMetalMode(mode.id)}
+                        aria-pressed={selected}
+                        aria-label={mode.label}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <span
+                          className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                            selected
+                              ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                              : "ring-1 ring-black/10"
+                          }`}
+                          style={swatchStyle}
+                        >
+                          {selected ? (
+                            <Check
+                              className="h-4 w-4 text-white drop-shadow"
+                              strokeWidth={3}
+                            />
+                          ) : null}
+                        </span>
+                        <span
+                          className={`text-sm font-semibold ${
+                            selected ? "text-[#BC7C10]" : "text-[#5c5346]"
+                          }`}
+                        >
+                          {mode.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="mt-5">
+                <p className="mb-3 text-xs font-semibold text-[#5c5346]">
+                  Accent color
+                </p>
+                <p className="mb-3 text-xs text-[#5c5346]/75">
+                  Applies to name, details, wifi & QR
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  {whiteCardAccents.map((swatch) => (
+                    <button
+                      key={swatch.color + swatch.label}
+                      type="button"
+                      onClick={() => setAccentColor(swatch.color)}
+                      aria-pressed={accentColor === swatch.color}
+                      aria-label={swatch.label}
+                      className="flex flex-col items-center gap-1.5"
+                    >
+                      <span
+                        className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                          accentColor === swatch.color
+                            ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                            : "ring-1 ring-black/10"
+                        }`}
+                        style={{
+                          backgroundColor: swatch.color,
+                          border:
+                            // swatch.color === "#FFFFFF"
+                            true
+                              ? "1.5px solid rgba(20,20,20,0.18)"
+                              : undefined,
+                        }}
+                      >
+                        {accentColor === swatch.color ? (
+                          <Check
+                            className="h-3.5 w-3.5 drop-shadow"
+                            style={{
+                              color: readableTextColor(swatch.color),
+                            }}
+                            strokeWidth={3}
+                          />
+                        ) : null}
+                      </span>
+                      <span className="max-w-[4.5rem] text-center text-[10px] font-medium text-[#5c5346]">
+                        {swatch.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Customize-only: accent colors (no text color — auto contrast) */}
-          {isCustomize ? (
-            <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
-              <SectionLabel
-                icon={QrCode}
-                title="QR border & NFC accent"
-                hint="Changes wifi icon and QR border (QR stays original colors in Customize)"
-              />
-              <div className="flex flex-wrap gap-3">
-                {accentColors.map((color) => (
-                  <ColorSwatch
-                    key={color}
-                    color={color}
-                    selected={accentColor === color}
-                    onSelect={() => setAccentColor(color)}
-                    label={`Accent color ${color}`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
 
           <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
             <SectionLabel
@@ -1185,10 +1228,20 @@ export default function CardCustomizer() {
             <input
               ref={logoInputRef}
               type="file"
-              accept="image/*"
+              accept="image/png,.png"
               onChange={handleLogoChange}
               className="sr-only"
             />
+            <div className="mb-3 rounded-xl border border-[#BC7C10]/20 bg-[#FFFCF7] px-3.5 py-3 text-xs leading-relaxed text-[#5c5346]">
+              <p className="font-semibold text-[#141414]">
+                PNG only · transparent background recommended
+              </p>
+              <p className="mt-1">
+                Upload a <span className="font-semibold text-[#141414]">.png</span>{" "}
+                logo with a transparent background so it stays clear and sharp
+                on both black and white cards.
+              </p>
+            </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
@@ -1196,7 +1249,7 @@ export default function CardCustomizer() {
                 className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#FFFCF7] px-5 py-2.5 text-sm font-semibold text-[#141414] transition-all hover:border-[#BC7C10]/35 hover:bg-white"
               >
                 <Upload className="h-4 w-4 text-[#BC7C10]" />
-                {logoUrl ? "Change logo" : "Upload logo"}
+                {logoUrl ? "Change logo" : "Upload PNG logo"}
               </button>
               {logoUrl ? (
                 <>
@@ -1220,6 +1273,14 @@ export default function CardCustomizer() {
                 </>
               ) : null}
             </div>
+            {logoError ? (
+              <p
+                role="alert"
+                className="mt-3 text-sm font-medium text-red-600"
+              >
+                {logoError}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
