@@ -26,6 +26,8 @@ import {
   getMetalPreset,
   type CardMode,
 } from "./cardFinishes";
+import { GOLD_GRADIENT } from "./goldCard";
+import { SILVER_GRADIENT } from "./silverCard";
 
 type Side = "front" | "back";
 
@@ -370,8 +372,29 @@ export default function CardCustomizer() {
     ? { fill: metalGradient, isGradient: true as const }
     : null;
 
-  const activeLogo = side === "front" ? frontLogo : backLogo;
-  const setActiveLogo = side === "front" ? setFrontLogo : setBackLogo;
+  /**
+   * QR plate background:
+   * - Black card → always black plate
+   * - Silver finish on white card → silver foil plate
+   * - Otherwise → match card body
+   */
+  const isBlackBody = displayCardColor === "#141414";
+  const qrPlateBg = isBlackBody
+    ? "#141414"
+    : cardMode === "silver"
+      ? (metalPreset?.gradient ?? "#9CA0A4")
+      : displayCardColor;
+  /** QR modules: gold/silver foil on black; dark modules on silver plate; white on black customize */
+  const qrModuleTint =
+    cardMode === "gold"
+      ? { fill: metalGradient!, isGradient: true as const }
+      : cardMode === "silver"
+        ? isBlackBody
+          ? { fill: metalGradient!, isGradient: true as const }
+          : { fill: "#141414", isGradient: false as const }
+        : isBlackBody
+          ? { fill: "#FFFFFF", isGradient: false as const }
+          : null;
 
   const hasExtraLine = moreDetails.trim().length > 0;
 
@@ -405,7 +428,8 @@ export default function CardCustomizer() {
   }, [side]);
 
   function updateLogo(patch: Partial<LogoLayout>) {
-    setActiveLogo((prev) => ({
+    // Front logo is disabled — always adjust back logo
+    setBackLogo((prev) => ({
       size: clamp(patch.size ?? prev.size, SIZE_MIN, SIZE_MAX),
       x: clamp(patch.x ?? prev.x, 0, 92),
       y: clamp(patch.y ?? prev.y, 0, 88),
@@ -423,6 +447,7 @@ export default function CardCustomizer() {
     setLogoUrl(url);
     setFrontLogo(FRONT_LOGO_DEFAULT);
     setBackLogo(BACK_LOGO_DEFAULT);
+    setSide("back");
     setLogoEditing(true);
     setLogoConfirmed(false);
   }
@@ -686,6 +711,7 @@ export default function CardCustomizer() {
                               strokeWidth={2.5}
                             />
 
+                            {/* Front logo — hidden for now
                             <PlacedLogo
                               src={logoUrl}
                               layout={frontLogo}
@@ -698,6 +724,7 @@ export default function CardCustomizer() {
                                 logoInputRef.current?.click()
                               }
                             />
+                            */}
 
                             <div
                               className={`absolute bottom-3 left-3 z-10 max-w-[52%] ${
@@ -732,21 +759,50 @@ export default function CardCustomizer() {
                               ) : null}
                             </div>
 
-                            {/* QR frame — foil gradient border on metal modes */}
+                            {/* QR — plate matches black / silver; modules foil or contrast */}
                             <div
-                              className="absolute right-3 bottom-3 z-10 h-12 w-12 rounded-md p-[3px]"
+                              className="absolute right-3 bottom-3 z-10 h-12 w-12 rounded-[5px]"
                               style={{
+                                padding: "0.5px",
                                 background: metalGradient ?? displayAccentColor,
                               }}
                             >
-                              <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[4px] bg-white p-0.5">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src="/Images/HexaQR.png"
-                                  alt="Hexa QR"
-                                  className="h-full w-full object-contain"
-                                  draggable={false}
-                                />
+                              <div
+                                className="flex h-full w-full items-center justify-center overflow-hidden rounded-[4.5px]"
+                                style={{ background: qrPlateBg }}
+                              >
+                                {qrModuleTint ? (
+                                  <span
+                                    className="block h-[88%] w-[88%]"
+                                    style={{
+                                      backgroundImage: qrModuleTint.isGradient
+                                        ? qrModuleTint.fill
+                                        : undefined,
+                                      backgroundColor: qrModuleTint.isGradient
+                                        ? undefined
+                                        : qrModuleTint.fill,
+                                      WebkitMaskImage:
+                                        "url(/Images/HexaQR.png)",
+                                      maskImage: "url(/Images/HexaQR.png)",
+                                      WebkitMaskSize: "contain",
+                                      maskSize: "contain",
+                                      WebkitMaskRepeat: "no-repeat",
+                                      maskRepeat: "no-repeat",
+                                      WebkitMaskPosition: "center",
+                                      maskPosition: "center",
+                                    }}
+                                    role="img"
+                                    aria-label="Hexa QR"
+                                  />
+                                ) : (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src="/Images/HexaQR.png"
+                                    alt="Hexa QR"
+                                    className="h-[88%] w-[88%] object-contain"
+                                    draggable={false}
+                                  />
+                                )}
                               </div>
                             </div>
                           </>
@@ -796,9 +852,9 @@ export default function CardCustomizer() {
               </div>
             </div>
 
-            {/* Logo adjust toolbar — under preview */}
+            {/* Back logo adjust toolbar — under preview */}
             <AnimatePresence>
-              {logoUrl && logoEditing ? (
+              {logoUrl && side === "back" ? (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -806,20 +862,20 @@ export default function CardCustomizer() {
                   className="mt-5 rounded-2xl border border-black/[0.06] bg-[#FFFCF7] px-3 py-4"
                 >
                   <p className="mb-3 text-center text-[11px] font-semibold tracking-wide text-[#5c5346] uppercase">
-                    Adjust {side} logo · size {Math.round(activeLogo.size)}px
+                    Adjust back logo · size {Math.round(backLogo.size)}px
                   </p>
                   <LogoToolbar
                     onDelete={removeLogo}
                     onShrink={() =>
-                      updateLogo({ size: activeLogo.size - SIZE_STEP })
+                      updateLogo({ size: backLogo.size - SIZE_STEP })
                     }
                     onGrow={() =>
-                      updateLogo({ size: activeLogo.size + SIZE_STEP })
+                      updateLogo({ size: backLogo.size + SIZE_STEP })
                     }
                     onMove={(dx, dy) =>
                       updateLogo({
-                        x: activeLogo.x + dx,
-                        y: activeLogo.y + dy,
+                        x: backLogo.x + dx,
+                        y: backLogo.y + dy,
                       })
                     }
                     onConfirm={() => {
@@ -829,10 +885,6 @@ export default function CardCustomizer() {
                     confirmed={logoConfirmed}
                   />
                 </motion.div>
-              ) : logoUrl ? (
-                <p className="mt-4 text-center text-xs text-[#5c5346]">
-                  Tap the logo on the card to resize or move it.
-                </p>
               ) : null}
             </AnimatePresence>
 
@@ -904,23 +956,60 @@ export default function CardCustomizer() {
             <SectionLabel
               icon={Palette}
               title="Card finish"
-              hint="Gold & Silver lock metal accents · Customize picks wifi & QR colors"
+              hint="Tap a circle — Gold, Silver, or Customize"
             />
-            <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#FFFCF7] p-1.5 ring-1 ring-black/[0.04]">
-              {CARD_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => selectCardMode(mode.id)}
-                  className={`rounded-lg px-2 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                    cardMode === mode.id
-                      ? "bg-[#141414] text-white shadow-md"
-                      : "text-[#5c5346] hover:bg-white hover:text-[#141414]"
-                  }`}
-                >
-                  {mode.label}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-start gap-6 sm:gap-8">
+              {CARD_MODES.map((mode) => {
+                const selected = cardMode === mode.id;
+                const swatchStyle =
+                  mode.id === "gold"
+                    ? { background: GOLD_GRADIENT }
+                    : mode.id === "silver"
+                      ? { background: SILVER_GRADIENT }
+                      : {
+                          backgroundColor: "#FFFFFF",
+                          border: "1.5px solid rgba(20,20,20,0.18)",
+                          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.9)",
+                        };
+
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => selectCardMode(mode.id)}
+                    aria-pressed={selected}
+                    aria-label={mode.label}
+                    className="group flex flex-col items-center gap-2"
+                  >
+                    <span
+                      className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                        selected
+                          ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                          : "ring-1 ring-black/10"
+                      }`}
+                      style={swatchStyle}
+                    >
+                      {selected ? (
+                        <Check
+                          className="h-4 w-4 drop-shadow"
+                          style={{
+                            color:
+                              mode.id === "customize" ? "#141414" : "#FFFFFF",
+                          }}
+                          strokeWidth={3}
+                        />
+                      ) : null}
+                    </span>
+                    <span
+                      className={`text-sm font-semibold ${
+                        selected ? "text-[#BC7C10]" : "text-[#5c5346]"
+                      }`}
+                    >
+                      {mode.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Body: black / white — for Gold, Silver & Customize */}
@@ -998,7 +1087,7 @@ export default function CardCustomizer() {
               <SectionLabel
                 icon={QrCode}
                 title="QR border & NFC accent"
-                hint="Changes wifi icon and QR frame color"
+                hint="Changes wifi icon and QR border (QR stays original colors in Customize)"
               />
               <div className="flex flex-wrap gap-3">
                 {accentColors.map((color) => (
@@ -1089,8 +1178,8 @@ export default function CardCustomizer() {
               title="Logo / image"
               hint={
                 isCustomize
-                  ? "Shown in original colors · adjust size & position on front and back"
-                  : `Tinted ${cardMode === "gold" ? "gold" : "silver"} on this finish · original colors in Customize`
+                  ? "Back side only · original colors · adjust below the card preview"
+                  : `Back side only · tinted ${cardMode === "gold" ? "gold" : "silver"} · adjust below preview`
               }
             />
             <input
@@ -1113,10 +1202,13 @@ export default function CardCustomizer() {
                 <>
                   <button
                     type="button"
-                    onClick={() => setLogoEditing(true)}
+                    onClick={() => {
+                      setSide("back");
+                      setLogoEditing(true);
+                    }}
                     className="text-sm font-semibold text-[#BC7C10] underline-offset-2 hover:underline"
                   >
-                    Adjust on {side}
+                    Adjust on back
                   </button>
                   <button
                     type="button"
@@ -1128,36 +1220,6 @@ export default function CardCustomizer() {
                 </>
               ) : null}
             </div>
-
-            {logoUrl ? (
-              <div className="mt-4 rounded-xl border border-black/[0.05] bg-[#FFFCF7] p-3">
-                <LogoToolbar
-                  onDelete={removeLogo}
-                  onShrink={() =>
-                    updateLogo({ size: activeLogo.size - SIZE_STEP })
-                  }
-                  onGrow={() =>
-                    updateLogo({ size: activeLogo.size + SIZE_STEP })
-                  }
-                  onMove={(dx, dy) =>
-                    updateLogo({
-                      x: activeLogo.x + dx,
-                      y: activeLogo.y + dy,
-                    })
-                  }
-                  onConfirm={() => {
-                    setLogoConfirmed(true);
-                    setLogoEditing(false);
-                  }}
-                  confirmed={logoConfirmed}
-                />
-                <p className="mt-2.5 text-center text-[11px] text-[#5c5346]">
-                  {side === "front" ? "Front" : "Back"} logo ·{" "}
-                  {Math.round(activeLogo.size)}px · position{" "}
-                  {Math.round(activeLogo.x)}%, {Math.round(activeLogo.y)}%
-                </p>
-              </div>
-            ) : null}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">

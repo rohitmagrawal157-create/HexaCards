@@ -77,9 +77,9 @@ export default function Footer() {
               </p>
               <p className="mt-1 text-lg text-white">
               Hexa Cards - Digital Business Cards
-              Plot No 42, 'G' Sector, opposite Jawaharlal Darda Road, Town Center, Cidco,
+              Plot No 42, 'G' Sector, opposite Medicover Hospital, Town Center, Cidco,Chhatrapati Sambhajinagar,
                 <br />
-                Chhatrapati Sambhajinagar, Maharashtra 431003
+                 Maharashtra 431003
               </p>
             </div>
           </div>
@@ -119,14 +119,15 @@ export default function Footer() {
           <div className="grid grid-cols-1 items-center gap-8 p-8 sm:p-10 lg:grid-cols-[auto_1fr]">
             <Link
               href="/"
-              className="relative block h-12 w-[180px] shrink-0"
+              className="relative block h-16 w-[240px] shrink-0 sm:h-[72px] sm:w-[280px]"
               aria-label="HexaCards home"
             >
               <Image
-                src="/Images/Hexacards.jpeg"
+                src="/Images/whiteLogo.png"
                 alt="HexaCards"
                 fill
-                sizes="180px"
+                quality={100}
+                sizes="(max-width: 640px) 240px, 280px"
                 className="object-contain object-left"
               />
             </Link>

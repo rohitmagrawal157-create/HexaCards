@@ -13,21 +13,22 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md">
-      <div className="px-4 pt-4 pb-2 sm:px-6 lg:px-8">
-        {/* Pill bar */}
+      <div className="px-4 pt-3 pb-2 sm:px-6 lg:px-8">
+        {/* Pill bar — medium height */}
         <div className="nav-pill mx-auto grid w-full max-w-[1280px] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-full border border-[#e8e8e8] bg-white py-2.5 pr-3 pl-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:gap-4 sm:py-3 sm:pr-4 sm:pl-5 lg:pr-5 lg:pl-6">
           {/* Left: logo → home */}
           <Link
             href="/"
-            className="relative h-11 w-[160px] shrink-0 sm:h-12 sm:w-[190px] lg:h-[52px] lg:w-[210px]"
+            className="relative h-12 w-[170px] shrink-0 sm:h-14 sm:w-[210px] lg:h-[56px] lg:w-[230px]"
             aria-label="HexaCards home"
           >
             <Image
-              src="/Images/Hexacards.jpeg"
+              src="/Images/Hexacards.png"
               alt="HexaCards"
               fill
               priority
-              sizes="210px"
+              quality={100}
+              sizes="(max-width: 640px) 170px, (max-width: 1024px) 210px, 230px"
               className="object-contain object-left"
             />
           </Link>
