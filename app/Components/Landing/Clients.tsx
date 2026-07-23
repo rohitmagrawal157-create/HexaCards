@@ -5,21 +5,22 @@ import Image from "next/image";
 const CLIENT_W = 120;
 const CLIENT_H = 70;
 
+/** Paths must match public/Images/clients filenames exactly (Linux/Vercel is case-sensitive). */
 const clients = [
-  { name: "Desale", logo: "/Images/clients/Dsale.png" },
+  { name: "Desale", logo: "/Images/clients/dsale.png" },
   { name: "Yugen", logo: "/Images/clients/yugen.png" },
   { name: "Advocate", logo: "/Images/clients/advocate.png" },
-  { name: "Honda", logo: "/Images/clients/Honda.png" },
-  { name: "Hero", logo: "/Images/clients/Hero.png" },
+  { name: "Honda", logo: "/Images/clients/honda.png" },
+  { name: "Hero", logo: "/Images/clients/hero.png" },
   { name: "TVS", logo: "/Images/clients/tvs.png" },
   { name: "Royal", logo: "/Images/clients/royal.png" },
   { name: "Sakal", logo: "/Images/clients/sakal.png" },
-  { name: "CA India", logo: "/Images/clients/CAIndia.png" },
-  { name: "HDFC Life", logo: "/Images/clients/HDFCLife.png" },
+  { name: "CA India", logo: "/Images/clients/caindia.png" },
+  { name: "HDFC Life", logo: "/Images/clients/hdfclife.png" },
   { name: "LIC", logo: "/Images/clients/lic.png" },
   { name: "Medicover", logo: "/Images/clients/medicover.png" },
-  // { name: "Angel", logo: "/Images/clients/angel.png" },
-  { name: "BBG", logo: "/Images/clients/BBG.png" },
+  { name: "Angel", logo: "/Images/clients/angel.png" },
+  { name: "BBG", logo: "/Images/clients/bbg.png" },
   { name: "Buzz", logo: "/Images/clients/buzz.png" },
   { name: "Sasmos", logo: "/Images/clients/sasmos.png" },
 ] as const;
@@ -53,7 +54,7 @@ export default function Clients() {
                 alt={`${client.name} logo`}
                 width={CLIENT_W}
                 height={CLIENT_H}
-                className="h-[100px] w-[200px] object-contain opacity-90"
+                className="h-[70px] w-[120px] object-contain opacity-90"
               />
             </div>
           ))}
