@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  MessageCircle,
   Upload,
   Wifi,
   Check,
@@ -100,6 +99,19 @@ function readableTextColor(hex: string) {
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
 }
 
 function SectionLabel({
@@ -620,23 +632,17 @@ export default function CardCustomizer() {
             transition={{ duration: 0.45 }}
             className="mb-3 hidden items-start gap-3 rounded-2xl border border-[#BC7C10]/25 bg-[#FFFCF7] p-4 shadow-sm lg:flex"
           >
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
-              style={{
-                background:
-                  "linear-gradient(135deg,#9B6F18 0%,#C9982C 35%,#D8A83A 70%,#B8841D 100%)",
-              }}
-            >
-              <MessageCircle className="h-5 w-5" strokeWidth={2} />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm">
+              <WhatsAppIcon className="h-5 w-5" />
             </span>
             <p className="text-sm leading-relaxed text-[#141414]">
               Need a free custom mockup? Chat with our designer on WhatsApp —
               pay only after you approve.{" "}
               <a
-                href="https://api.whatsapp.com/send?phone=919971420130"
+                href="https://api.whatsapp.com/send?phone=9226286898"
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold text-[#BC7C10] underline decoration-[#BC7C10]/35 underline-offset-2 transition-colors hover:text-[#9a650d]"
+                className="font-bold text-[#25D366] underline decoration-[#25D366]/40 underline-offset-2 transition-colors hover:text-[#1ebe57]"
               >
                 Open WhatsApp
               </a>
@@ -795,46 +801,45 @@ export default function CardCustomizer() {
                           `,
                         }}
                       >
+                        {/* Wifi — both front & back */}
+                        {foilStops && foilGradId ? (
+                          <svg
+                            width="0"
+                            height="0"
+                            className="absolute"
+                            aria-hidden
+                          >
+                            <defs>
+                              <linearGradient
+                                id={foilGradId}
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="0%"
+                              >
+                                {foilStops.map((stop) => (
+                                  <stop
+                                    key={stop.offset}
+                                    offset={stop.offset}
+                                    stopColor={stop.color}
+                                  />
+                                ))}
+                              </linearGradient>
+                            </defs>
+                          </svg>
+                        ) : null}
+                        <Wifi
+                          className="absolute top-3 right-3 z-30 h-4 w-4 rotate-90"
+                          color={
+                            foilGradId
+                              ? `url(#${foilGradId})`
+                              : displayAccentColor
+                          }
+                          strokeWidth={2.5}
+                        />
+
                         {side === "front" ? (
                           <>
-                            {/* Foil gradients for wifi stroke (black gold/silver + white gold) */}
-                            {foilStops && foilGradId ? (
-                              <svg
-                                width="0"
-                                height="0"
-                                className="absolute"
-                                aria-hidden
-                              >
-                                <defs>
-                                  <linearGradient
-                                    id={foilGradId}
-                                    x1="0%"
-                                    y1="0%"
-                                    x2="100%"
-                                    y2="0%"
-                                  >
-                                    {foilStops.map((stop) => (
-                                      <stop
-                                        key={stop.offset}
-                                        offset={stop.offset}
-                                        stopColor={stop.color}
-                                      />
-                                    ))}
-                                  </linearGradient>
-                                </defs>
-                              </svg>
-                            ) : null}
-
-                            <Wifi
-                              className="absolute top-3 right-3 z-10 h-4 w-4 rotate-90"
-                              color={
-                                foilGradId
-                                  ? `url(#${foilGradId})`
-                                  : displayAccentColor
-                              }
-                              strokeWidth={2.5}
-                            />
-
                             {/* Front logo — hidden for now
                             <PlacedLogo
                               src={logoUrl}
@@ -851,30 +856,30 @@ export default function CardCustomizer() {
                             */}
 
                             <div
-                              className={`absolute bottom-3 left-3 z-10 max-w-[52%] ${
+                              className={`absolute bottom-3 left-3 z-10 max-w-[54%] ${
                                 hasExtraLine ? "" : "pb-0.5"
                               }`}
                             >
                               <p
-                                className={`leading-tight font-bold ${
-                                  hasExtraLine ? "text-[14px]" : "text-[15px]"
+                                className={`leading-[1.15] font-bold tracking-[-0.01em] ${
+                                  hasExtraLine ? "text-[15px]" : "text-[16px]"
                                 }`}
                                 style={displayTextStyle}
                               >
                                 {title.trim() || "Your Name"}
                               </p>
                               <p
-                                className={`mt-0.5 leading-snug ${
-                                  hasExtraLine ? "text-[8px]" : "text-[9px]"
-                                } ${metalGradient ? "opacity-90" : "opacity-80"}`}
+                                className={`mt-1 leading-snug font-medium ${
+                                  hasExtraLine ? "text-[10px]" : "text-[11px]"
+                                } ${metalGradient ? "opacity-95" : "opacity-90"}`}
                                 style={displayTextStyle}
                               >
                                 {subTitle.trim() || "Title or company"}
                               </p>
                               {hasExtraLine ? (
                                 <p
-                                  className={`mt-0.5 text-[8px] leading-snug ${
-                                    metalGradient ? "opacity-80" : "opacity-65"
+                                  className={`mt-0.5 text-[9.5px] leading-snug font-medium ${
+                                    metalGradient ? "opacity-85" : "opacity-75"
                                   }`}
                                   style={displayTextStyle}
                                 >
@@ -883,11 +888,11 @@ export default function CardCustomizer() {
                               ) : null}
                             </div>
 
-                            {/* QR — plate matches black / silver; modules foil or contrast */}
+                            {/* QR — ~30% larger; clearer foil/accent border */}
                             <div
-                              className="absolute right-3 bottom-3 z-10 h-12 w-12 rounded-[5px]"
+                              className="absolute right-2.5 bottom-2.5 z-10 h-[62px] w-[62px] rounded-[6px]"
                               style={{
-                                padding: "0.5px",
+                                padding: "1.5px",
                                 background: metalGradient ?? displayAccentColor,
                               }}
                             >
@@ -897,7 +902,7 @@ export default function CardCustomizer() {
                               >
                                 {qrModuleTint ? (
                                   <span
-                                    className="block h-[88%] w-[88%]"
+                                    className="block h-[90%] w-[90%]"
                                     style={{
                                       backgroundImage: qrModuleTint.isGradient
                                         ? qrModuleTint.fill
@@ -923,7 +928,7 @@ export default function CardCustomizer() {
                                   <img
                                     src="/Images/HexaQR.png"
                                     alt="Hexa QR"
-                                    className="h-[88%] w-[88%] object-contain"
+                                    className="h-[90%] w-[90%] object-contain"
                                     draggable={false}
                                   />
                                 )}
@@ -1042,23 +1047,17 @@ export default function CardCustomizer() {
         >
           {/* Mobile WhatsApp + progress (scrolls under sticky card) */}
           <div className="flex items-start gap-2.5 rounded-xl border border-[#BC7C10]/25 bg-white p-3 shadow-sm lg:hidden">
-            <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
-              style={{
-                background:
-                  "linear-gradient(135deg,#9B6F18 0%,#C9982C 35%,#D8A83A 70%,#B8841D 100%)",
-              }}
-            >
-              <MessageCircle className="h-4 w-4" strokeWidth={2} />
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-sm">
+              <WhatsAppIcon className="h-4 w-4" />
             </span>
             <p className="text-xs leading-relaxed text-[#141414]">
               Need a free custom mockup? Chat on WhatsApp — pay only after you
               approve.{" "}
               <a
-                href="https://api.whatsapp.com/send?phone=919971420130"
+                href="https://api.whatsapp.com/send?phone=9226286898"
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold text-[#BC7C10] underline decoration-[#BC7C10]/35 underline-offset-2"
+                className="font-bold text-[#25D366] underline decoration-[#25D366]/40 underline-offset-2"
               >
                 Open WhatsApp
               </a>

@@ -89,7 +89,7 @@ export default function Hero() {
 
             <div className="mt-7">
               <Link
-                href="/design-your-card#card-studio"
+                href="/product"
                 className="inline-flex items-center gap-2 rounded-full bg-[#BC7C10] px-7 py-3.5 text-base font-semibold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.98] sm:px-8 sm:py-4 sm:text-lg"
               >
                 Design Your Card
