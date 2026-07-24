@@ -26,7 +26,7 @@ import {
   type CardMode,
   type MetalMode,
 } from "./cardFinishes";
-import { GOLD_GRADIENT } from "./goldCard";
+import { GOLD_GRADIENT, GOLD_SOLID, GOLD_STOPS } from "./goldCard";
 import { SILVER_GRADIENT } from "./silverCard";
 
 type Side = "front" | "back";
@@ -44,20 +44,18 @@ const CARD_BODY = {
   white: "#FFFFFF",
 } as const;
 
-/** White card accents — requested 5 + existing customize colors */
+/** White card accents — gold matches black-card gold; order: gold, black, red, green, orange… */
 const whiteCardAccents = [
+  { label: "Gold", color: GOLD_SOLID },
+  { label: "Black", color: "#141414" },
   { label: "Red", color: "#E53935" },
+  { label: "Green", color: "#00B813" },
+  { label: "Orange", color: "#FF8E00" },
   { label: "Dark Pink", color: "#C2185B" },
   { label: "Royal Blue", color: "#1565C0" },
   { label: "Light Green", color: "#7CB342" },
   { label: "Yellow", color: "#FDD835" },
-  { label: "Gold", color: "#C9982C" },
-  // { label: "Silver", color: "#9CA0A4" },
-  // { label: "White", color: "#FFFFFF" },
-  { label: "Black", color: "#141414" },
   { label: "Sky Blue", color: "#00BFFF" },
-  { label: "Green", color: "#00B813" },
-  { label: "Orange", color: "#FF8E00" },
   { label: "Hot Pink", color: "#FD0095" },
 ] as const;
 
@@ -67,7 +65,7 @@ const CARD_H = 154;
 const PREVIEW_MAX_W = 488; // 2× for comfortable editing
 
 const FRONT_LOGO_DEFAULT: LogoLayout = { size: 40, x: 6, y: 8 };
-const BACK_LOGO_DEFAULT: LogoLayout = { size: 72, x: 50, y: 48 };
+const BACK_LOGO_DEFAULT: LogoLayout = { size: 86, x: 50, y: 48 };
 
 const SIZE_MIN = 16;
 const SIZE_MAX = 120;
@@ -114,15 +112,19 @@ function SectionLabel({
   hint?: string;
 }) {
   return (
-    <div className="mb-3 flex items-start justify-between gap-3">
+    <div className="mb-2 flex items-start justify-between gap-2 sm:mb-3 sm:gap-3">
       <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFFCF7] text-[#BC7C10] ring-1 ring-[#BC7C10]/15">
-          <Icon className="h-4 w-4" strokeWidth={2} />
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#FFFCF7] text-[#BC7C10] ring-1 ring-[#BC7C10]/15 sm:h-8 sm:w-8 sm:rounded-lg">
+          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />
         </span>
         <div>
-          <p className="text-sm font-semibold text-[#141414]">{title}</p>
+          <p className="text-xs font-semibold text-[#141414] sm:text-sm">
+            {title}
+          </p>
           {hint ? (
-            <p className="text-xs text-[#5c5346]/80">{hint}</p>
+            <p className="text-[10px] leading-snug text-[#5c5346]/80 sm:text-xs">
+              {hint}
+            </p>
           ) : null}
         </div>
       </div>
@@ -147,7 +149,7 @@ function ToolBtn({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className={`flex h-10 w-10 items-center justify-center rounded-full border bg-white text-[#141414] transition-all duration-150 hover:scale-105 active:scale-95 ${
+      className={`flex h-7 w-7 items-center justify-center rounded-full border bg-white text-[#141414] transition-all duration-150 hover:scale-105 active:scale-95 sm:h-10 sm:w-10 ${
         active
           ? "border-[#BC7C10] shadow-sm shadow-[#BC7C10]/20"
           : "border-black/15 hover:border-black/30"
@@ -158,7 +160,7 @@ function ToolBtn({
   );
 }
 
-/** Matches reference: trash · − · + · ← → ↓ ↑ · ✓ */
+/** trash · − · + · ← → ↓ ↑ · ✓ — compact single row on mobile */
 function LogoToolbar({
   onDelete,
   onShrink,
@@ -174,31 +176,32 @@ function LogoToolbar({
   onConfirm: () => void;
   confirmed: boolean;
 }) {
+  const icon = "h-3 w-3 sm:h-4 sm:w-4";
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2.5">
+    <div className="grid w-full grid-cols-8 place-items-center gap-0.5 sm:flex sm:flex-nowrap sm:justify-center sm:gap-2.5">
       <ToolBtn label="Remove logo" onClick={onDelete}>
-        <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+        <Trash2 className={icon} strokeWidth={2.25} />
       </ToolBtn>
       <ToolBtn label="Make smaller" onClick={onShrink}>
-        <Minus className="h-4 w-4" strokeWidth={2.5} />
+        <Minus className={icon} strokeWidth={2.5} />
       </ToolBtn>
       <ToolBtn label="Make larger" onClick={onGrow}>
-        <Plus className="h-4 w-4" strokeWidth={2.5} />
+        <Plus className={icon} strokeWidth={2.5} />
       </ToolBtn>
       <ToolBtn label="Move left" onClick={() => onMove(-MOVE_STEP, 0)}>
-        <ArrowLeft className="h-4 w-4" strokeWidth={2.25} />
+        <ArrowLeft className={icon} strokeWidth={2.25} />
       </ToolBtn>
       <ToolBtn label="Move right" onClick={() => onMove(MOVE_STEP, 0)}>
-        <ArrowRight className="h-4 w-4" strokeWidth={2.25} />
+        <ArrowRight className={icon} strokeWidth={2.25} />
       </ToolBtn>
       <ToolBtn label="Move down" onClick={() => onMove(0, MOVE_STEP)}>
-        <ArrowDown className="h-4 w-4" strokeWidth={2.25} />
+        <ArrowDown className={icon} strokeWidth={2.25} />
       </ToolBtn>
       <ToolBtn label="Move up" onClick={() => onMove(0, -MOVE_STEP)}>
-        <ArrowUp className="h-4 w-4" strokeWidth={2.25} />
+        <ArrowUp className={icon} strokeWidth={2.25} />
       </ToolBtn>
       <ToolBtn label="Confirm position" onClick={onConfirm} active={confirmed}>
-        <Check className="h-4 w-4" strokeWidth={2.75} />
+        <Check className={icon} strokeWidth={2.75} />
       </ToolBtn>
     </div>
   );
@@ -296,6 +299,73 @@ function PlacedLogo({
   );
 }
 
+/** Back-side empty state — embossed “YOUR LOGO HERE” circle (gold / silver / accent) */
+function BackLogoPlaceholder({
+  fill,
+  isGradient,
+  cardBodyColor,
+  onClick,
+}: {
+  fill: string;
+  isGradient: boolean;
+  cardBodyColor: string;
+  onClick: () => void;
+}) {
+  const foilText: CSSProperties = isGradient
+    ? metalTextStyle(fill)
+    : { color: fill };
+  const foilBg: CSSProperties = isGradient
+    ? { background: fill }
+    : { backgroundColor: fill };
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="absolute inset-0 z-20 flex items-center justify-center"
+      aria-label="Upload logo"
+    >
+      {/* Outer foil ring — medium size */}
+      <span
+        className="relative flex aspect-square w-[37%] max-w-[132px] items-center justify-center rounded-full p-[3px] shadow-[0_3px_10px_rgba(0,0,0,0.4)]"
+        style={foilBg}
+      >
+        {/* Inner plate = card body */}
+        <span
+          className="relative flex h-full w-full flex-col items-center justify-center rounded-full px-2.5 text-center"
+          style={{ backgroundColor: cardBodyColor }}
+        >
+          <span
+            className="text-[11px] leading-[1.15] font-extrabold tracking-[0.12em] uppercase drop-shadow-sm"
+            style={foilText}
+          >
+            Your
+          </span>
+          <span
+            className="text-[11px] leading-[1.15] font-extrabold tracking-[0.12em] uppercase drop-shadow-sm"
+            style={foilText}
+          >
+            Logo
+          </span>
+          <span
+            className="text-[11px] leading-[1.15] font-extrabold tracking-[0.12em] uppercase drop-shadow-sm"
+            style={foilText}
+          >
+            Here
+          </span>
+          <span className="relative mt-2 flex h-2 w-12 items-center justify-center">
+            <span className="absolute h-px w-full rounded-full" style={foilBg} />
+            <span className="relative z-[1] h-1.5 w-1.5 rounded-full" style={foilBg} />
+          </span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
 export default function CardCustomizer() {
   const [side, setSide] = useState<Side>("front");
   const [cardBody, setCardBody] = useState<CardBody>("black");
@@ -328,11 +398,21 @@ export default function CardCustomizer() {
       : null;
 
   const displayCardColor = CARD_BODY[cardBody];
-  const metalGradient = metalPreset?.gradient ?? null;
+  // White-card gold uses the same foil as black-card gold
+  const isWhiteGold = isCustomize && accentColor === GOLD_SOLID;
+  const metalGradient =
+    metalPreset?.gradient ?? (isWhiteGold ? GOLD_GRADIENT : null);
+  const foilStops = metalPreset?.stops ?? (isWhiteGold ? GOLD_STOPS : null);
+  const foilGradId = metalPreset
+    ? `cardMetalGrad-${cardMode}`
+    : isWhiteGold
+      ? "cardMetalGrad-white-gold"
+      : null;
+
   // White card: selected accent drives name, details, wifi & QR
   const displayTextColor = isCustomize
     ? accentColor
-    : (metalPreset?.contentColor ?? "#C9982C");
+    : (metalPreset?.contentColor ?? GOLD_SOLID);
   const displayTextStyle: CSSProperties = metalGradient
     ? metalTextStyle(metalGradient)
     : { color: displayTextColor };
@@ -341,7 +421,7 @@ export default function CardCustomizer() {
     : (metalPreset?.accentColor ?? accentColor);
   const logoTint = metalGradient
     ? { fill: metalGradient, isGradient: true as const }
-    : null;
+    : null; // white card → original logo colors
 
   const isBlackBody = displayCardColor === CARD_BODY.black;
   const qrPlateBg = isBlackBody
@@ -356,11 +436,13 @@ export default function CardCustomizer() {
         ? isBlackBody
           ? { fill: metalGradient!, isGradient: true as const }
           : { fill: "#141414", isGradient: false as const }
-        : isCustomize
-          ? { fill: accentColor, isGradient: false as const }
-          : isBlackBody
-            ? { fill: "#FFFFFF", isGradient: false as const }
-            : null;
+        : isWhiteGold
+          ? { fill: GOLD_GRADIENT, isGradient: true as const }
+          : isCustomize
+            ? { fill: accentColor, isGradient: false as const }
+            : isBlackBody
+              ? { fill: "#FFFFFF", isGradient: false as const }
+              : null;
 
   const hasExtraLine = moreDetails.trim().length > 0;
 
@@ -392,6 +474,19 @@ export default function CardCustomizer() {
   useEffect(() => {
     setLogoConfirmed(false);
   }, [side]);
+
+  // Land on the card editor when arriving via #card-studio (Design Your Card CTA)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hash !== "#card-studio") return;
+    const el = document.getElementById("card-studio");
+    if (!el) return;
+    // Wait a tick for layout/sticky nav
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, []);
 
   function updateLogo(patch: Partial<LogoLayout>) {
     // Front logo is disabled — always adjust back logo
@@ -496,28 +591,34 @@ export default function CardCustomizer() {
 
   return (
     <div className="min-h-[70vh] bg-[#FFFCF7]">
-      <div className="border-b border-black/[0.06] bg-white/70 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
-          <p className="text-xs font-bold tracking-[0.16em] text-[#BC7C10] uppercase">
+      {/* Compact page intro — keeps card editor in first viewport */}
+      <div className="border-b border-black/[0.06] bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-baseline gap-3 px-5 py-3 sm:gap-4 sm:px-8 sm:py-4">
+          <p className="shrink-0 text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase sm:text-xs">
             Card Studio
           </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#141414] sm:text-4xl">
+          <h1 className="text-base font-extrabold tracking-tight text-[#141414] sm:text-lg lg:text-xl">
             Design Your Hexa Card
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#5c5346] sm:text-base">
-            Pick colors, add your details, upload a logo — resize and move it
-            on front and back. Preview updates live.
+          <p className="ml-auto hidden max-w-md truncate text-xs text-[#5c5346] lg:block">
+            Colors, details & logo — preview updates live
           </p>
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-12 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="lg:sticky lg:top-28 lg:self-start">
+      <div
+        id="card-studio"
+        className="mx-auto grid max-w-6xl scroll-mt-[88px] grid-cols-1 gap-0 px-0 pb-8 sm:scroll-mt-[100px] sm:gap-0 sm:px-0 sm:pb-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:px-8 lg:py-8"
+      >
+        {/* Preview — sticky on mobile so form scrolls underneath */}
+        <div
+          className="sticky top-[80px] z-30 self-start border-b border-black/[0.06] bg-[#FFFCF7]/95 px-4 pt-3 pb-3 shadow-[0_12px_28px_-8px_rgba(15,23,42,0.2)] backdrop-blur-xl sm:top-[92px] sm:px-6 lg:top-28 lg:z-auto lg:border-0 lg:bg-transparent lg:px-0 lg:pt-0 lg:pb-0 lg:shadow-none lg:backdrop-blur-none"
+        >
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="flex items-start gap-3 rounded-2xl border border-[#BC7C10]/25 bg-[#FFFCF7] p-4 shadow-sm"
+            className="mb-3 hidden items-start gap-3 rounded-2xl border border-[#BC7C10]/25 bg-[#FFFCF7] p-4 shadow-sm lg:flex"
           >
             <span
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
@@ -546,10 +647,10 @@ export default function CardCustomizer() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.08 }}
-            className="mt-6 rounded-3xl border border-black/[0.06] bg-white p-5 shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:p-7"
+            className="rounded-2xl border border-black/[0.06] bg-white p-3 shadow-[0_8px_28px_rgba(15,23,42,0.06)] sm:rounded-3xl sm:p-5 lg:mt-6 lg:p-7 lg:shadow-[0_16px_48px_rgba(15,23,42,0.06)]"
           >
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+            <div className="mb-3 flex flex-col gap-2.5 sm:mb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+              <div className="hidden items-center gap-2 sm:flex">
                 <Sparkles className="h-4 w-4 text-[#BC7C10]" />
                 <p className="text-sm font-semibold text-[#141414]">
                   Live preview
@@ -644,7 +745,7 @@ export default function CardCustomizer() {
                 </svg>
               </div>
 
-              <div className="relative z-10 flex flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
+              <div className="relative z-10 flex flex-col items-center px-3 py-4 sm:px-6 sm:py-10">
                 {/* <p className="mb-3 text-[11px] font-semibold tracking-wide text-[#5c5346]/80 uppercase">
                   Card size {CARD_W} × {CARD_H} px
                 </p> */}
@@ -696,8 +797,8 @@ export default function CardCustomizer() {
                       >
                         {side === "front" ? (
                           <>
-                            {/* Foil gradients for wifi stroke (gold / silver modes) */}
-                            {metalPreset ? (
+                            {/* Foil gradients for wifi stroke (black gold/silver + white gold) */}
+                            {foilStops && foilGradId ? (
                               <svg
                                 width="0"
                                 height="0"
@@ -706,13 +807,13 @@ export default function CardCustomizer() {
                               >
                                 <defs>
                                   <linearGradient
-                                    id={`cardMetalGrad-${cardMode}`}
+                                    id={foilGradId}
                                     x1="0%"
                                     y1="0%"
                                     x2="100%"
                                     y2="0%"
                                   >
-                                    {metalPreset.stops.map((stop) => (
+                                    {foilStops.map((stop) => (
                                       <stop
                                         key={stop.offset}
                                         offset={stop.offset}
@@ -727,8 +828,8 @@ export default function CardCustomizer() {
                             <Wifi
                               className="absolute top-3 right-3 z-10 h-4 w-4 rotate-90"
                               color={
-                                metalPreset
-                                  ? `url(#cardMetalGrad-${cardMode})`
+                                foilGradId
+                                  ? `url(#${foilGradId})`
                                   : displayAccentColor
                               }
                               strokeWidth={2.5}
@@ -839,34 +940,12 @@ export default function CardCustomizer() {
                             tint={logoTint}
                           />
                         ) : (
-                          <div className="flex h-full flex-col items-center justify-center">
-                            {metalGradient ? (
-                              <span
-                                className="flex h-14 w-14 items-center justify-center rounded-full p-[3px]"
-                                style={{ background: metalGradient }}
-                              >
-                                <span
-                                  className="flex h-full w-full items-center justify-center rounded-full text-[10px] font-bold"
-                                  style={{
-                                    backgroundColor: displayCardColor,
-                                    ...metalTextStyle(metalGradient),
-                                  }}
-                                >
-                                  LOGO
-                                </span>
-                              </span>
-                            ) : (
-                              <div
-                                className="flex h-14 w-14 items-center justify-center rounded-full border-[3px] text-[10px] font-bold"
-                                style={{
-                                  borderColor: displayTextColor,
-                                  color: displayTextColor,
-                                }}
-                              >
-                                LOGO
-                              </div>
-                            )}
-                          </div>
+                          <BackLogoPlaceholder
+                            fill={metalGradient ?? displayAccentColor}
+                            isGradient={Boolean(metalGradient)}
+                            cardBodyColor={displayCardColor}
+                            onClick={() => logoInputRef.current?.click()}
+                          />
                         )}
                       </div>
                     </motion.div>
@@ -882,9 +961,9 @@ export default function CardCustomizer() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}
-                  className="mt-5 rounded-2xl border border-black/[0.06] bg-[#FFFCF7] px-3 py-4"
+                  className="mt-2 rounded-xl border border-black/[0.06] bg-[#FFFCF7] px-1.5 py-2 sm:mt-5 sm:rounded-2xl sm:px-3 sm:py-4"
                 >
-                  <p className="mb-3 text-center text-[11px] font-semibold tracking-wide text-[#5c5346] uppercase">
+                  <p className="mb-3 hidden text-center text-[11px] font-semibold tracking-wide text-[#5c5346] uppercase sm:block">
                     Adjust back logo · size {Math.round(backLogo.size)}px
                   </p>
                   <LogoToolbar
@@ -910,20 +989,21 @@ export default function CardCustomizer() {
                   <button
                     type="button"
                     onClick={() => flipTo("front")}
-                    className={`mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all ${
+                    className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-all sm:mt-4 sm:gap-2 sm:rounded-xl sm:px-4 sm:py-3 sm:text-sm ${
                       flipPulse
                         ? "bg-[#BC7C10] text-white shadow-md shadow-[#BC7C10]/30 ring-2 ring-[#BC7C10]/40 ring-offset-2 ring-offset-[#FFFCF7]"
                         : "border border-black/10 bg-white text-[#141414] hover:border-[#BC7C10]/35 hover:text-[#BC7C10]"
                     }`}
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     View front side
                   </button>
                 </motion.div>
               ) : null}
             </AnimatePresence>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#5c5346]">
+            {/* Status chips — hidden for now
+            <div className="mt-5 hidden flex-wrap items-center justify-center gap-2 text-[11px] text-[#5c5346] lg:flex">
               <span className="rounded-full bg-[#FFFCF7] px-2.5 py-1 ring-1 ring-black/5 capitalize">
                 {isBlackCard ? `${cardMode} black` : "white"} card
               </span>
@@ -935,9 +1015,9 @@ export default function CardCustomizer() {
                 {metalGradient ? `${cardMode} foil` : displayAccentColor}
               </span>
             </div>
+            */}
 
-            {/* Design progress — below the card preview */}
-            <div className="mx-auto mt-6 w-full max-w-sm">
+            <div className="mx-auto mt-6 hidden w-full max-w-sm lg:block">
               <div className="mb-1.5 flex items-center justify-between text-xs font-semibold">
                 <span className="text-[#5c5346]">Design progress</span>
                 <span className="text-[#BC7C10]">{progressPct}%</span>
@@ -958,9 +1038,48 @@ export default function CardCustomizer() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.12 }}
-          className="space-y-5"
+          className="relative z-0 space-y-3 px-4 pt-4 sm:space-y-5 sm:px-8 lg:px-0 lg:pt-0"
         >
-          <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
+          {/* Mobile WhatsApp + progress (scrolls under sticky card) */}
+          <div className="flex items-start gap-2.5 rounded-xl border border-[#BC7C10]/25 bg-white p-3 shadow-sm lg:hidden">
+            <span
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm"
+              style={{
+                background:
+                  "linear-gradient(135deg,#9B6F18 0%,#C9982C 35%,#D8A83A 70%,#B8841D 100%)",
+              }}
+            >
+              <MessageCircle className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <p className="text-xs leading-relaxed text-[#141414]">
+              Need a free custom mockup? Chat on WhatsApp — pay only after you
+              approve.{" "}
+              <a
+                href="https://api.whatsapp.com/send?phone=919971420130"
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-[#BC7C10] underline decoration-[#BC7C10]/35 underline-offset-2"
+              >
+                Open WhatsApp
+              </a>
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm lg:hidden">
+            <div className="mb-1 flex items-center justify-between text-[11px] font-semibold">
+              <span className="text-[#5c5346]">Design progress</span>
+              <span className="text-[#BC7C10]">{progressPct}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-black/[0.06]">
+              <motion.div
+                className="h-full rounded-full bg-[#BC7C10]"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              />
+            </div>
+          </div>
+          <div className="hidden rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5 lg:block">
             <SectionLabel
               icon={Sparkles}
               title="Card side"
@@ -985,13 +1104,13 @@ export default function CardCustomizer() {
           </div>
 
           {/* Card type: Black | White */}
-          <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
+          <div className="rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
             <SectionLabel
               icon={Palette}
               title="Card type"
               hint="Black → gold/silver foil · White → custom accent colors"
             />
-            <div className="flex flex-wrap items-start gap-6 sm:gap-8">
+            <div className="flex flex-wrap items-start gap-4 sm:gap-8">
               {(
                 [
                   { id: "black" as const, label: "Black Card", color: CARD_BODY.black },
@@ -1006,12 +1125,12 @@ export default function CardCustomizer() {
                     onClick={() => selectCardBody(type.id)}
                     aria-pressed={selected}
                     aria-label={type.label}
-                    className="flex flex-col items-center gap-2"
+                    className="flex flex-col items-center gap-1.5 sm:gap-2"
                   >
                     <span
-                      className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                      className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-12 sm:w-12 ${
                         selected
-                          ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                          ? "ring-2 ring-[#BC7C10] ring-offset-1 ring-offset-white sm:ring-offset-2"
                           : "ring-1 ring-black/10"
                       }`}
                       style={{
@@ -1024,7 +1143,7 @@ export default function CardCustomizer() {
                     >
                       {selected ? (
                         <Check
-                          className="h-4 w-4 drop-shadow"
+                          className="h-3.5 w-3.5 drop-shadow sm:h-4 sm:w-4"
                           style={{
                             color: type.id === "white" ? "#141414" : "#FFFFFF",
                           }}
@@ -1033,7 +1152,7 @@ export default function CardCustomizer() {
                       ) : null}
                     </span>
                     <span
-                      className={`text-sm font-semibold ${
+                      className={`text-[11px] font-semibold sm:text-sm ${
                         selected ? "text-[#BC7C10]" : "text-[#5c5346]"
                       }`}
                     >
@@ -1046,11 +1165,11 @@ export default function CardCustomizer() {
 
             {/* Black card → Gold / Silver only */}
             {isBlackCard ? (
-              <div className="mt-5">
-                <p className="mb-3 text-xs font-semibold text-[#5c5346]">
+              <div className="mt-3.5 sm:mt-5">
+                <p className="mb-2 text-[11px] font-semibold text-[#5c5346] sm:mb-3 sm:text-xs">
                   Finish color
                 </p>
-                <div className="flex flex-wrap items-start gap-6 sm:gap-8">
+                <div className="flex flex-wrap items-start gap-4 sm:gap-8">
                   {METAL_MODES.map((mode) => {
                     const selected = cardMode === mode.id;
                     const swatchStyle =
@@ -1064,25 +1183,25 @@ export default function CardCustomizer() {
                         onClick={() => selectMetalMode(mode.id)}
                         aria-pressed={selected}
                         aria-label={mode.label}
-                        className="flex flex-col items-center gap-2"
+                        className="flex flex-col items-center gap-1.5 sm:gap-2"
                       >
                         <span
-                          className={`relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                          className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-12 sm:w-12 ${
                             selected
-                              ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                              ? "ring-2 ring-[#BC7C10] ring-offset-1 ring-offset-white sm:ring-offset-2"
                               : "ring-1 ring-black/10"
                           }`}
                           style={swatchStyle}
                         >
                           {selected ? (
                             <Check
-                              className="h-4 w-4 text-white drop-shadow"
+                              className="h-3.5 w-3.5 text-white drop-shadow sm:h-4 sm:w-4"
                               strokeWidth={3}
                             />
                           ) : null}
                         </span>
                         <span
-                          className={`text-sm font-semibold ${
+                          className={`text-[11px] font-semibold sm:text-sm ${
                             selected ? "text-[#BC7C10]" : "text-[#5c5346]"
                           }`}
                         >
@@ -1094,14 +1213,14 @@ export default function CardCustomizer() {
                 </div>
               </div>
             ) : (
-              <div className="mt-5">
-                <p className="mb-3 text-xs font-semibold text-[#5c5346]">
+              <div className="mt-3.5 sm:mt-5">
+                <p className="mb-1.5 text-[11px] font-semibold text-[#5c5346] sm:mb-3 sm:text-xs">
                   Accent color
                 </p>
-                <p className="mb-3 text-xs text-[#5c5346]/75">
+                {/* <p className="mb-2 hidden text-xs text-[#5c5346]/75 sm:mb-3 sm:block">
                   Applies to name, details, wifi & QR
-                </p>
-                <div className="flex flex-wrap gap-4">
+                </p> */}
+                <div className="flex flex-wrap gap-2.5 sm:gap-4">
                   {whiteCardAccents.map((swatch) => (
                     <button
                       key={swatch.color + swatch.label}
@@ -1109,26 +1228,24 @@ export default function CardCustomizer() {
                       onClick={() => setAccentColor(swatch.color)}
                       aria-pressed={accentColor === swatch.color}
                       aria-label={swatch.label}
-                      className="flex flex-col items-center gap-1.5"
+                      className="flex flex-col items-center gap-1 sm:gap-1.5"
                     >
                       <span
-                        className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 ${
+                        className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 hover:scale-110 sm:h-10 sm:w-10 ${
                           accentColor === swatch.color
-                            ? "ring-2 ring-[#BC7C10] ring-offset-2 ring-offset-white"
+                            ? "ring-2 ring-[#BC7C10] ring-offset-1 ring-offset-white sm:ring-offset-2"
                             : "ring-1 ring-black/10"
                         }`}
                         style={{
-                          backgroundColor: swatch.color,
-                          border:
-                            // swatch.color === "#FFFFFF"
-                            true
-                              ? "1.5px solid rgba(20,20,20,0.18)"
-                              : undefined,
+                          background:
+                            swatch.color === GOLD_SOLID
+                              ? GOLD_GRADIENT
+                              : swatch.color,
                         }}
                       >
                         {accentColor === swatch.color ? (
                           <Check
-                            className="h-3.5 w-3.5 drop-shadow"
+                            className="h-3 w-3 drop-shadow sm:h-3.5 sm:w-3.5"
                             style={{
                               color: readableTextColor(swatch.color),
                             }}
@@ -1136,7 +1253,7 @@ export default function CardCustomizer() {
                           />
                         ) : null}
                       </span>
-                      <span className="max-w-[4.5rem] text-center text-[10px] font-medium text-[#5c5346]">
+                      <span className="max-w-[3.5rem] text-center text-[9px] font-medium text-[#5c5346] sm:max-w-[4.5rem] sm:text-[10px]">
                         {swatch.label}
                       </span>
                     </button>
@@ -1146,19 +1263,19 @@ export default function CardCustomizer() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
+          <div className="rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
             <SectionLabel
               icon={Type}
               title="Card details"
               hint="Name & subtitle show on the front · extra line is optional"
             />
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <label className="block">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#5c5346]">
+                <div className="mb-1 flex items-center justify-between sm:mb-1.5">
+                  <span className="text-xs font-medium text-[#5c5346] sm:text-sm">
                     Name / Title
                   </span>
-                  <span className="text-[11px] text-[#5c5346]/70">
+                  <span className="text-[10px] text-[#5c5346]/70 sm:text-[11px]">
                     {title.length}/40
                   </span>
                 </div>
@@ -1168,16 +1285,16 @@ export default function CardCustomizer() {
                   maxLength={40}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Rohit Agrawal"
-                  className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3.5 py-3 text-sm text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15"
+                  className="w-full rounded-lg border border-black/10 bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm"
                 />
               </label>
 
               <label className="block">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#5c5346]">
+                <div className="mb-1 flex items-center justify-between sm:mb-1.5">
+                  <span className="text-xs font-medium text-[#5c5346] sm:text-sm">
                     Subtitle
                   </span>
-                  <span className="text-[11px] text-[#5c5346]/70">
+                  <span className="text-[10px] text-[#5c5346]/70 sm:text-[11px]">
                     {subTitle.length}/48
                   </span>
                 </div>
@@ -1187,19 +1304,19 @@ export default function CardCustomizer() {
                   maxLength={48}
                   onChange={(e) => setSubTitle(e.target.value)}
                   placeholder="e.g. Founder · Hexa Cards"
-                  className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3.5 py-3 text-sm text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15"
+                  className="w-full rounded-lg border border-black/10 bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm"
                 />
               </label>
 
               <label className="block">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#5c5346]">
+                <div className="mb-1 flex items-center justify-between sm:mb-1.5">
+                  <span className="text-xs font-medium text-[#5c5346] sm:text-sm">
                     Extra line{" "}
                     <span className="font-normal text-[#5c5346]/60">
                       (optional)
                     </span>
                   </span>
-                  <span className="text-[11px] text-[#5c5346]/70">
+                  <span className="text-[10px] text-[#5c5346]/70 sm:text-[11px]">
                     {moreDetails.length}/56
                   </span>
                 </div>
@@ -1209,19 +1326,19 @@ export default function CardCustomizer() {
                   maxLength={56}
                   onChange={(e) => setMoreDetails(e.target.value)}
                   placeholder="Phone, email, or link — only shows if filled"
-                  className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3.5 py-3 text-sm text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15"
+                  className="w-full rounded-lg border border-black/10 bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm"
                 />
               </label>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-black/[0.06] bg-white p-4 shadow-sm sm:p-5">
+          <div className="rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
             <SectionLabel
               icon={ImageIcon}
               title="Logo / image"
               hint={
                 isCustomize
-                  ? "Back side only · original colors · adjust below the card preview"
+                  ? "Back side only · original logo colors · adjust below the card preview"
                   : `Back side only · tinted ${cardMode === "gold" ? "gold" : "silver"} · adjust below preview`
               }
             />
@@ -1232,23 +1349,23 @@ export default function CardCustomizer() {
               onChange={handleLogoChange}
               className="sr-only"
             />
-            <div className="mb-3 rounded-xl border border-[#BC7C10]/20 bg-[#FFFCF7] px-3.5 py-3 text-xs leading-relaxed text-[#5c5346]">
+            <div className="mb-1 rounded-lg border border-[#BC7C10]/20 bg-[#FFFCF7] px-1.5 py-1 text-[10px] leading-relaxed text-[#5c5346] sm:mb-3 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-xs">
               <p className="font-semibold text-[#141414]">
                 PNG only · transparent background recommended
               </p>
-              <p className="mt-1">
+              {/* <p className="mt-0.5 sm:mt-1">
                 Upload a <span className="font-semibold text-[#141414]">.png</span>{" "}
                 logo with a transparent background so it stays clear and sharp
                 on both black and white cards.
-              </p>
+              </p> */}
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => logoInputRef.current?.click()}
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#FFFCF7] px-5 py-2.5 text-sm font-semibold text-[#141414] transition-all hover:border-[#BC7C10]/35 hover:bg-white"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#FFFCF7] px-3.5 py-2 text-xs font-semibold text-[#141414] transition-all hover:border-[#BC7C10]/35 hover:bg-white sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
               >
-                <Upload className="h-4 w-4 text-[#BC7C10]" />
+                <Upload className="h-3.5 w-3.5 text-[#BC7C10] sm:h-4 sm:w-4" />
                 {logoUrl ? "Change logo" : "Upload PNG logo"}
               </button>
               {logoUrl ? (
@@ -1259,14 +1376,14 @@ export default function CardCustomizer() {
                       setSide("back");
                       setLogoEditing(true);
                     }}
-                    className="text-sm font-semibold text-[#BC7C10] underline-offset-2 hover:underline"
+                    className="text-xs font-semibold text-[#BC7C10] underline-offset-2 hover:underline sm:text-sm"
                   >
                     Adjust on back
                   </button>
                   <button
                     type="button"
                     onClick={removeLogo}
-                    className="text-sm font-medium text-[#5c5346] underline-offset-2 hover:text-[#141414] hover:underline"
+                    className="text-xs font-medium text-[#5c5346] underline-offset-2 hover:text-[#141414] hover:underline sm:text-sm"
                   >
                     Remove
                   </button>
@@ -1276,29 +1393,29 @@ export default function CardCustomizer() {
             {logoError ? (
               <p
                 role="alert"
-                className="mt-3 text-sm font-medium text-red-600"
+                className="mt-2 text-xs font-medium text-red-600 sm:mt-3 sm:text-sm"
               >
                 {logoError}
               </p>
             ) : null}
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
             <button
               type="button"
               onClick={resetDesign}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-black/10 bg-white px-5 py-3.5 text-sm font-semibold text-[#141414] transition-colors hover:bg-[#FFFCF7]"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-black/10 bg-white px-4 py-2.5 text-xs font-semibold text-[#141414] transition-colors hover:bg-[#FFFCF7] sm:gap-2 sm:rounded-xl sm:px-5 sm:py-3.5 sm:text-sm"
             >
-              <RotateCcw className="h-4 w-4" />
+              <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Reset
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              className="inline-flex flex-[1.4] items-center justify-center gap-2 rounded-xl bg-[#BC7C10] px-5 py-3.5 text-sm font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99]"
+              className="inline-flex flex-[1.4] items-center justify-center gap-1.5 rounded-lg bg-[#BC7C10] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99] sm:gap-2 sm:rounded-xl sm:px-5 sm:py-3.5 sm:text-sm"
             >
               {savedFlash ? "Details saved" : "Submit details"}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
 
