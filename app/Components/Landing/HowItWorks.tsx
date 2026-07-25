@@ -1,159 +1,92 @@
 type Step = {
-  step: string;
+  number: string;
   title: string;
   description: string;
-  icon: "tap" | "share" | "grow";
+  image: string;
+  alt: string;
 };
+
+const ACCENT = "#BC7C10";
 
 const steps: Step[] = [
   {
-    step: "1",
-    title: "Tap or Scan",
-    description: "Tap your Hexa Card or scan the QR code",
-    icon: "tap",
+    number: "01",
+    title: "Get Your Product",
+    description:
+      "Customise your Hexa Card with your photo, logo, and style. Choose your premium material and make it uniquely yours.",
+    image: "/images/step1.webp",
+    alt: "Get your Hexa Card product",
   },
   {
-    step: "2",
-    title: "Share Instantly",
-    description: "Your digital profile opens instantly on their phone",
-    icon: "share",
+    number: "02",
+    title: "Hexa Digital Profile",
+    description:
+      "Fully customise your digital profile, update anytime by logging in to your dashboard. Add all your details and links, then share with your network.",
+    image: "/images/step2.webp",
+    alt: "Hexa Cards digital profile",
   },
   {
-    step: "3",
-    title: "Connect & Grow",
-    description: "Save contact, follow, enquire or do business",
-    icon: "grow",
+    number: "03",
+    title: "Share Your Details With Anyone, Any Way",
+    description:
+      "One tap. One scan. One link. Your info, shared in seconds — no app required.",
+    image: "/images/step3.webp",
+    alt: "Share your details with anyone",
   },
 ];
 
-function TapIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 72 72"
-      fill="none"
-      stroke="url(#howTapGrad)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="howTapGrad" x1="12" y1="8" x2="60" y2="64">
-          <stop stopColor="#BC7C10" />
-          <stop offset="1" stopColor="#BC7C10" />
-        </linearGradient>
-      </defs>
-      <path d="M36 12c-5.5 0-10 4.5-10 10 0 2.8 1.1 5.3 2.9 7.2" />
-      <path d="M36 12c5.5 0 10 4.5 10 10 0 2.8-1.1 5.3-2.9 7.2" />
-      <path d="M36 29.2V42c0 3.2 2 5.8 5 6.5l10.5 2.5c3.8 1 6.5 4.5 6.5 8.5V58" />
-      <path d="M31 48.5V58" />
-      <path d="M26 44.5V58" />
-      <path d="M21 48V58" />
-      <circle cx="36" cy="22" r="2.5" fill="url(#howTapGrad)" stroke="none" />
-    </svg>
-  );
-}
-
-function ShareIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 72 72"
-      fill="none"
-      stroke="url(#howShareGrad)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="howShareGrad" x1="14" y1="10" x2="58" y2="62">
-          <stop stopColor="#BC7C10" />
-          <stop offset="1" stopColor="#BC7C10" />
-        </linearGradient>
-      </defs>
-      <rect x="22" y="10" width="28" height="52" rx="5" />
-      <circle cx="36" cy="30" r="7" />
-      <path d="M27 48c3-5.5 7.5-8 9-8s6 2.5 9 8" />
-      <path d="M30 16h12" />
-    </svg>
-  );
-}
-
-function GrowIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 72 72"
-      fill="none"
-      stroke="url(#howGrowGrad)"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <defs>
-        <linearGradient id="howGrowGrad" x1="10" y1="14" x2="62" y2="58">
-          <stop stopColor="#BC7C10" />
-          <stop offset="1" stopColor="#BC7C10" />
-        </linearGradient>
-      </defs>
-      <path d="M14 54h44" />
-      <path d="M20 54V40" />
-      <path d="M30 54V28" />
-      <path d="M40 54V34" />
-      <path d="M50 54V18" />
-      <path d="M42 14h14v14" />
-      <path d="M56 14 34 36" />
-    </svg>
-  );
-}
-
-function StepIcon({ type }: { type: Step["icon"] }) {
-  const className =
-    "h-[72px] w-[72px] shrink-0 transition-transform duration-300 ease-out group-hover:scale-110 sm:h-20 sm:w-20";
-  if (type === "tap") return <TapIcon className={className} />;
-  if (type === "share") return <ShareIcon className={className} />;
-  return <GrowIcon className={className} />;
-}
-
-function DottedConnector() {
-  return (
-    <div
-      className="pointer-events-none absolute top-1/2 right-0 z-10 hidden w-6 -translate-y-1/2 translate-x-1/2 items-center md:flex lg:w-10"
-      aria-hidden
-    >
-      <div className="h-px flex-1 border-t-2 border-dashed border-[#BC7C10]/45" />
-      <svg
-        className="h-2.5 w-2.5 shrink-0 text-[#BC7C10]"
-        viewBox="0 0 10 10"
-        fill="currentColor"
-      >
-        <path d="M1.5 0.5 9 5 1.5 9.5V0.5Z" />
-      </svg>
-    </div>
-  );
-}
-
 function StepCard({ item }: { item: Step }) {
   return (
-    <article className="group flex h-full items-center gap-4 rounded-2xl border border-black/[0.06] bg-white p-5 shadow-[0_4px_24px_rgba(15,23,42,0.04)] transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[#BC7C10]/35 hover:shadow-[0_16px_40px_rgba(188,124,16,0.12)] sm:gap-5 sm:p-6">
-      <StepIcon type={item.icon} />
+    <div
+      className="group relative overflow-hidden rounded-[2.5rem] border border-gray-100 bg-white/80 p-6 text-center backdrop-blur-xl transition-all duration-500 hover:-translate-y-2 hover:border-gray-200 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] lg:p-8"
+      style={{ "--step-accent": ACCENT } as React.CSSProperties}
+    >
+      {/* Ghost background number — CSS var is defined on this card (the
+          ancestor), so both this element and the content below can read
+          it via group-hover:text-[color:var(--step-accent)]. */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-[15rem] font-black text-gray-50/50 transition-all duration-700 group-hover:text-[color:var(--step-accent)] group-hover:opacity-[0.06]"
+        aria-hidden
+      >
+        {item.number}
+      </div>
 
-      <div className="min-w-0 flex-1 text-left">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#BC7C10] text-xs font-bold text-white transition-colors duration-300 group-hover:bg-[#9a650d]">
-          {item.step}
-        </span>
+      <div className="relative z-10 flex h-full flex-col">
+        {/* Product photo */}
+        <div className="mb-8 aspect-[4/3] w-full overflow-hidden rounded-[1.5rem] bg-white ring-1 ring-gray-100/50 transition-shadow duration-500 group-hover:shadow-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.image}
+            alt={item.alt}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        </div>
 
-        <h3 className="mt-2.5 text-lg font-bold leading-tight text-[#141414] transition-colors duration-300 group-hover:text-[#9a650d] sm:text-xl">
+        {/* Numbered badge — background fades in on hover behind the
+            number, text switches from accent to white at the same time */}
+        <div className="relative mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-gray-50">
+          <span
+            className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            style={{ backgroundColor: ACCENT }}
+            aria-hidden
+          />
+          <span
+            className="relative z-10 text-lg font-bold transition-colors duration-500 group-hover:text-white"
+            style={{ color: ACCENT }}
+          >
+            {item.number.replace(/^0/, "")}
+          </span>
+        </div>
+
+        <h3 className="mb-3 text-2xl font-bold tracking-tight text-gray-900">
           {item.title}
         </h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-[#64748B] sm:text-[15px]">
+        <p className="mx-auto max-w-[280px] text-base leading-relaxed text-gray-500">
           {item.description}
         </p>
       </div>
-    </article>
+    </div>
   );
 }
 
@@ -161,21 +94,23 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="scroll-mt-20 bg-white py-16 sm:py-20"
+      className="relative scroll-mt-20 overflow-hidden bg-white py-20 sm:py-24"
     >
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <h2 className="text-center text-2xl font-extrabold tracking-[0.06em] text-[#141414] uppercase sm:text-3xl">
-          How It Works
-        </h2>
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-16 max-w-2xl text-center lg:mb-20">
+          <h2 className="text-4xl font-bold leading-tight tracking-tight text-gray-900 lg:text-5xl">
+            How Hexa Cards Works
+          </h2>
+          <p className="mt-4 text-lg text-gray-500 lg:text-xl">
+            Three simple steps to revolutionize your networking experience
+          </p>
+        </div>
 
-        <ol className="mt-10 grid list-none grid-cols-1 gap-5 p-0 sm:mt-12 md:grid-cols-3 md:gap-6 lg:gap-8">
-          {steps.map((item, index) => (
-            <li key={item.step} className="relative">
-              {index < steps.length - 1 ? <DottedConnector /> : null}
-              <StepCard item={item} />
-            </li>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3 lg:gap-10">
+          {steps.map((step) => (
+            <StepCard key={step.number} item={step} />
           ))}
-        </ol>
+        </div>
       </div>
     </section>
   );

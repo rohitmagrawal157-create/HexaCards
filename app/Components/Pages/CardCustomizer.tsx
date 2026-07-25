@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Upload,
@@ -379,6 +380,7 @@ function BackLogoPlaceholder({
 }
 
 export default function CardCustomizer() {
+  const router = useRouter();
   const [side, setSide] = useState<Side>("front");
   const [cardBody, setCardBody] = useState<CardBody>("black");
   const [cardMode, setCardMode] = useState<CardMode>("gold");
@@ -396,8 +398,11 @@ export default function CardCustomizer() {
   const [savedFlash, setSavedFlash] = useState(false);
   const [flipPulse, setFlipPulse] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const logoObjectUrl = useRef<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(PREVIEW_MAX_W / CARD_W);
@@ -524,6 +529,7 @@ export default function CardCustomizer() {
     }
 
     setLogoError(null);
+    setSubmitError(null);
     if (logoObjectUrl.current) URL.revokeObjectURL(logoObjectUrl.current);
     const url = URL.createObjectURL(file);
     logoObjectUrl.current = url;
@@ -563,6 +569,8 @@ export default function CardCustomizer() {
     setTitle("");
     setSubTitle("");
     setMoreDetails("");
+    setTitleError(null);
+    setSubmitError(null);
     removeLogo();
   }
 
@@ -583,29 +591,86 @@ export default function CardCustomizer() {
   }
 
   function handleSubmit() {
-    setSavedFlash(true);
-    window.setTimeout(() => setSavedFlash(false), 2200);
-    console.log("Submitting design:", {
+    const name = title.trim();
+    let nameErr: string | null = null;
+    let logoErr: string | null = null;
+
+    if (!name) {
+      nameErr = "Name is required.";
+    } else if (name.length < 2) {
+      nameErr = "Enter at least 2 characters for your name.";
+    }
+
+    if (!logoUrl) {
+      logoErr = "Please upload a PNG logo before continuing.";
+    }
+
+    setTitleError(nameErr);
+    setLogoError(logoErr);
+
+    if (nameErr || logoErr) {
+      const parts = [nameErr, logoErr].filter(Boolean);
+      setSubmitError(parts.join(" "));
+      // Focus / scroll to the first missing field
+      window.setTimeout(() => {
+        if (nameErr) {
+          titleInputRef.current?.focus();
+          titleInputRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        } else {
+          logoInputRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 50);
+      return;
+    }
+
+    setSubmitError(null);
+
+    const design = {
       side,
       cardBody,
       cardMode: isBlackCard ? cardMode : "customize",
       cardColor: displayCardColor,
       accentColor: displayAccentColor,
       textColor: displayTextColor,
-      title,
-      subTitle,
-      moreDetails,
-      hasLogo: Boolean(logoUrl),
+      title: name,
+      subTitle: subTitle.trim(),
+      moreDetails: moreDetails.trim(),
+      hasLogo: true,
       frontLogo,
       backLogo,
-    });
+      savedAt: Date.now(),
+    };
+
+    try {
+      sessionStorage.setItem("hexaCardDesign", JSON.stringify(design));
+    } catch {
+      // ignore storage failures — still continue to checkout
+    }
+
+    setSavedFlash(true);
+    window.setTimeout(() => {
+      router.push("/checkout");
+    }, 450);
   }
 
   return (
     <div className="min-h-[70vh] bg-[#FFFCF7]">
       {/* Compact page intro — keeps card editor in first viewport */}
       <div className="border-b border-black/[0.06] bg-white/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-baseline gap-3 px-5 py-3 sm:gap-4 sm:px-8 sm:py-4">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-3 sm:gap-4 sm:px-8 sm:py-4">
+          <a
+            href="/product"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#141414] transition-colors hover:border-[#BC7C10]/35 hover:text-[#BC7C10]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            Back
+          </a>
           <p className="shrink-0 text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase sm:text-xs">
             Card Studio
           </p>
@@ -1272,20 +1337,41 @@ export default function CardCustomizer() {
               <label className="block">
                 <div className="mb-1 flex items-center justify-between sm:mb-1.5">
                   <span className="text-xs font-medium text-[#5c5346] sm:text-sm">
-                    Name / Title
+                    Name / Title{" "}
+                    <span className="text-[#BC7C10]">*</span>
                   </span>
                   <span className="text-[10px] text-[#5c5346]/70 sm:text-[11px]">
                     {title.length}/40
                   </span>
                 </div>
                 <input
+                  ref={titleInputRef}
                   type="text"
                   value={title}
                   maxLength={40}
-                  onChange={(e) => setTitle(e.target.value)}
+                  aria-invalid={Boolean(titleError)}
+                  aria-describedby={titleError ? "title-error" : undefined}
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (titleError) setTitleError(null);
+                    if (submitError) setSubmitError(null);
+                  }}
                   placeholder="e.g. Rohit Agrawal"
-                  className="w-full rounded-lg border border-black/10 bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm"
+                  className={`w-full rounded-lg border bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:bg-white focus:ring-2 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm ${
+                    titleError
+                      ? "border-red-400 focus:border-red-400 focus:ring-red-200"
+                      : "border-black/10 focus:border-[#BC7C10]/50 focus:ring-[#BC7C10]/15"
+                  }`}
                 />
+                {titleError ? (
+                  <p
+                    id="title-error"
+                    role="alert"
+                    className="mt-1.5 text-xs font-medium text-red-600"
+                  >
+                    {titleError}
+                  </p>
+                ) : null}
               </label>
 
               <label className="block">
@@ -1331,14 +1417,20 @@ export default function CardCustomizer() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-black/[0.06] bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5">
+          <div
+            className={`rounded-xl border bg-white p-3 shadow-sm sm:rounded-2xl sm:p-5 ${
+              logoError && !logoUrl
+                ? "border-red-300"
+                : "border-black/[0.06]"
+            }`}
+          >
             <SectionLabel
               icon={ImageIcon}
-              title="Logo / image"
+              title="Logo / image *"
               hint={
                 isCustomize
-                  ? "Back side only · original logo colors · adjust below the card preview"
-                  : `Back side only · tinted ${cardMode === "gold" ? "gold" : "silver"} · adjust below preview`
+                  ? "Required · back side only · original logo colors"
+                  : `Required · back side only · tinted ${cardMode === "gold" ? "gold" : "silver"}`
               }
             />
             <input
@@ -1352,17 +1444,16 @@ export default function CardCustomizer() {
               <p className="font-semibold text-[#141414]">
                 PNG only · transparent background recommended
               </p>
-              {/* <p className="mt-0.5 sm:mt-1">
-                Upload a <span className="font-semibold text-[#141414]">.png</span>{" "}
-                logo with a transparent background so it stays clear and sharp
-                on both black and white cards.
-              </p> */}
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => logoInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#FFFCF7] px-3.5 py-2 text-xs font-semibold text-[#141414] transition-all hover:border-[#BC7C10]/35 hover:bg-white sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm"
+                className={`inline-flex items-center gap-1.5 rounded-full border bg-[#FFFCF7] px-3.5 py-2 text-xs font-semibold text-[#141414] transition-all hover:bg-white sm:gap-2 sm:px-5 sm:py-2.5 sm:text-sm ${
+                  logoError && !logoUrl
+                    ? "border-red-400"
+                    : "border-black/10 hover:border-[#BC7C10]/35"
+                }`}
               >
                 <Upload className="h-3.5 w-3.5 text-[#BC7C10] sm:h-4 sm:w-4" />
                 {logoUrl ? "Change logo" : "Upload PNG logo"}
@@ -1386,6 +1477,10 @@ export default function CardCustomizer() {
                   >
                     Remove
                   </button>
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700">
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    Logo added
+                  </span>
                 </>
               ) : null}
             </div>
@@ -1413,10 +1508,19 @@ export default function CardCustomizer() {
               onClick={handleSubmit}
               className="inline-flex flex-[1.4] items-center justify-center gap-1.5 rounded-lg bg-[#BC7C10] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99] sm:gap-2 sm:rounded-xl sm:px-5 sm:py-3.5 sm:text-sm"
             >
-              {savedFlash ? "Details saved" : "Submit details"}
+              {savedFlash ? "Going to checkout…" : "Submit details"}
               <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
+
+          {submitError ? (
+            <p
+              role="alert"
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-center text-xs font-medium text-red-700 sm:text-sm"
+            >
+              {submitError}
+            </p>
+          ) : null}
 
           <AnimatePresence>
             {savedFlash ? (

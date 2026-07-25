@@ -1,6 +1,5 @@
-import { Navbar, Footer, Clients, HowItWorks, Testimonials, Products, FAQ } from "../Components/Landing";
+import { Navbar, Footer } from "../Components/Landing";
 import ProductDetails from "../Components/Pages/ProductDetails";
-import ProductItem from "../Components/Pages/ProductItem";
 
 export const metadata = {
   title: "NFC Business Card — HexaCards",
@@ -8,18 +7,12 @@ export const metadata = {
     "Premium Hexa NFC business card — design your digital card, share contact details instantly.",
 };
 
-export default function ProductPage() {
+export default function ProductDetailsPage() {
   return (
     <div className="min-h-full bg-[#FFFCF7] text-[#141414]">
       <Navbar />
       <main className="flex-1">
         <ProductDetails />
-        <Clients />
-        <ProductItem/>
-        <HowItWorks />
-        <Testimonials />
-        <Products/>
-        <FAQ/>
       </main>
       <Footer />
     </div>

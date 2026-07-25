@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Feature from "./Feature";
 
 type Product = {
@@ -39,6 +40,13 @@ const products: Product[] = [
       "Countertop standee for your desk or counter — collect Google reviews on autopilot.",
     image: "/Images/Products/reviewStandy.jpg",
     href: "#review-stand",
+  },
+  {
+    title: "Kitchen Sticky Notes",
+    description:
+      "Kitchen sticky notes for your fridge or pantry — write down your grocery list or ideas.",
+    image: "/Images/Products/kitchen.webp",
+    href: "#kitchen-sticky-notes",
   },
 ];
 
@@ -116,7 +124,7 @@ function ProductCard({ item }: { item: Product }) {
           src={item.image}
           alt={item.title}
           fill
-          sizes="(max-width: 640px) 48vw, (max-width: 1024px) 45vw, 25vw"
+          sizes="(max-width: 640px) 62vw, (max-width: 1024px) 42vw, 23vw"
           className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
       </div>
@@ -136,6 +144,7 @@ function ProductCard({ item }: { item: Product }) {
 function ProductsGrid() {
   const [hasAnimated, setHasAnimated] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     const el = sectionRef.current;
@@ -153,9 +162,23 @@ function ProductsGrid() {
     return () => observer.disconnect();
   }, []);
 
+  function scrollByCard(direction: "prev" | "next") {
+    const el = scrollerRef.current;
+    if (!el) return;
+    // Scroll by roughly one card's width (first child's width + gap)
+    // rather than a hardcoded pixel value, so this stays correct across
+    // the different card widths at each breakpoint.
+    const card = el.firstElementChild as HTMLElement | null;
+    const amount = card ? card.offsetWidth + 20 : 320;
+    el.scrollBy({
+      left: direction === "next" ? amount : -amount,
+      behavior: "smooth",
+    });
+  }
+
   return (
     <div ref={sectionRef} className="mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="mx-auto mb-8 max-w-2xl text-center lg:mb-10">
+      <div className="mb-8 max-w-2xl lg:mb-10">
         <p className="mb-3 text-xs font-bold tracking-[0.15em] text-[#BC7C10] uppercase sm:text-sm">
           Products
         </p>
@@ -169,13 +192,49 @@ function ProductsGrid() {
         )}
       </div>
 
-      <ul className="grid list-none grid-cols-2 gap-3 p-0 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+      {/* Horizontal snap-scroll slider, replacing the old 2/4-column
+          grid — with 5 items a fixed grid always orphans one card on
+          its own row at some breakpoint. Scroll-snap keeps cards
+          aligned as the user swipes/scrolls instead. Scrollbar is
+          hidden (cross-browser) since the arrow buttons below and
+          direct touch/drag scrolling are the intended way to navigate. */}
+      <ul
+        ref={scrollerRef}
+        className="flex list-none snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth p-0 pb-1 sm:gap-5 lg:gap-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {products.map((item) => (
-          <li key={item.title}>
+          <li
+            key={item.title}
+            className="w-[62%] shrink-0 snap-start sm:w-[42%] lg:w-[23%]"
+          >
             <ProductCard item={item} />
           </li>
         ))}
       </ul>
+
+      {/* Arrow controls — placed below the slider. Visible on all
+          screen sizes now (not desktop-only) since hiding the
+          scrollbar removes the only other visual cue that this row
+          scrolls, so touch users benefit from these too, not just
+          mouse/trackpad users. */}
+      <div className="mt-6 flex justify-center gap-3">
+        <button
+          type="button"
+          onClick={() => scrollByCard("prev")}
+          aria-label="Scroll products left"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-[#141414] transition-colors hover:border-[#BC7C10] hover:text-[#BC7C10]"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollByCard("next")}
+          aria-label="Scroll products right"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-[#141414] transition-colors hover:border-[#BC7C10] hover:text-[#BC7C10]"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      </div>
     </div>
   );
 }
