@@ -14,7 +14,7 @@ const steps: Step[] = [
     title: "Get Your Product",
     description:
       "Customise your Hexa Card with your photo, logo, and style. Choose your premium material and make it uniquely yours.",
-    image: "/images/step1.webp",
+    image: "/Images/step1.webp",
     alt: "Get your Hexa Card product",
   },
   {
@@ -22,7 +22,7 @@ const steps: Step[] = [
     title: "Hexa Digital Profile",
     description:
       "Fully customise your digital profile, update anytime by logging in to your dashboard. Add all your details and links, then share with your network.",
-    image: "/images/step2.webp",
+    image: "/Images/step2.webp",
     alt: "Hexa Cards digital profile",
   },
   {
@@ -30,7 +30,7 @@ const steps: Step[] = [
     title: "Share Your Details With Anyone, Any Way",
     description:
       "One tap. One scan. One link. Your info, shared in seconds — no app required.",
-    image: "/images/step3.webp",
+    image: "/Images/step3.webp",
     alt: "Share your details with anyone",
   },
 ];
