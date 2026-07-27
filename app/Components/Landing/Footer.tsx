@@ -4,11 +4,11 @@ import { MapPin, Mail, Phone } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "About Us", href: "/#about" },
-  { label: "Products", href: "/#products" },
-  { label: "Solutions", href: "/#solutions" },
-  { label: "Blog", href: "/#blog" },
-  { label: "Contact Us", href: "/#footer" },
+  { label: "Products", href: "/products" },
+  { label: "NFC Card", href: "/product/nfc-business-card" },
+  { label: "Services", href: "/services" },
+  { label: "Reviews", href: "/product/social-media-cards" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 type IconProps = { className?: string };
@@ -145,12 +145,12 @@ export default function Footer() {
               <ul className="flex flex-wrap gap-x-8 gap-y-3">
                 {navLinks.map((link) => (
                   <li key={link.label}>
-                    <a
+                    <Link
                       href={link.href}
                       className="text-sm font-semibold text-white transition-colors hover:text-[#BC7C10]"
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

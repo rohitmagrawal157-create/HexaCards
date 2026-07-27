@@ -7,8 +7,9 @@ import {
   CreditCard,
   ShieldCheck,
   CheckCircle2,
-  Info,
   ArrowLeft,
+  Minus,
+  Plus,
 } from "lucide-react";
 
 type CartItem = {
@@ -19,7 +20,14 @@ type CartItem = {
   qty: number;
 };
 
-type DeliveryOption = "standard" | "express";
+type PackOption = {
+  id: "1" | "2" | "3";
+  qty: number;
+  title: string;
+  subtitle: string;
+  price: number;
+  badge?: string;
+};
 
 type SavedDesign = {
   title?: string;
@@ -31,17 +39,31 @@ type SavedDesign = {
   hasLogo?: boolean;
 };
 
-const DEFAULT_CART: CartItem[] = [
+const PACK_OPTIONS: PackOption[] = [
   {
-    id: "hexa-nfc-card",
-    title: "Hexa NFC Business Card",
-    image: "/Images/Products/digitalCard.jpg",
-    price: 799,
+    id: "1",
     qty: 1,
+    title: "1 Card",
+    subtitle: "One Smart NFC Card",
+    price: 799,
+  },
+  {
+    id: "2",
+    qty: 2,
+    title: "2 Cards",
+    subtitle: "Pack of 2 NFC Smart cards",
+    price: 1299,
+    badge: "Popular",
+  },
+  {
+    id: "3",
+    qty: 3,
+    title: "3 Cards",
+    subtitle: "Pack of 3 NFC Smart Cards",
+    price: 1499,
+    badge: "Best Value",
   },
 ];
-
-const EXPRESS_FEE = 99;
 
 const PROMO_CODES: Record<string, { label: string; percentOff: number }> = {
   WELCOME10: { label: "WELCOME10", percentOff: 10 },
@@ -64,8 +86,8 @@ export default function Checkout() {
     country: "IN",
   });
   const [sameBilling, setSameBilling] = useState(true);
-  const [deliveryOption, setDeliveryOption] =
-    useState<DeliveryOption>("standard");
+  const [selectedPackId, setSelectedPackId] = useState<PackOption["id"]>("1");
+  const [packCount, setPackCount] = useState(1);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     label: string;
@@ -88,33 +110,40 @@ export default function Checkout() {
     }
   }, []);
 
-  const cartItems = useMemo(() => {
+  const selectedPack =
+    PACK_OPTIONS.find((p) => p.id === selectedPackId) ?? PACK_OPTIONS[0];
+
+  const lineQty = selectedPack.qty * packCount;
+  const linePrice = selectedPack.price * packCount;
+
+  const cartItems = useMemo((): CartItem[] => {
     const name = design?.title?.trim();
-    if (!name) return DEFAULT_CART;
     return [
       {
-        ...DEFAULT_CART[0],
-        title: `Hexa NFC Card — ${name}`,
+        id: "hexa-nfc-card",
+        title: name ? `Hexa NFC Card — ${name}` : "Hexa NFC Business Card",
+        image: "/Images/Products/digitalCard.jpg",
+        price: linePrice,
+        qty: lineQty,
       },
     ];
-  }, [design]);
+  }, [design, linePrice, lineQty]);
 
   function updateField<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  const subtotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.qty, 0),
-    [cartItems],
-  );
+  function bumpPackCount(delta: number) {
+    setPackCount((n) => Math.min(10, Math.max(1, n + delta)));
+  }
 
-  const deliveryFee = deliveryOption === "express" ? EXPRESS_FEE : 0;
+  const subtotal = linePrice;
 
   const discountAmount = appliedCoupon
     ? Math.round(subtotal * (appliedCoupon.percentOff / 100))
     : 0;
 
-  const total = Math.max(0, subtotal - discountAmount + deliveryFee);
+  const total = Math.max(0, subtotal - discountAmount);
 
   function handleApplyCoupon() {
     const code = couponInput.trim().toUpperCase();
@@ -144,11 +173,12 @@ export default function Checkout() {
     console.log("Submitting order:", {
       form,
       sameBilling,
-      deliveryOption,
+      selectedPack,
+      packCount,
+      lineQty,
       appliedCoupon,
       subtotal,
       discountAmount,
-      deliveryFee,
       total,
       design,
     });
@@ -164,10 +194,11 @@ export default function Checkout() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex-1" />
         <Link
           href="/design-your-card#card-studio"
-          className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-[#141414] transition-colors hover:border-[#BC7C10]/35 hover:text-[#BC7C10]"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#BC7C10] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to design
@@ -402,7 +433,7 @@ export default function Checkout() {
               <div className="mt-4 space-y-4">
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-3">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#FFFCF7] ring-1 ring-black/[0.04]">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#BC7C10]/10 ring-1 ring-[#BC7C10]/25">
                       <Image
                         src={item.image}
                         alt={item.title}
@@ -415,71 +446,128 @@ export default function Checkout() {
                       <p className="truncate text-sm font-semibold text-[#141414]">
                         {item.title}
                       </p>
-                      <p className="text-xs text-[#5c5346]">Qty {item.qty}</p>
-                      <p className="mt-1 text-sm font-bold text-[#141414]">
-                        {currency(item.price * item.qty)}
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="text-xs text-[#5c5346]">Qty</span>
+                        <div className="inline-flex items-center rounded-full border border-[#BC7C10]/30 bg-[#FFFCF7]">
+                          <button
+                            type="button"
+                            aria-label="Decrease quantity"
+                            onClick={() => bumpPackCount(-1)}
+                            disabled={packCount <= 1}
+                            className="flex h-7 w-7 items-center justify-center rounded-full text-[#BC7C10] transition-colors hover:bg-[#BC7C10]/10 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                          </button>
+                          <span className="min-w-[1.5rem] text-center text-xs font-bold text-[#141414]">
+                            {item.qty}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Increase quantity"
+                            onClick={() => bumpPackCount(1)}
+                            disabled={packCount >= 10}
+                            className="flex h-7 w-7 items-center justify-center rounded-full text-[#BC7C10] transition-colors hover:bg-[#BC7C10]/10 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-1 text-sm font-bold text-[#BC7C10]">
+                        {currency(item.price)}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 space-y-2">
-                <p className="text-sm font-semibold text-[#141414]">Delivery</p>
-                <label className="flex cursor-pointer items-center space-x-3 rounded-lg border border-black/10 p-3 transition-colors hover:border-[#BC7C10]/30">
-                  <input
-                    type="radio"
-                    name="delivery_option"
-                    value="standard"
-                    checked={deliveryOption === "standard"}
-                    onChange={() => setDeliveryOption("standard")}
-                    className="text-[#BC7C10] focus:ring-[#BC7C10]"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#141414]">
-                        Standard Delivery
+              <div className="mt-5 space-y-2.5" role="radiogroup" aria-label="Pack size">
+                {PACK_OPTIONS.map((pack) => {
+                  const selected = selectedPackId === pack.id;
+                  return (
+                    <div
+                      key={pack.id}
+                      role="radio"
+                      aria-checked={selected}
+                      tabIndex={0}
+                      onClick={() => setSelectedPackId(pack.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedPackId(pack.id);
+                        }
+                      }}
+                      className={`flex w-full cursor-pointer items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-all ${
+                        selected
+                          ? "border-2 border-[#BC7C10] bg-[#FFF8ED]"
+                          : "border border-black/10 bg-white hover:border-[#BC7C10]/35"
+                      }`}
+                    >
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                          selected ? "border-[#BC7C10]" : "border-black/25"
+                        }`}
+                        aria-hidden
+                      >
+                        {selected ? (
+                          <span className="h-2 w-2 rounded-full bg-[#BC7C10]" />
+                        ) : null}
                       </span>
-                      <span className="text-sm font-medium text-green-700">
-                        Free
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-[#5c5346]">
-                      3–5 business days
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex cursor-pointer items-center space-x-3 rounded-lg border border-black/10 p-3 transition-colors hover:border-[#BC7C10]/30">
-                  <input
-                    type="radio"
-                    name="delivery_option"
-                    value="express"
-                    checked={deliveryOption === "express"}
-                    onChange={() => setDeliveryOption("express")}
-                    className="text-[#BC7C10] focus:ring-[#BC7C10]"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-[#141414]">
-                        Express Delivery
-                      </span>
-                      <span className="text-sm font-medium text-[#BC7C10]">
-                        {currency(EXPRESS_FEE)}
-                      </span>
-                    </div>
-                    <p className="mt-1 flex items-center text-xs text-[#5c5346]">
-                      1–2 business days
-                      <span className="group relative ml-1.5 inline-flex items-center">
-                        <Info className="h-3.5 w-3.5 cursor-help text-[#5c5346]/60" />
-                        <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-48 -translate-x-1/2 rounded-md bg-[#141414] p-2 text-center text-[10px] leading-tight text-white opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:opacity-100">
-                          Subject to design approval for customised products.
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-sm font-bold text-[#141414]">
+                            {pack.title}
+                          </span>
+                          {pack.badge ? (
+                            <span className="rounded-full bg-[#22c55e] px-2 py-0.5 text-[10px] font-bold tracking-wide text-white uppercase">
+                              {pack.badge}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-[#5c5346]">
+                          {pack.subtitle}
                         </span>
                       </span>
-                    </p>
-                  </div>
-                </label>
+                      <span className="flex shrink-0 flex-col items-end gap-1.5">
+                        <span className="text-sm font-bold text-[#141414]">
+                          {currency(pack.price)}
+                        </span>
+                        {/* {selected ? (
+                          <span
+                            className="inline-flex items-center rounded-full border border-[#BC7C10]/30 bg-white"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              aria-label="Decrease packs"
+                              onClick={() => bumpPackCount(-1)}
+                              disabled={packCount <= 1}
+                              className="flex h-6 w-6 items-center justify-center rounded-full text-[#BC7C10] hover:bg-[#BC7C10]/10 disabled:opacity-40"
+                            >
+                              <Minus className="h-3 w-3" strokeWidth={2.5} />
+                            </button>
+                            <span className="min-w-[1.25rem] text-center text-[11px] font-bold text-[#141414]">
+                              {packCount}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Increase packs"
+                              onClick={() => bumpPackCount(1)}
+                              disabled={packCount >= 10}
+                              className="flex h-6 w-6 items-center justify-center rounded-full text-[#BC7C10] hover:bg-[#BC7C10]/10 disabled:opacity-40"
+                            >
+                              <Plus className="h-3 w-3" strokeWidth={2.5} />
+                            </button>
+                          </span>
+                        ) : null} */}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
+
+              <p className="mt-4 text-xs text-[#5c5346]">
+                Free delivery · 4–6 business days
+              </p>
 
               <div className="mt-4 space-y-3 border-t border-black/[0.06] pt-4">
                 <div className="flex justify-between text-sm">
@@ -503,13 +591,7 @@ export default function Checkout() {
 
                 <div className="flex justify-between text-sm">
                   <span className="text-[#5c5346]">Delivery</span>
-                  <span
-                    className={`font-medium ${
-                      deliveryFee === 0 ? "text-green-700" : "text-[#141414]"
-                    }`}
-                  >
-                    {deliveryFee === 0 ? "Free" : currency(deliveryFee)}
-                  </span>
+                  <span className="font-medium text-green-700">Free</span>
                 </div>
 
                 <div className="border-t border-black/[0.06] pt-3">

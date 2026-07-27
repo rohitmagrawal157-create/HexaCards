@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Feature from "./Feature";
 
 type Product = {
@@ -18,41 +19,41 @@ const products: Product[] = [
     description:
       "Your full digital identity on NFC and QR — share contacts, links, and leads in one tap.",
     image: "/Images/Products/digitalCard.jpg",
-    href: "#digital-profile",
+    href: "/product/nfc-business-card",
   },
   {
     title: "Digital Profile + QR",
     description:
       "Print-ready QR that opens your profile instantly. No app, no friction, works on every phone.",
     image: "/Images/Products/digitalQR.jpg",
-    href: "#qr-code",
+    href: "/product/digital-profile-qr",
   },
   {
     title: "Google Review Cards",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan.",
     image: "/Images/Products/googleReview.jpg",
-    href: "#google-review-cards",
+    href: "/product/social-media-cards",
   },
   {
     title: "Google Review Standy",
     description:
       "Countertop standee for your desk or counter — collect Google reviews on autopilot.",
     image: "/Images/Products/reviewStandy.jpg",
-    href: "#review-stand",
+    href: "/product/google-review-standy",
   },
   {
-    title: "Kitchen Sticky Notes",
+    title: "Review Keychain QR",
     description:
-      "Kitchen sticky notes for your fridge or pantry — write down your grocery list or ideas.",
+      "Tap or scan keychain that opens your Google review page — always with you on your keys.",
     image: "/Images/Products/kitchen.webp",
-    href: "#kitchen-sticky-notes",
+    href: "/product/review-keychain-qr",
   },
 ];
 
 function RevealHeading() {
   const words: { text: string; gradient?: boolean; lineBreak?: boolean }[] = [
-    { text: "Four", gradient: true },
+    { text: "Five", gradient: true },
     { text: "products." },
     { text: "One", gradient: true },
     { text: "tap", lineBreak: true },
@@ -63,7 +64,7 @@ function RevealHeading() {
   ];
 
   return (
-    <h2 className="text-4xl font-bold leading-tight text-[#141414] sm:text-5xl">
+    <h2 className="text-center text-4xl font-bold leading-tight text-[#141414] sm:text-5xl">
       {words.map((word, i) => (
         <span key={i}>
           <span
@@ -88,8 +89,9 @@ function RevealSubtext() {
     "QR,",
     "review",
     "cards,",
+    "stands,",
     "and",
-    "stands",
+    "keychains",
     "—",
     "built",
     "to",
@@ -99,7 +101,7 @@ function RevealSubtext() {
   ];
 
   return (
-    <p className="mt-3 text-lg text-[#7a7a82]">
+    <p className="mt-3 text-center text-lg text-[#7a7a82]">
       {words.map((word, i) => (
         <span
           key={i}
@@ -115,9 +117,9 @@ function RevealSubtext() {
 
 function ProductCard({ item }: { item: Product }) {
   return (
-    <a
+    <Link
       href={item.href}
-      className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BC7C10] focus-visible:ring-offset-2"
+      className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BC7C10] focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-square">
         <Image
@@ -127,6 +129,9 @@ function ProductCard({ item }: { item: Product }) {
           sizes="(max-width: 640px) 62vw, (max-width: 1024px) 42vw, 23vw"
           className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
         />
+        {/* <span className="absolute top-3 left-3 inline-flex items-center rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold tracking-wide text-[#BC7C10] uppercase shadow-sm ring-1 ring-[#BC7C10]/20 sm:text-[11px]">
+          View Product
+        </span> */}
       </div>
 
       <div className="flex flex-1 flex-col px-3 pt-3 pb-4 sm:px-4 sm:pt-4 sm:pb-5">
@@ -136,8 +141,12 @@ function ProductCard({ item }: { item: Product }) {
         <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#5c5346] sm:mt-2 sm:line-clamp-3 sm:text-sm">
           {item.description}
         </p>
+        <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-[#BC7C10] transition-colors group-hover:text-[#9a650d] sm:mt-4 sm:text-xs">
+          View Product
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+        </span>
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -178,7 +187,7 @@ function ProductsGrid() {
 
   return (
     <div ref={sectionRef} className="mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="mb-8 max-w-2xl lg:mb-10">
+      <div className="mx-auto mb-8 max-w-2xl text-center lg:mb-10">
         <p className="mb-3 text-xs font-bold tracking-[0.15em] text-[#BC7C10] uppercase sm:text-sm">
           Products
         </p>

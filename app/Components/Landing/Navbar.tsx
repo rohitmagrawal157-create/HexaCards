@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ShoppingCart } from "lucide-react";
 import { navLinks } from "./data";
 
+function linkIsActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function Navbar() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
@@ -33,7 +40,7 @@ export default function Navbar() {
             />
           </Link>
 
-          {/* Center: links — no overflow scroll (prevents bottom scrollbar) */}
+          {/* Center: links */}
           <nav
             className="hidden min-w-0 items-center justify-center overflow-visible lg:flex"
             aria-label="Primary"
@@ -42,6 +49,13 @@ export default function Navbar() {
               {navLinks.map((link) => {
                 const hasDropdown = Boolean(link.children?.length);
                 const isOpen = activeDropdown === link.label;
+                const isActive =
+                  linkIsActive(pathname, link.href) ||
+                  Boolean(
+                    link.children?.some((child) =>
+                      linkIsActive(pathname, child.href),
+                    ),
+                  );
                 return (
                   <li
                     key={link.label}
@@ -53,9 +67,13 @@ export default function Navbar() {
                       hasDropdown ? setActiveDropdown(null) : undefined
                     }
                   >
-                    <a
+                    <Link
                       href={link.href}
-                      className="group flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[15px] font-semibold text-[#141414] transition-colors duration-200 hover:text-[#BC7C10] xl:px-3.5 xl:text-base"
+                      className={`group flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-2 text-[15px] font-semibold transition-colors duration-200 xl:px-3.5 xl:text-base ${
+                        isActive
+                          ? "text-[#BC7C10]"
+                          : "text-[#141414] hover:text-[#BC7C10]"
+                      }`}
                     >
                       {link.label}
                       {hasDropdown ? (
@@ -66,7 +84,7 @@ export default function Navbar() {
                           strokeWidth={2}
                         />
                       ) : null}
-                    </a>
+                    </Link>
 
                     {hasDropdown ? (
                       <div
@@ -77,16 +95,26 @@ export default function Navbar() {
                         }`}
                       >
                         <ul className="min-w-[200px] rounded-2xl border border-[#e8e8e8] bg-white p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.1)]">
-                          {link.children!.map((child) => (
-                            <li key={child.href + child.label}>
-                              <a
-                                href={child.href}
-                                className="block rounded-xl px-3.5 py-2.5 text-[15px] font-medium text-[#333] transition-colors hover:bg-black/[0.04] hover:text-[#BC7C10]"
-                              >
-                                {child.label}
-                              </a>
-                            </li>
-                          ))}
+                          {link.children!.map((child) => {
+                            const childActive = linkIsActive(
+                              pathname,
+                              child.href,
+                            );
+                            return (
+                              <li key={child.href + child.label}>
+                                <Link
+                                  href={child.href}
+                                  className={`block rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-colors hover:bg-black/[0.04] hover:text-[#BC7C10] ${
+                                    childActive
+                                      ? "text-[#BC7C10]"
+                                      : "text-[#333]"
+                                  }`}
+                                >
+                                  {child.label}
+                                </Link>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     ) : null}
@@ -96,21 +124,23 @@ export default function Navbar() {
             </ul>
           </nav>
 
-          {/* Right: cart + sign in (desktop) / menu (mobile) — stays inside pill */}
+          {/* Right: cart + sign in (desktop) / menu (mobile) */}
           <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-2.5">
-            <a
-              href="#cart"
-              aria-label="Cart"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-[#1a1a1a] transition-opacity hover:opacity-70"
+            <Link
+              href="/checkout"
+              aria-label="Cart / Checkout"
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition-opacity hover:opacity-70 ${
+                pathname === "/checkout" ? "text-[#BC7C10]" : "text-[#1a1a1a]"
+              }`}
             >
               <ShoppingCart className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </a>
-            <a
-              href="#signin"
+            </Link>
+            <Link
+              href="/design-your-card"
               className="hidden shrink-0 items-center justify-center rounded-full bg-[#111] px-5 py-2.5 text-[15px] font-semibold whitespace-nowrap text-white transition-colors duration-200 hover:bg-[#222] active:scale-[0.98] lg:inline-flex"
             >
               Sign In
-            </a>
+            </Link>
             <button
               type="button"
               className="flex h-9 w-9 items-center justify-center text-[#1a1a1a] lg:hidden"
@@ -150,66 +180,66 @@ export default function Navbar() {
             {navLinks.map((link) => {
               const hasDropdown = Boolean(link.children?.length);
               return (
-              <li key={link.label}>
-                {hasDropdown ? (
-                  <>
-                    <button
-                      type="button"
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-left text-base font-semibold text-[#141414]"
-                      aria-expanded={mobileExpanded === link.label}
-                      onClick={() =>
-                        setMobileExpanded((current) =>
-                          current === link.label ? null : link.label,
-                        )
-                      }
+                <li key={link.label}>
+                  {hasDropdown ? (
+                    <>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-3.5 text-left text-base font-semibold text-[#141414]"
+                        aria-expanded={mobileExpanded === link.label}
+                        onClick={() =>
+                          setMobileExpanded((current) =>
+                            current === link.label ? null : link.label,
+                          )
+                        }
+                      >
+                        {link.label}
+                        <ChevronDown
+                          className={`h-4 w-4 text-[#666] transition-transform duration-300 ${
+                            mobileExpanded === link.label ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <ul
+                        className={`overflow-hidden border-l border-black/10 pl-3 transition-all duration-300 ${
+                          mobileExpanded === link.label
+                            ? "mb-2 max-h-60 opacity-100"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        {link.children!.map((child) => (
+                          <li key={child.href + child.label}>
+                            <Link
+                              href={child.href}
+                              className="block rounded-lg px-3 py-2.5 text-[15px] text-[#555]"
+                              onClick={() => setOpen(false)}
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="block rounded-xl px-3 py-3.5 text-base font-semibold text-[#141414]"
+                      onClick={() => setOpen(false)}
                     >
                       {link.label}
-                      <ChevronDown
-                        className={`h-4 w-4 text-[#666] transition-transform duration-300 ${
-                          mobileExpanded === link.label ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    <ul
-                      className={`overflow-hidden border-l border-black/10 pl-3 transition-all duration-300 ${
-                        mobileExpanded === link.label
-                          ? "mb-2 max-h-60 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      {link.children!.map((child) => (
-                        <li key={child.href + child.label}>
-                          <a
-                            href={child.href}
-                            className="block rounded-lg px-3 py-2.5 text-[15px] text-[#555]"
-                            onClick={() => setOpen(false)}
-                          >
-                            {child.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <a
-                    href={link.href}
-                    className="block rounded-xl px-3 py-3.5 text-base font-semibold text-[#141414]"
-                    onClick={() => setOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                )}
-              </li>
+                    </Link>
+                  )}
+                </li>
               );
             })}
             <li className="mt-3 border-t border-[#e8e8e8] pt-3">
-              <a
-                href="#signin"
+              <Link
+                href="/design-your-card"
                 className="flex w-full items-center justify-center rounded-full bg-[#111] px-5 py-3 text-base font-semibold text-white"
                 onClick={() => setOpen(false)}
               >
                 Sign In
-              </a>
+              </Link>
             </li>
           </ul>
         </nav>

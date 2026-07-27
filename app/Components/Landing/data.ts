@@ -12,25 +12,26 @@ export type NavLink = {
 export const navLinks: NavLink[] = [
   {
     label: "Digital Business Card",
-    href: "#products",
+    href: "/product/nfc-business-card",
     children: [
-      { label: "NFC Business Card", href: "#products" },
-      { label: "Metal Card", href: "#products" },
-      { label: "PVC Card", href: "#products" },
-      { label: "Wooden Card", href: "#products" },
+      { label: "NFC Business Card", href: "/product/nfc-business-card" },
+      { label: "Metal Card", href: "/product/metal-card" },
+      { label: "PVC Card", href: "/product/pvc-card" },
+      { label: "Wooden Card", href: "/product/wooden-card" },
     ],
   },
   {
     label: "For Reviews",
-    href: "#testimonials",
+    href: "/product/social-media-cards",
     children: [
-      { label: "Google Reviews", href: "#testimonials" },
-      { label: "Review Stand", href: "#testimonials" },
+      { label: "Google Review Cards", href: "/product/social-media-cards" },
+      { label: "Google Review Standy", href: "/product/google-review-standy" },
+      { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
     ],
   },
-  { label: "Products", href: "#products" },
-  { label: "Services", href: "#solutions" },
-  { label: "Contact Us", href: "#footer" },
+  { label: "Products", href: "/products" },
+  { label: "Services", href: "/services" },
+  { label: "Contact Us", href: "/contact" },
 ];
 
 
@@ -47,19 +48,19 @@ export const products = [
   {
     title: "Digital Profile + QR",
     description: "NFC + QR digital identity",
-    price: "₹499",
+    price: "₹999",
     image: "/Images/Products/digitalCard.png",
   },
   {
     title: "QR Code",
     description: "Instant scan-to-connect",
-    price: "₹249",
+    price: "₹749",
     image: "/Images/Products/QR.png",
   },
   {
     title: "Google Review Cards",
     description: "Get more Google reviews",
-    price: "₹399",
+    price: "₹799",
     image: "/Images/Products/googleReview.png",
   },
   {
@@ -221,27 +222,28 @@ export const faqs = [
 
 export const footerLinks = {
   product: [
-    { label: "Hexa Card", href: "#" },
-    { label: "Review Standee", href: "#" },
-    { label: "Social Media Standee", href: "#" },
-    { label: "Hexa VTag", href: "#" },
+    { label: "NFC Business Card", href: "/product/nfc-business-card" },
+    { label: "Metal Card", href: "/product/metal-card" },
+    { label: "PVC Card", href: "/product/pvc-card" },
+    { label: "Wooden Card", href: "/product/wooden-card" },
   ],
   solutions: [
-    { label: "For Businesses", href: "#" },
-    { label: "For Doctors", href: "#" },
-    { label: "For Real Estate", href: "#" },
-    { label: "For Influencers", href: "#" },
+    { label: "Google Review Cards", href: "/product/social-media-cards" },
+    { label: "Google Review Standy", href: "/product/google-review-standy" },
+    { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
+    { label: "Services", href: "/services" },
+    { label: "Design Your Card", href: "/design-your-card" },
   ],
   company: [
-    { label: "About Us", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Franchise", href: "#" },
-    { label: "Contact", href: "#" },
+    { label: "Home", href: "/" },
+    { label: "Contact", href: "/contact" },
+    { label: "Products", href: "/products" },
+    { label: "Services", href: "/services" },
   ],
   support: [
-    { label: "Help Center", href: "#" },
-    { label: "FAQs", href: "#" },
-    { label: "Shipping Policy", href: "#" },
-    { label: "Returns & Refunds", href: "#" },
+    { label: "FAQs", href: "/#faqs" },
+    { label: "Contact Us", href: "/contact" },
+    { label: "Design Card", href: "/design-your-card" },
+    { label: "Checkout", href: "/checkout" },
   ],
 };

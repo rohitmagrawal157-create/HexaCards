@@ -47,6 +47,7 @@ type Product = {
   image: string;
   alt: string;
   weight?: string;
+  href: string;
 };
 
 const products: Product[] = [
@@ -58,6 +59,7 @@ const products: Product[] = [
     image: media[0].src,
     alt: media[0].alt,
     weight: "20g",
+    href: "/product/nfc-business-card",
   },
   {
     title: "PVC White Premium Digital Business Card",
@@ -67,6 +69,7 @@ const products: Product[] = [
     image: media[1].src,
     alt: media[1].alt,
     weight: "20g",
+    href: "/product/pvc-card",
   },
   {
     title: "Silver PVC Digital Business Card",
@@ -76,6 +79,7 @@ const products: Product[] = [
     image: media[2].src,
     alt: media[2].alt,
     weight: "20g",
+    href: "/product/pvc-card",
   },
   {
     title: "Black Marble PVC Digital Business Card",
@@ -85,6 +89,7 @@ const products: Product[] = [
     image: media[3].src,
     alt: media[3].alt,
     weight: "20g",
+    href: "/product/pvc-card",
   },
   {
     title: "Black Metal NFC Card with Gold Engraving",
@@ -94,6 +99,7 @@ const products: Product[] = [
     image: media[4].src,
     alt: media[4].alt,
     weight: "20g",
+    href: "/product/metal-card",
   },
 ];
 
@@ -114,7 +120,7 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <NextLink
-      href="/product-details"
+      href={product.href}
       style={{ width: CARD_WIDTH }}
       className="group block shrink-0 snap-start"
     >
@@ -219,7 +225,7 @@ export default function ProductItem() {
 
           <div className="flex items-center gap-3">
             <NextLink
-              href="/product-details"
+              href="/products"
               className="hidden text-sm font-semibold text-[#BD7F14] transition-colors hover:text-[#96650E] sm:inline"
             >
               View all

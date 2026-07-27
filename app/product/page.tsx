@@ -1,27 +1,6 @@
-import { Navbar, Footer, Clients, HowItWorks, Testimonials, Products, FAQ } from "../Components/Landing";
-import ProductDetails from "../Components/Pages/ProductDetails";
-import ProductItem from "../Components/Pages/ProductItem";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "NFC Business Card — HexaCards",
-  description:
-    "Premium Hexa NFC business card — design your digital card, share contact details instantly.",
-};
-
-export default function ProductPage() {
-  return (
-    <div className="min-h-full bg-[#FFFCF7] text-[#141414]">
-      <Navbar />
-      <main className="flex-1">
-        <ProductDetails />
-        <Clients />
-        <ProductItem/>
-        <HowItWorks />
-        <Testimonials />
-        <Products/>
-        <FAQ/>
-      </main>
-      <Footer />
-    </div>
-  );
+/** Canonical NFC product page is `/product/nfc-business-card`. */
+export default function ProductIndexRedirect() {
+  redirect("/product/nfc-business-card");
 }
