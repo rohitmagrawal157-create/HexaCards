@@ -24,7 +24,7 @@ export const navLinks: NavLink[] = [
     label: "For Reviews",
     href: "/product/social-media-cards",
     children: [
-      { label: "Google Review Cards", href: "/product/social-media-cards" },
+      { label: "Social Media Cards", href: "/product/social-media-cards" },
       { label: "Google Review Standy", href: "/product/google-review-standy" },
       { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
     ],
@@ -58,7 +58,7 @@ export const products = [
     image: "/Images/Products/QR.png",
   },
   {
-    title: "Google Review Cards",
+    title: "Social Media Cards",
     description: "Get more Google reviews",
     price: "₹799",
     image: "/Images/Products/googleReview.png",
@@ -228,7 +228,7 @@ export const footerLinks = {
     { label: "Wooden Card", href: "/product/wooden-card" },
   ],
   solutions: [
-    { label: "Google Review Cards", href: "/product/social-media-cards" },
+    { label: "Social Media Cards", href: "/product/social-media-cards" },
     { label: "Google Review Standy", href: "/product/google-review-standy" },
     { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
     { label: "Services", href: "/services" },

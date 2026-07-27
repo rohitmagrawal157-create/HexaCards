@@ -272,8 +272,8 @@ export const productCatalog: Record<string, CatalogProduct> = {
   "social-media-cards": {
     id: "social-media-cards",
     category: "For Reviews",
-    title: "Google Review Cards",
-    shortTitle: "Google Review Cards",
+    title: "Social Media Cards",
+    shortTitle: "Social Media Cards",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan — also available for Instagram and YouTube.",
     price: 799,
@@ -339,7 +339,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
   "google-reviews": {
     id: "google-reviews",
     category: "For Reviews",
-    title: "Google Review Cards",
+    title: "Social Media Cards",
     shortTitle: "Google Reviews",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan — grow ratings without awkward asks.",

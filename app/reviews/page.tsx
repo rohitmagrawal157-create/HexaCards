@@ -26,7 +26,7 @@ export default function ReviewsPage() {
               Grow with customer reviews
             </h1>
             <p className="mx-auto mt-2 max-w-xl text-sm text-[#5c5346] sm:text-base">
-              Google review cards and counter stands that make collecting
+              Social media cards and counter stands that make collecting
               feedback effortless.
             </p>
           </div>

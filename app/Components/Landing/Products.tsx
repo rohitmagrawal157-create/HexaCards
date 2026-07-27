@@ -29,7 +29,7 @@ const products: Product[] = [
     href: "/product/digital-profile-qr",
   },
   {
-    title: "Google Review Cards",
+    title: "Social Media Cards",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan.",
     image: "/Images/Products/googleReview.jpg",
