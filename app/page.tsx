@@ -10,6 +10,7 @@ import {
   FAQ,
   Footer,
 } from "./Components/Landing";
+import Franchise from "./Components/Landing/Franchise";
 
 export default function HomePage() {
   return (
@@ -23,6 +24,7 @@ export default function HomePage() {
         {/* <WhyHexa /> */}
         <Industries />
         <Testimonials />
+        <Franchise />
         <FAQ />
       </div>
       <Footer />

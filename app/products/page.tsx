@@ -4,7 +4,7 @@ import { NavProduct } from "../Components/Pages";
 export const metadata = {
   title: "Products — HexaCards",
   description:
-    "Explore Hexa NFC cards, QR products, Google review cards, and review stands.",
+    "Browse Instagram, YouTube, Google Review cards, NFC business cards, stands, and keychains — open any product for full details.",
 };
 
 export default function ProductsPage() {  

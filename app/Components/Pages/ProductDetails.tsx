@@ -48,9 +48,13 @@ function IndiaFlag({ className }: { className?: string }) {
 export default function ProductDetails({
   productId = "nfc-business-card",
   product: productProp,
+  backHref = "/",
+  backLabel = "Back",
 }: {
   productId?: string;
   product?: CatalogProduct;
+  backHref?: string;
+  backLabel?: string;
 }) {
   const product = productProp ?? getProduct(productId);
   const media = product.media;
@@ -69,7 +73,7 @@ export default function ProductDetails({
   }
 
   return (
-    <section className="bg-[#FFFCF7]">
+    <section className="bg-[#FFFFFF]">
       <div className="border-b border-black/[0.06] bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-5 py-3 sm:gap-3 sm:px-8 sm:py-4">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
@@ -84,11 +88,11 @@ export default function ProductDetails({
             </p>
           </div>
           <Link
-            href="/products"
+            href={backHref}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#BC7C10] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back
+            {backLabel}
           </Link>
         </div>
       </div>

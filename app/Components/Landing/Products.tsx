@@ -31,7 +31,7 @@ const products: Product[] = [
   {
     title: "Social Media Cards",
     description:
-      "Hand customers a card that opens your Google review page in one tap or scan.",
+      "Instagram, YouTube & Google Review cards — pick a platform and share in one tap.",
     image: "/Images/Products/googleReview.jpg",
     href: "/product/social-media-cards",
   },

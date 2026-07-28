@@ -1,11 +1,10 @@
 import { Navbar, Footer } from "../../Components/Landing";
-import { SocialMediaCards, getProduct } from "../../Components/Pages";
-
-const product = getProduct("social-media-cards");
+import { SocialMediaCards } from "../../Components/Pages";
 
 export const metadata = {
-  title: `${product.shortTitle} — HexaCards`,
-  description: product.description,
+  title: "Social Media Cards — HexaCards",
+  description:
+    "Instagram, YouTube, and Google Review NFC cards — choose a platform and open product details.",
 };
 
 export default function SocialMediaCardsPage() {

@@ -1,7 +1,7 @@
-import { Products, HowItWorks, FAQ } from "../Landing";
-import ProductItem from "./ProductItem";
+import { HowItWorks, FAQ } from "../Landing";
+import ProductsCatalog from "./ProductsCatalog";
 
-/** Navbar → Products page content */
+/** Navbar → Products page: full catalog grid → each card opens detail page */
 export default function NavProduct() {
   return (
     <>
@@ -14,13 +14,12 @@ export default function NavProduct() {
             Our Products
           </h1>
           <p className="mx-auto mt-2 max-w-xl text-sm text-[#5c5346] sm:text-base">
-            NFC cards, QR tools, and review products — built to grow your
-            business with one tap.
+            Instagram, YouTube, Google Reviews, NFC cards, stands, and keychains
+            — click any product to open its detail page.
           </p>
         </div>
       </div>
-      <ProductItem />
-      <Products />
+      <ProductsCatalog />
       <HowItWorks />
       <FAQ />
     </>

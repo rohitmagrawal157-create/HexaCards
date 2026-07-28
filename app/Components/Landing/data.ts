@@ -25,6 +25,9 @@ export const navLinks: NavLink[] = [
     href: "/product/social-media-cards",
     children: [
       { label: "Social Media Cards", href: "/product/social-media-cards" },
+      { label: "Instagram Card", href: "/product/instagram-card" },
+      { label: "YouTube Card", href: "/product/youtube-card" },
+      { label: "Google Review Cards", href: "/product/google-review-card" },
       { label: "Google Review Standy", href: "/product/google-review-standy" },
       { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
     ],
@@ -229,6 +232,9 @@ export const footerLinks = {
   ],
   solutions: [
     { label: "Social Media Cards", href: "/product/social-media-cards" },
+    { label: "Instagram Card", href: "/product/instagram-card" },
+    { label: "YouTube Card", href: "/product/youtube-card" },
+    { label: "Google Review Cards", href: "/product/google-review-card" },
     { label: "Google Review Standy", href: "/product/google-review-standy" },
     { label: "Review Keychain QR", href: "/product/review-keychain-qr" },
     { label: "Services", href: "/services" },

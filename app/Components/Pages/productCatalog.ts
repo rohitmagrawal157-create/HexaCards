@@ -272,11 +272,11 @@ export const productCatalog: Record<string, CatalogProduct> = {
   "social-media-cards": {
     id: "social-media-cards",
     category: "For Reviews",
-    title: "Social Media Cards",
-    shortTitle: "Social Media Cards",
+    title: "Google Review Cards",
+    shortTitle: "Google Review Cards",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan — also available for Instagram and YouTube.",
-    price: 799,
+    price: 399,
     compareAtPrice: 799,
     media: [
       {
@@ -336,14 +336,155 @@ export const productCatalog: Record<string, CatalogProduct> = {
     ctaHref: "/checkout",
     designable: false,
   },
+  "instagram-card": {
+    id: "instagram-card",
+    category: "Social Media Cards",
+    title: "Instagram NFC Card",
+    shortTitle: "Instagram Card",
+    description:
+      "One tap or scan opens your Instagram profile — built for creators, salons, and brands that grow with followers.",
+    price: 399,
+    compareAtPrice: 799,
+    media: [
+      {
+        type: "image",
+        src: "/Images/Products/Instacard1.jpg",
+        alt: "Hexa Instagram NFC card",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Instacard2.jpg",
+        alt: "Hexa Instagram NFC card — alternate view",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/googleReview.jpg",
+        alt: "Hexa social media card style",
+      },
+    ],
+    highlights: [
+      "Opens your Instagram profile instantly",
+      "NFC + QR — works on every smartphone",
+      "Perfect for salons, shops & creators",
+      "Custom branding with your handle",
+    ],
+    finishes: [
+      { name: "Black · Gold", hint: "Premium contrast finish" },
+      { name: "Brand Colors", hint: "Match your Instagram look" },
+      { name: "Matte PVC", hint: "Durable everyday card" },
+    ],
+    included: [
+      "Printed Instagram NFC / QR card",
+      "Your Instagram link programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-hand packaging",
+    ],
+    ctaLabel: "Order Instagram Card",
+    ctaHref: "/checkout",
+    designable: false,
+  },
+  "youtube-card": {
+    id: "youtube-card",
+    category: "Social Media Cards",
+    title: "YouTube NFC Card",
+    shortTitle: "YouTube Card",
+    description:
+      "Share your YouTube channel with one tap or scan — grow subscribers without typing a long URL.",
+    price: 399,
+    compareAtPrice: 799,
+    media: [
+      {
+        type: "image",
+        src: "/Images/Products/Youtubecard1.jpg",
+        alt: "Hexa YouTube NFC card",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Youtubecard2.jpg",
+        alt: "Hexa YouTube NFC card — alternate view",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/googleReview.jpg",
+        alt: "Hexa social media card style",
+      },
+    ],
+    highlights: [
+      "Opens your YouTube channel instantly",
+      "NFC + QR — works on every smartphone",
+      "Ideal for creators & educators",
+      "Custom branding with your channel name",
+    ],
+    finishes: [
+      { name: "YouTube Red", hint: "Channel-ready design" },
+      { name: "Black · Gold", hint: "Premium contrast finish" },
+      { name: "Matte PVC", hint: "Durable everyday card" },
+    ],
+    included: [
+      "Printed YouTube NFC / QR card",
+      "Your channel link programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-hand packaging",
+    ],
+    ctaLabel: "Order YouTube Card",
+    ctaHref: "/checkout",
+    designable: false,
+  },
+  "google-review-card": {
+    id: "google-review-card",
+    category: "For Reviews",
+    title: "Google Review Cards",
+    shortTitle: "Google Review Cards",
+    description:
+      "Hand customers a card that opens your Google review page in one tap or scan — grow ratings without awkward asks.",
+    price: 399,
+    compareAtPrice: 799,
+    media: [
+      {
+        type: "image",
+        src: "/Images/Products/googleReview.jpg",
+        alt: "Hexa Google review card",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Googlecard1.jpg",
+        alt: "Hexa Google review NFC card",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Googlecard2.jpg",
+        alt: "Hexa Google review NFC card — alternate view",
+      },
+    ],
+    highlights: [
+      "Opens your Google review page instantly",
+      "NFC + QR — works on every phone",
+      "Perfect for clinics, shops & restaurants",
+      "Custom branding with your business name",
+    ],
+    finishes: [
+      { name: "Standard Print", hint: "Full-color Google-ready design" },
+      { name: "Premium Finish", hint: "Matte or gloss coating" },
+      { name: "Bulk Packs", hint: "Ideal for counter staff" },
+    ],
+    included: [
+      "Printed Google review NFC/QR cards",
+      "Your Google review link programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-hand packaging",
+    ],
+    ctaLabel: "Order Review Cards",
+    ctaHref: "/checkout",
+    designable: false,
+  },
   "google-reviews": {
     id: "google-reviews",
     category: "For Reviews",
-    title: "Social Media Cards",
+    title: "Google Review Cards",
     shortTitle: "Google Reviews",
     description:
       "Hand customers a card that opens your Google review page in one tap or scan — grow ratings without awkward asks.",
-    price: 799,
+    price: 399,
     compareAtPrice: 799,
     media: [
       {
