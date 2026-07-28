@@ -333,7 +333,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Ready-to-hand packaging",
     ],
     ctaLabel: "Order Review Cards",
-    ctaHref: "/checkout",
+    ctaHref: "/order/google-review-card",
     designable: false,
   },
   "instagram-card": {
@@ -380,7 +380,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Ready-to-hand packaging",
     ],
     ctaLabel: "Order Instagram Card",
-    ctaHref: "/checkout",
+    ctaHref: "/order/instagram-card",
     designable: false,
   },
   "youtube-card": {
@@ -427,7 +427,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Ready-to-hand packaging",
     ],
     ctaLabel: "Order YouTube Card",
-    ctaHref: "/checkout",
+    ctaHref: "/order/youtube-card",
     designable: false,
   },
   "google-review-card": {
@@ -474,7 +474,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Ready-to-hand packaging",
     ],
     ctaLabel: "Order Review Cards",
-    ctaHref: "/checkout",
+    ctaHref: "/order/google-review-card",
     designable: false,
   },
   "google-reviews": {
@@ -541,14 +541,14 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Ready-to-hand packaging",
     ],
     ctaLabel: "Order Review Cards",
-    ctaHref: "/checkout",
+    ctaHref: "/order/google-review-card",
     designable: false,
   },
   "review-stand": {
     id: "review-stand",
-    category: "For Reviews",
+    category: "Review Standee",
     title: "Google Review Standee",
-    shortTitle: "Google Review Standy",
+    shortTitle: "Google Standee",
     description:
       "Countertop standee for your desk or counter — customers scan and leave a Google review on autopilot.",
     price: 699,
@@ -569,6 +569,85 @@ export const productCatalog: Record<string, CatalogProduct> = {
         src: "/Images/Products/googleStandy2.jpg",
         alt: "Hexa Google review standee — alternate view",
       },
+    ],
+    highlights: [
+      "Desk / counter standee with QR + NFC",
+      "Opens Google reviews in one scan",
+      "Always-on review collection at checkout",
+      "Custom branding for your business",
+    ],
+    finishes: [
+      { name: "Table Stand", hint: "Stable countertop display" },
+      { name: "Branded Print", hint: "Your logo & Google QR" },
+      { name: "Durable Board", hint: "Everyday shop use" },
+    ],
+    included: [
+      "Printed Google review standee",
+      "Your Google review link / NFC programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-place packaging",
+    ],
+    ctaLabel: "Order Google Standee",
+    ctaHref: "/order/google-standee",
+    designable: false,
+  },
+  "google-standee": {
+    id: "google-standee",
+    category: "Review Standee",
+    title: "Google Review Standee",
+    shortTitle: "Google Standee",
+    description:
+      "Countertop standee for your desk or counter — customers scan and leave a Google review on autopilot.",
+    price: 699,
+    compareAtPrice: 1299,
+    media: [
+      {
+        type: "image",
+        src: "/Images/Products/reviewStandy.jpg",
+        alt: "Hexa Google review standee",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/googleStandy1.jpg",
+        alt: "Hexa Google review standee — detail",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/googleStandy2.jpg",
+        alt: "Hexa Google review standee — alternate view",
+      },
+    ],
+    highlights: [
+      "Desk / counter standee with QR + NFC",
+      "Opens Google reviews in one scan",
+      "Always-on review collection at checkout",
+      "Custom branding for your business",
+    ],
+    finishes: [
+      { name: "Table Stand", hint: "Stable countertop display" },
+      { name: "Branded Print", hint: "Your logo & Google QR" },
+      { name: "Durable Board", hint: "Everyday shop use" },
+    ],
+    included: [
+      "Printed Google review standee",
+      "Your Google review link / NFC programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-place packaging",
+    ],
+    ctaLabel: "Order Google Standee",
+    ctaHref: "/order/google-standee",
+    designable: false,
+  },
+  "instagram-standee": {
+    id: "instagram-standee",
+    category: "Review Standee",
+    title: "Instagram Standee",
+    shortTitle: "Instagram Standee",
+    description:
+      "Countertop Instagram standee — customers scan or tap to open your profile and follow in seconds.",
+    price: 699,
+    compareAtPrice: 1299,
+    media: [
       {
         type: "image",
         src: "/Images/Products/InstaStandy1.jpg",
@@ -587,23 +666,70 @@ export const productCatalog: Record<string, CatalogProduct> = {
     ],
     highlights: [
       "Desk / counter standee with QR + NFC",
-      "Opens Google reviews in one scan",
-      "Always-on review collection at checkout",
-      "Custom branding for your business",
+      "Opens your Instagram profile in one scan",
+      "Grow followers from your counter",
+      "Custom branding with your handle",
     ],
     finishes: [
-      { name: "Google Standy", hint: "Collect Google reviews on autopilot" },
-      { name: "Instagram Standy", hint: "Grow followers from your counter" },
+      { name: "Table Stand", hint: "Stable countertop display" },
+      { name: "Brand Colors", hint: "Match your Instagram look" },
       { name: "Durable Board", hint: "Everyday shop use" },
     ],
     included: [
-      "Printed review standee",
-      "Your Google review link / NFC programmed",
+      "Printed Instagram standee",
+      "Your Instagram link / NFC programmed",
       "Free design assistance on WhatsApp",
       "Ready-to-place packaging",
     ],
-    ctaLabel: "Order Review Stand",
-    ctaHref: "/checkout",
+    ctaLabel: "Order Instagram Standee",
+    ctaHref: "/order/instagram-standee",
+    designable: false,
+  },
+  "youtube-standee": {
+    id: "youtube-standee",
+    category: "Review Standee",
+    title: "YouTube Standee",
+    shortTitle: "YouTube Standee",
+    description:
+      "Countertop YouTube standee — customers scan or tap to open your channel and subscribe instantly.",
+    price: 699,
+    compareAtPrice: 1299,
+    media: [
+      {
+        type: "image",
+        src: "/Images/Products/reviewStandy.jpg",
+        alt: "Hexa YouTube standee",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Youtubecard1.jpg",
+        alt: "Hexa YouTube card design",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/Youtubecard2.jpg",
+        alt: "Hexa YouTube card — alternate view",
+      },
+    ],
+    highlights: [
+      "Desk / counter standee with QR + NFC",
+      "Opens your YouTube channel in one scan",
+      "Grow subscribers from your counter",
+      "Custom branding with your channel name",
+    ],
+    finishes: [
+      { name: "Table Stand", hint: "Stable countertop display" },
+      { name: "YouTube Red", hint: "Channel-ready design" },
+      { name: "Durable Board", hint: "Everyday shop use" },
+    ],
+    included: [
+      "Printed YouTube standee",
+      "Your channel link / NFC programmed",
+      "Free design assistance on WhatsApp",
+      "Ready-to-place packaging",
+    ],
+    ctaLabel: "Order YouTube Standee",
+    ctaHref: "/order/youtube-standee",
     designable: false,
   },
   "review-keychain-qr": {
@@ -664,6 +790,9 @@ export type CardProductId =
 export type ReviewProductId =
   | "google-reviews"
   | "review-stand"
+  | "google-standee"
+  | "instagram-standee"
+  | "youtube-standee"
   | "review-keychain-qr";
 
 export function getProduct(id: string): CatalogProduct {

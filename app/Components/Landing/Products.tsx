@@ -31,16 +31,16 @@ const products: Product[] = [
   {
     title: "Social Media Cards",
     description:
-      "Instagram, YouTube & Google Review cards — pick a platform and share in one tap.",
+      "Google, Instagram & YouTube cards — pick a platform and share in one tap.",
     image: "/Images/Products/googleReview.jpg",
     href: "/product/social-media-cards",
   },
   {
-    title: "Google Review Standy",
+    title: "Google Review Standee",
     description:
-      "Countertop standee for your desk or counter — collect Google reviews on autopilot.",
+      "Google, Instagram & YouTube standees — pick a platform for your counter.",
     image: "/Images/Products/reviewStandy.jpg",
-    href: "/product/google-review-standy",
+    href: "/product/google-review-standee",
   },
   {
     title: "Review Keychain QR",

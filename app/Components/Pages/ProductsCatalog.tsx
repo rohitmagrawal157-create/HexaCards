@@ -23,22 +23,33 @@ export const FULL_CATALOG_ORDER: CatalogEntry[] = [
     badge: "Popular",
   },
   { id: "digital-profile-qr", href: "/product/digital-profile-qr" },
-  { id: "instagram-card", href: "/product/instagram-card", badge: "Social" },
-  { id: "youtube-card", href: "/product/youtube-card", badge: "Social" },
   {
     id: "google-review-card",
     href: "/product/google-review-card",
-    badge: "Reviews",
+    badge: "Social",
   },
-  { id: "review-stand", href: "/product/google-review-standy" },
+  { id: "instagram-card", href: "/product/instagram-card", badge: "Social" },
+  { id: "youtube-card", href: "/product/youtube-card", badge: "Social" },
+  { id: "google-standee", href: "/product/google-standee", badge: "Standee" },
+  {
+    id: "instagram-standee",
+    href: "/product/instagram-standee",
+    badge: "Standee",
+  },
+  { id: "youtube-standee", href: "/product/youtube-standee", badge: "Standee" },
   { id: "review-keychain-qr", href: "/product/review-keychain-qr" },
   { id: "metal-card", href: "/product/metal-card" },
   { id: "pvc-card", href: "/product/pvc-card" },
   { id: "wooden-card", href: "/product/wooden-card" },
 ];
 
-/** Social Media Cards category — Instagram, YouTube, Google Reviews */
+/** Social Media Cards category — 1 Google, 2 Instagram, 3 YouTube */
 export const SOCIAL_MEDIA_CATALOG: CatalogEntry[] = [
+  {
+    id: "google-review-card",
+    href: "/product/google-review-card",
+    badge: "Google",
+  },
   {
     id: "instagram-card",
     href: "/product/instagram-card",
@@ -49,10 +60,24 @@ export const SOCIAL_MEDIA_CATALOG: CatalogEntry[] = [
     href: "/product/youtube-card",
     badge: "YouTube",
   },
+];
+
+/** Review Standee category — 1 Google, 2 Instagram, 3 YouTube */
+export const STANDEE_CATALOG: CatalogEntry[] = [
   {
-    id: "google-review-card",
-    href: "/product/google-review-card",
+    id: "google-standee",
+    href: "/product/google-standee",
     badge: "Google",
+  },
+  {
+    id: "instagram-standee",
+    href: "/product/instagram-standee",
+    badge: "Instagram",
+  },
+  {
+    id: "youtube-standee",
+    href: "/product/youtube-standee",
+    badge: "YouTube",
   },
 ];
 
@@ -74,7 +99,7 @@ function CatalogCard({ item }: { item: CatalogItem }) {
       href={href}
       className="group flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.06] transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-[#BC7C10]/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BC7C10]"
     >
-      <div className="relative aspect-square overflow-hidden bg-[#FFF8ED]">
+      <div className="relative aspect-square overflow-hidden bg-[#F3F4F6]">
         {badge ? (
           <span className="absolute top-3 left-3 z-10 rounded-full bg-[#BC7C10] px-2.5 py-1 text-[10px] font-bold tracking-wide text-white uppercase">
             {badge}

@@ -99,7 +99,7 @@ export default function ProductDetails({
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:py-12">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <div className="relative aspect-square overflow-hidden rounded-2xl border border-[#BC7C10]/20 bg-[#FFF8ED] shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:rounded-3xl">
+          <div className="relative aspect-square overflow-hidden rounded-2xl border border-black/[0.06] bg-[#F3F4F6] shadow-[0_16px_48px_rgba(15,23,42,0.06)] sm:rounded-3xl">
             {active.type === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

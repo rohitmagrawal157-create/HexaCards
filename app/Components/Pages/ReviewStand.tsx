@@ -1,6 +1,12 @@
 import ProductPageLayout from "./ProductPageLayout";
 
-/** Review Stand product page content (legacy catalog id) */
+/** Legacy catalog id — same as Google Standee detail */
 export default function ReviewStand() {
-  return <ProductPageLayout productId="review-stand" />;
+  return (
+    <ProductPageLayout
+      productId="google-standee"
+      backHref="/product/google-review-standee"
+      backLabel="Standees"
+    />
+  );
 }

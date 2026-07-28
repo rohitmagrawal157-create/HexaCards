@@ -1,7 +1,10 @@
 export { default as ProductPageLayout } from "./ProductPageLayout";
 export { default as DigitalProfileQr } from "./DigitalProfileQr";
 export { default as SocialMediaCards } from "./SocialMediaCards";
-export { default as GoogleReviewStandy } from "./GoogleReviewStandy";
+export { default as GoogleReviewStandee } from "./GoogleReviewStandee";
+export { default as GoogleStandee } from "./GoogleStandee";
+export { default as InstagramStandee } from "./InstagramStandee";
+export { default as YoutubeStandee } from "./YoutubeStandee";
 export { default as InstagramCard } from "./InstagramCard";
 export { default as YoutubeCard } from "./YoutubeCard";
 export { default as GoogleReviewCard } from "./GoogleReviewCard";
@@ -19,6 +22,7 @@ export { default as NavServices } from "./NavServices";
 export { default as ProductItem } from "./ProductItem";
 export { default as Checkout } from "./Checkout";
 export { default as CardCustomizer } from "./CardCustomizer";
+export { default as DetailsForm } from "./DetailsForm";
 export {
   productCatalog,
   getProduct,
