@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { getProduct } from "./productCatalog";
+import { goToCheckout } from "./auth";
 
 export type OrderPlatform = "instagram" | "youtube" | "google";
 
@@ -212,7 +213,7 @@ export default function DetailsForm({ productId }: { productId: string }) {
       // sessionStorage may be full/blocked — continue to checkout anyway
     }
 
-    router.push("/checkout");
+    goToCheckout(router, "/checkout");
   }
 
   return (

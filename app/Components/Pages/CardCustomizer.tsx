@@ -28,6 +28,7 @@ import {
 } from "./cardFinishes";
 import { GOLD_GRADIENT, GOLD_SOLID, GOLD_STOPS } from "./goldCard";
 import { SILVER_GRADIENT } from "./silverCard";
+import { goToCheckout } from "./auth";
 
 type Side = "front" | "back";
 
@@ -610,7 +611,7 @@ export default function CardCustomizer() {
 
     setSavedFlash(true);
     window.setTimeout(() => {
-      router.push("/checkout");
+      goToCheckout(router, "/checkout");
     }, 450);
   }
 

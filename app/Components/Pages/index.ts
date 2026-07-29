@@ -23,8 +23,15 @@ export { default as ProductItem } from "./ProductItem";
 export { default as Checkout } from "./Checkout";
 export { default as CardCustomizer } from "./CardCustomizer";
 export { default as DetailsForm } from "./DetailsForm";
+export { default as Login } from "./Login";
 export {
   productCatalog,
   getProduct,
   type CatalogProduct,
 } from "./productCatalog";
+export {
+  isLoggedIn,
+  getAuthUser,
+  goToCheckout,
+  loginPathWithNext,
+} from "./auth";

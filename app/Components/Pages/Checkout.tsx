@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CreditCard,
   ShieldCheck,
@@ -10,7 +11,15 @@ import {
   ArrowLeft,
   Minus,
   Plus,
+  LayoutDashboard,
+  Package,
 } from "lucide-react";
+import { getAuthUser, isLoggedIn, loginPathWithNext } from "./auth";
+import {
+  formatOrderDate,
+  saveOrder,
+  type HexaOrder,
+} from "./orders";
 
 type CartItem = {
   id: string;
@@ -74,6 +83,8 @@ function currency(amount: number) {
 }
 
 export default function Checkout() {
+  const router = useRouter();
+  const [authReady, setAuthReady] = useState(false);
   const [design, setDesign] = useState<SavedDesign | null>(null);
   const [form, setForm] = useState({
     firstName: "",
@@ -99,6 +110,43 @@ export default function Checkout() {
   } | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [placedOrder, setPlacedOrder] = useState<HexaOrder | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      router.replace(loginPathWithNext("/checkout"));
+      return;
+    }
+    const user = getAuthUser();
+    if (user) {
+      const parts = user.name.trim().split(/\s+/);
+      const firstName = parts[0] ?? "";
+      const lastName = parts.slice(1).join(" ");
+      setForm((f) => ({
+        ...f,
+        phone: f.phone || user.phone,
+        firstName: f.firstName || firstName,
+        lastName: f.lastName || lastName,
+      }));
+    }
+    setAuthReady(true);
+  }, [router]);
+
+  // If user logs out while we're already on checkout, redirect them
+  // to login so checkout is not shown to logged-out users.
+  useEffect(() => {
+    function onAuthChange() {
+      if (!isLoggedIn()) {
+        setAuthReady(false);
+        router.replace(loginPathWithNext("/checkout"));
+      } else {
+        setAuthReady(true);
+      }
+    }
+
+    window.addEventListener("hexa-auth-change", onAuthChange);
+    return () => window.removeEventListener("hexa-auth-change", onAuthChange);
+  }, [router]);
 
   useEffect(() => {
     try {
@@ -167,23 +215,41 @@ export default function Checkout() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!agreedToTerms) return;
+    if (!agreedToTerms || isSubmitting) return;
     setIsSubmitting(true);
 
-    console.log("Submitting order:", {
-      form,
-      sameBilling,
-      selectedPack,
-      packCount,
-      lineQty,
-      appliedCoupon,
-      subtotal,
-      discountAmount,
-      total,
-      design,
-    });
+    try {
+      const productTitle = cartItems[0]?.title ?? "Hexa NFC Business Card";
+      const order = saveOrder({
+        customerName: `${form.firstName} ${form.lastName}`.trim(),
+        phone: form.phone,
+        email: form.email,
+        address: form.address,
+        city: form.city,
+        postalCode: form.postalCode,
+        country: form.country,
+        packTitle: selectedPack.title,
+        qty: lineQty,
+        subtotal,
+        discount: discountAmount,
+        total,
+        coupon: appliedCoupon?.label ?? null,
+        productTitle,
+        status: "placed",
+      });
 
-    setIsSubmitting(false);
+      try {
+        sessionStorage.removeItem("hexaCardDesign");
+        sessionStorage.removeItem("hexaOrderDetails");
+      } catch {
+        // ignore
+      }
+
+      setPlacedOrder(order);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const finishLabel = design
@@ -192,17 +258,102 @@ export default function Checkout() {
       : `Black card · ${design.cardMode ?? "gold"} finish`
     : null;
 
+  if (!authReady) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-16 text-center sm:px-6 lg:px-8">
+        <p className="text-sm font-medium text-[#5c5346]">
+          Checking sign-in…
+        </p>
+      </div>
+    );
+  }
+
+  if (placedOrder) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="rounded-2xl border border-black/[0.06] bg-white p-6 text-center shadow-sm sm:p-10">
+          <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/12 text-emerald-600">
+            <CheckCircle2 className="h-9 w-9" />
+          </span>
+          <p className="mt-5 text-xs font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
+            Order confirmed
+          </p>
+          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#141414]">
+            Thank you!
+          </h1>
+          <p className="mt-2 text-sm text-[#5c5346]">
+            Your HexaCards order is placed. Track shipping and updates from your
+            dashboard.
+          </p>
+
+          <div className="mt-6 rounded-xl border border-black/[0.06] bg-[#FFFCF7] p-4 text-left">
+            <div className="flex items-start gap-3">
+              <Package className="mt-0.5 h-5 w-5 shrink-0 text-[#BC7C10]" />
+              <div className="min-w-0 flex-1 space-y-1.5 text-sm">
+                <p className="font-bold text-[#141414]">
+                  {placedOrder.productTitle}
+                </p>
+                <p className="text-[#5c5346]">
+                  Order ID:{" "}
+                  <span className="font-semibold text-[#141414]">
+                    {placedOrder.id}
+                  </span>
+                </p>
+                <p className="text-[#5c5346]">
+                  {placedOrder.packTitle} · Qty {placedOrder.qty}
+                </p>
+                <p className="text-[#5c5346]">
+                  Placed: {formatOrderDate(placedOrder.createdAt)}
+                </p>
+                <p className="pt-1 text-base font-bold text-[#141414]">
+                  Total: {currency(placedOrder.total)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <Link
+              href="/dashboard?tab=orders"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BC7C10] px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d]"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Go to Dashboard
+            </Link>
+            <Link
+              href="/products"
+              className="inline-flex items-center justify-center rounded-xl border border-black/10 bg-white px-4 py-3.5 text-sm font-semibold text-[#141414] transition-colors hover:bg-black/[0.03]"
+            >
+              Continue shopping
+            </Link>
+          </div>
+
+          <p className="mt-5 text-xs text-[#8a8174]">
+            Use Dashboard → Order History to track your order.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex-1" />
-        <Link
-          href="/design-your-card#card-studio"
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined" && window.history.length > 1) {
+              router.back();
+            } else {
+              router.push("/products");
+            }
+          }}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#BC7C10] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d] active:scale-[0.99]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to design
-        </Link>
+          Back
+        </button>
       </div>
 
       <div className="mb-8 text-center">

@@ -1,11 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, ShoppingCart } from "lucide-react";
+import { ChevronDown, LogOut, ShoppingCart, UserRound } from "lucide-react";
 import { navLinks } from "./data";
+import {
+  clearAuthUser,
+  getAuthUser,
+  goToCheckout,
+  type HexaAuthUser,
+} from "../Pages/auth";
 
 function linkIsActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -14,9 +20,42 @@ function linkIsActive(pathname: string, href: string) {
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [user, setUser] = useState<HexaAuthUser | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const sync = () => setUser(getAuthUser());
+    sync();
+    window.addEventListener("hexa-auth-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("hexa-auth-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (!userMenuRef.current) return;
+      const target = e.target as Node;
+      if (userMenuRef.current.contains(target)) return;
+      setUserMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
+
+  function signOut() {
+    clearAuthUser();
+    setUser(null);
+    setOpen(false);
+    setUserMenuOpen(false);
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md">
@@ -104,9 +143,9 @@ export default function Navbar() {
                               <li key={child.href + child.label}>
                                 <Link
                                   href={child.href}
-                                  className={`block rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-colors hover:bg-black/[0.04] hover:text-[#BC7C10] ${
+                                  className={`block rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
                                     childActive
-                                      ? "text-[#BC7C10]"
+                                      ? "bg-[#FFF8ED] text-[#BC7C10]"
                                       : "text-[#333]"
                                   }`}
                                 >
@@ -132,15 +171,64 @@ export default function Navbar() {
               className={`flex h-9 w-9 items-center justify-center rounded-full transition-opacity hover:opacity-70 ${
                 pathname === "/checkout" ? "text-[#BC7C10]" : "text-[#1a1a1a]"
               }`}
+              onClick={(e) => {
+                // Redirect to login (with return URL) before checkout page loads.
+                e.preventDefault();
+                goToCheckout(router, "/checkout");
+              }}
             >
               <ShoppingCart className="h-[18px] w-[18px]" strokeWidth={1.75} />
             </Link>
-            <Link
-              href="/design-your-card"
-              className="hidden shrink-0 items-center justify-center rounded-full bg-[#111] px-5 py-2.5 text-[15px] font-semibold whitespace-nowrap text-white transition-colors duration-200 hover:bg-[#222] active:scale-[0.98] lg:inline-flex"
-            >
-              Sign In
-            </Link>
+            {user ? (
+              <div ref={userMenuRef} className="relative hidden items-center gap-1.5 lg:flex">
+                <span className="max-w-[140px] truncate rounded-full bg-[#FFF8ED] px-3 py-2 text-xs font-bold text-[#BC7C10]">
+                  {user.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-label="User menu"
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#1a1a1a] transition-colors hover:bg-black/[0.04]"
+                >
+                  <UserRound className="h-4 w-4" />
+                </button>
+
+                {userMenuOpen ? (
+                  <div
+                    role="menu"
+                    aria-label="User menu"
+                    className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-[#e8e8e8] bg-white shadow-[0_14px_50px_rgba(0,0,0,0.12)]"
+                  >
+                    <Link
+                      href="/dashboard"
+                      role="menuitem"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-3 text-sm font-semibold text-[#141414] hover:bg-[#FFF8ED]"
+                    >
+                      User dashboard
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={signOut}
+                      className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-[#141414] hover:bg-[#FFF8ED]"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="hidden shrink-0 items-center justify-center rounded-full bg-[#111] px-5 py-2.5 text-[15px] font-semibold whitespace-nowrap text-white transition-colors duration-200 hover:bg-[#222] active:scale-[0.98] lg:inline-flex"
+              >
+                Sign In
+              </Link>
+            )}
             <button
               type="button"
               className="flex h-9 w-9 items-center justify-center text-[#1a1a1a] lg:hidden"
@@ -233,13 +321,36 @@ export default function Navbar() {
               );
             })}
             <li className="mt-3 border-t border-[#e8e8e8] pt-3">
-              <Link
-                href="/design-your-card"
-                className="flex w-full items-center justify-center rounded-full bg-[#111] px-5 py-3 text-base font-semibold text-white"
-                onClick={() => setOpen(false)}
-              >
-                Sign In
-              </Link>
+              {user ? (
+                <div className="space-y-2">
+                  <p className="px-3 text-sm font-bold text-[#BC7C10]">
+                    {user.name}
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center justify-center rounded-full bg-[#FFF8ED] px-5 py-3 text-base font-semibold text-[#BC7C10] transition-colors hover:bg-[#FFF3DF]"
+                  >
+                    User dashboard
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-black/10 px-5 py-3 text-base font-semibold text-[#141414]"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  href="/login"
+                  className="flex w-full items-center justify-center rounded-full bg-[#111] px-5 py-3 text-base font-semibold text-white"
+                  onClick={() => setOpen(false)}
+                >
+                  Sign In
+                </Link>
+              )}
             </li>
           </ul>
         </nav>
