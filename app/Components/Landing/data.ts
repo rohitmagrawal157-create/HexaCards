@@ -66,7 +66,7 @@ export const products = [
   {
     title: "Social Media Cards",
     description: "Get more Google reviews",
-    price: "₹799",
+    price: "₹ 799",
     image: "/Images/Products/googleReview.png",
   },
   {
