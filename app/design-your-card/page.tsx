@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../Components/Landing";
-import CardCustomizer from "../Components/Pages/CardCustomizer";
+import { Navbar, Footer } from "@/components/landing";
+import CardCustomizer from "@/components/products/CardCustomizer";
 
 export const metadata = {
   title: "Design Your Card — HexaCards",

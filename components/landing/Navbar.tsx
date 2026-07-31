@@ -11,7 +11,7 @@ import {
   getAuthUser,
   goToCheckout,
   type HexaAuthUser,
-} from "../Pages/auth";
+} from "@/lib/auth";
 
 function linkIsActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";

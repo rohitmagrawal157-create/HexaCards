@@ -12,8 +12,8 @@ import {
   X,
   Check,
 } from "lucide-react";
-import { getProduct } from "./productCatalog";
-import { goToCheckout } from "./auth";
+import { getProduct } from "@/lib/product-catalog";
+import { goToCheckout } from "@/lib/auth";
 
 export type OrderPlatform = "instagram" | "youtube" | "google";
 

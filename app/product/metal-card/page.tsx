@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { MetalCard, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { MetalCard, getProduct } from "@/components/products";
 
 const product = getProduct("metal-card");
 

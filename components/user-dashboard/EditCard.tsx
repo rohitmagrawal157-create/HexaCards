@@ -28,17 +28,27 @@ import {
   isLoggedIn,
   loginPathWithNext,
   type HexaAuthUser,
-} from "../Pages/auth";
+} from "@/lib/auth";
+import { hasPlacedOrder } from "@/lib/orders";
 import {
   cardPublicSlug,
   cardPublicUrl,
   cardPublicPath,
-  compressImageFile,
+  clearBrochureFile,
+  formatFileSize,
   getCardProfile,
+  normalizePhoneForInput,
+  saveBrochureFile,
   saveCardProfile,
+  BROCHURE_MAX_BYTES,
   type HexaCardProfile,
-} from "./cardProfile";
+} from "@/lib/card-profile";
+import PhoneNumberField from "./PhoneNumberField";
 import ProfileBanner from "./ProfileBanner";
+import ImageCropModal, {
+  readFileAsDataUrl,
+  type CropKind,
+} from "./ImageCropModal";
 
 type EditTab = "contact" | "social" | "businessInfo" | "appearance";
 
@@ -78,6 +88,12 @@ export default function EditCard() {
   const coverRef = useRef<HTMLInputElement>(null);
   const logoRef = useRef<HTMLInputElement>(null);
   const shareRef = useRef<HTMLInputElement>(null);
+  const brochureRef = useRef<HTMLInputElement>(null);
+  const [brochureError, setBrochureError] = useState("");
+  const [cropState, setCropState] = useState<{
+    src: string;
+    kind: CropKind;
+  } | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -85,8 +101,12 @@ export default function EditCard() {
       return;
     }
     const auth = getAuthUser();
+    if (!auth || !hasPlacedOrder(auth.phone)) {
+      router.replace("/dashboard");
+      return;
+    }
     setUser(auth);
-    setProfile(getCardProfile(auth?.name, auth?.phone));
+    setProfile(getCardProfile(auth.name, auth.phone));
     setAuthReady(true);
   }, [router]);
 
@@ -154,21 +174,75 @@ export default function EditCard() {
     );
   }
 
-  function readImageFile(
-    file: File | undefined,
-    onDone: (dataUrl: string) => void,
-    options?: { maxWidth?: number; maxHeight?: number; quality?: number },
-  ) {
+  async function openImageCrop(file: File | undefined, kind: CropKind) {
     if (!file || !file.type.startsWith("image/")) return;
-    void compressImageFile(file, options)
-      .then(onDone)
-      .catch(() => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === "string") onDone(reader.result);
-        };
-        reader.readAsDataURL(file);
+    try {
+      const src = await readFileAsDataUrl(file);
+      setCropState({ src, kind });
+    } catch {
+      window.alert("Could not open this image. Please try another file.");
+    }
+  }
+
+  function applyCroppedImage(dataUrl: string) {
+    if (!cropState) return;
+    if (cropState.kind === "profile") updateAppearance("logoImage", dataUrl);
+    else if (cropState.kind === "background")
+      updateAppearance("coverImage", dataUrl);
+    else updateAppearance("shareImage", dataUrl);
+    setCropState(null);
+  }
+
+  async function handleBrochureUpload(file: File | undefined) {
+    if (!file || !profile) return;
+    setBrochureError("");
+    if (file.size > BROCHURE_MAX_BYTES) {
+      setBrochureError("Brochure must be 5 MB or smaller.");
+      return;
+    }
+    const allowed = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (file.type && !allowed.includes(file.type) && !file.name.match(/\.(pdf|png|jpe?g|webp|docx?)$/i)) {
+      setBrochureError("Use PDF, DOC, DOCX, or image files only.");
+      return;
+    }
+    try {
+      await saveBrochureFile(file);
+      setProfile({
+        ...profile,
+        contact: {
+          ...profile.contact,
+          brochureName: file.name,
+          brochureMime: file.type || "application/octet-stream",
+          brochureSize: file.size,
+        },
       });
+    } catch (err) {
+      setBrochureError(
+        err instanceof Error ? err.message : "Could not save brochure.",
+      );
+    }
+  }
+
+  async function handleBrochureClear() {
+    if (!profile) return;
+    setBrochureError("");
+    await clearBrochureFile();
+    setProfile({
+      ...profile,
+      contact: {
+        ...profile.contact,
+        brochureName: null,
+        brochureMime: null,
+        brochureSize: null,
+      },
+    });
   }
 
   function handleSave() {
@@ -311,7 +385,9 @@ export default function EditCard() {
                 {profile.contact.cardName || user.name}
               </p>
               <p className="mt-0.5 truncate text-[11px] text-white/50">
-                {profile.contact.title || "Digital business card"}
+                {[profile.contact.title, profile.contact.businessName]
+                  .filter((v) => v.trim())
+                  .join(" - ") || "Digital business card"}
               </p>
             </div>
 
@@ -352,7 +428,7 @@ export default function EditCard() {
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="rounded-xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-7">
+            <section className="overflow-visible rounded-xl border border-black/[0.06] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-7">
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-black/[0.06] pb-4">
                 <div>
                   <p className="text-[11px] font-semibold tracking-[0.14em] text-[#BC7C10] uppercase">
@@ -404,48 +480,36 @@ export default function EditCard() {
                       onChange={(e) =>
                         updateContact("businessName", e.target.value)
                       }
-                      placeholder="Business name"
+                      placeholder="Shown on card as Title - Business name"
                     />
                   </Field>
-                  <Field label="Country code">
-                    <select
-                      className={fieldClass()}
-                      value={profile.contact.countryCode}
-                      onChange={(e) =>
-                        updateContact("countryCode", e.target.value)
+
+                  <div className="relative z-30 grid gap-4 sm:col-span-2 sm:grid-cols-2">
+                    <PhoneNumberField
+                      label="Mobile number"
+                      value={normalizePhoneForInput(
+                        profile.contact.mobile,
+                        profile.contact.countryCode,
+                      )}
+                      defaultCountry={profile.contact.countryCode || "IN"}
+                      placeholder="Mobile number"
+                      onChange={(value) => updateContact("mobile", value)}
+                      onCountryChange={(country) =>
+                        updateContact("countryCode", country)
                       }
-                    >
-                      <option value="IN">India (+91)</option>
-                      <option value="US">USA (+1)</option>
-                      <option value="AE">UAE (+971)</option>
-                    </select>
-                  </Field>
-                  <Field label="Mobile number">
-                    <input
-                      className={fieldClass()}
-                      value={profile.contact.mobile}
-                      onChange={(e) =>
-                        updateContact(
-                          "mobile",
-                          e.target.value.replace(/\D/g, "").slice(0, 10),
-                        )
-                      }
-                      placeholder="10-digit mobile"
                     />
-                  </Field>
-                  <Field label="WhatsApp number">
-                    <input
-                      className={fieldClass()}
-                      value={profile.contact.whatsapp}
-                      onChange={(e) =>
-                        updateContact(
-                          "whatsapp",
-                          e.target.value.replace(/\D/g, "").slice(0, 10),
-                        )
-                      }
+                    <PhoneNumberField
+                      label="WhatsApp number"
+                      value={normalizePhoneForInput(
+                        profile.contact.whatsapp,
+                        profile.contact.countryCode,
+                      )}
+                      defaultCountry={profile.contact.countryCode || "IN"}
                       placeholder="WhatsApp number"
+                      onChange={(value) => updateContact("whatsapp", value)}
                     />
-                  </Field>
+                  </div>
+
                   <Field label="Email address">
                     <input
                       type="email"
@@ -455,7 +519,7 @@ export default function EditCard() {
                       placeholder="you@company.com"
                     />
                   </Field>
-                  <Field label="Website" className="sm:col-span-2">
+                  <Field label="Website">
                     <input
                       className={fieldClass()}
                       value={profile.contact.website}
@@ -463,6 +527,7 @@ export default function EditCard() {
                       placeholder="https://"
                     />
                   </Field>
+
                   <Field label="State">
                     <input
                       className={fieldClass()}
@@ -488,6 +553,60 @@ export default function EditCard() {
                       placeholder="Full address"
                     />
                   </Field>
+
+                  <div className="sm:col-span-2">
+                    <p className={labelClass()}>E-Brochure</p>
+                    <div className="mt-1.5 rounded-xl border border-dashed border-black/15 bg-[#FAFAF8] p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-[#141414]">
+                            {profile.contact.brochureName ||
+                              "Upload company brochure"}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-[#8a8174]">
+                            PDF, DOC, or image · Max 5 MB
+                            {profile.contact.brochureSize
+                              ? ` · ${formatFileSize(profile.contact.brochureSize)} used`
+                              : ""}
+                          </p>
+                          {brochureError ? (
+                            <p className="mt-1.5 text-[11px] font-medium text-[#E24C4C]">
+                              {brochureError}
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => brochureRef.current?.click()}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 bg-white px-3 py-2 text-[12px] font-semibold text-[#141414] hover:bg-white"
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            {profile.contact.brochureName ? "Replace" : "Upload"}
+                          </button>
+                          {profile.contact.brochureName ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleBrochureClear()}
+                              className="rounded-lg px-3 py-2 text-[12px] font-semibold text-[#E24C4C] hover:bg-[#FFF5F5]"
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                      <input
+                        ref={brochureRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,image/*,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          void handleBrochureUpload(e.target.files?.[0]);
+                          e.target.value = "";
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : null}
 
@@ -623,49 +742,31 @@ export default function EditCard() {
                   <div className="grid gap-4 sm:grid-cols-3">
                     <ImageUpload
                       label="Cover image"
-                      hint="Header banner"
+                      hint="Square or banner crop"
                       value={profile.appearance.coverImage}
                       inputRef={coverRef}
                       onPick={() => coverRef.current?.click()}
-                      onChange={(file) =>
-                        readImageFile(
-                          file,
-                          (url) => updateAppearance("coverImage", url),
-                          { maxWidth: 1400, maxHeight: 900, quality: 0.7 },
-                        )
-                      }
+                      onChange={(file) => void openImageCrop(file, "background")}
                       onClear={() => updateAppearance("coverImage", null)}
                     />
                     <ImageUpload
                       label="Logo / profile"
-                      hint="Circle logo"
+                      hint="Square crop · 512×512"
                       value={profile.appearance.logoImage}
                       inputRef={logoRef}
                       onPick={() => logoRef.current?.click()}
-                      onChange={(file) =>
-                        readImageFile(
-                          file,
-                          (url) => updateAppearance("logoImage", url),
-                          { maxWidth: 512, maxHeight: 512, quality: 0.75 },
-                        )
-                      }
+                      onChange={(file) => void openImageCrop(file, "profile")}
                       onClear={() => updateAppearance("logoImage", null)}
                     />
-                    <ImageUpload
+                    {/* <ImageUpload
                       label="Share image"
-                      hint="Social preview"
+                      hint="Square crop · 1080×1080"
                       value={profile.appearance.shareImage}
                       inputRef={shareRef}
                       onPick={() => shareRef.current?.click()}
-                      onChange={(file) =>
-                        readImageFile(
-                          file,
-                          (url) => updateAppearance("shareImage", url),
-                          { maxWidth: 1200, maxHeight: 630, quality: 0.7 },
-                        )
-                      }
+                      onChange={(file) => void openImageCrop(file, "share")}
                       onClear={() => updateAppearance("shareImage", null)}
-                    />
+                    /> */}
                   </div>
 
                   <div>
@@ -759,18 +860,10 @@ export default function EditCard() {
                     slug={slug}
                     compact
                     onUploadProfile={(file) =>
-                      readImageFile(
-                        file,
-                        (url) => updateAppearance("logoImage", url),
-                        { maxWidth: 512, maxHeight: 512, quality: 0.75 },
-                      )
+                      void openImageCrop(file, "profile")
                     }
                     onUploadBackground={(file) =>
-                      readImageFile(
-                        file,
-                        (url) => updateAppearance("coverImage", url),
-                        { maxWidth: 1400, maxHeight: 900, quality: 0.7 },
-                      )
+                      void openImageCrop(file, "background")
                     }
                   />
                 </div>
@@ -779,6 +872,15 @@ export default function EditCard() {
           </div>
         </main>
       </div>
+
+      {cropState ? (
+        <ImageCropModal
+          imageSrc={cropState.src}
+          kind={cropState.kind}
+          onCancel={() => setCropState(null)}
+          onComplete={applyCroppedImage}
+        />
+      ) : null}
     </div>
   );
 }

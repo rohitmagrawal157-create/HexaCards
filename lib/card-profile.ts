@@ -1,3 +1,8 @@
+import {
+  parsePhoneNumberFromString,
+  type CountryCode,
+} from "libphonenumber-js";
+
 export type CardContactInfo = {
   cardName: string;
   title: string;
@@ -10,6 +15,9 @@ export type CardContactInfo = {
   state: string;
   city: string;
   address: string;
+  brochureName: string | null;
+  brochureMime: string | null;
+  brochureSize: number | null;
 };
 
 export type CardSocialLinks = {
@@ -42,7 +50,42 @@ export type HexaCardProfile = {
   updatedAt: string;
 };
 
+/** Normalize stored phone (national or E.164) for react-phone-number-input */
+export function normalizePhoneForInput(
+  number: string,
+  countryCode = "IN",
+): string {
+  const raw = number.trim();
+  if (!raw) return "";
+  if (raw.startsWith("+")) {
+    return parsePhoneNumberFromString(raw)?.number || raw;
+  }
+  const country = countryCode.toUpperCase() as CountryCode;
+  return parsePhoneNumberFromString(raw, country)?.number || raw;
+}
+
+/** Display-ready international phone, powered by libphonenumber-js */
+export function formatDialNumber(countryCode: string, number: string) {
+  const normalized = normalizePhoneForInput(number, countryCode);
+  if (!normalized) return "";
+  const parsed = parsePhoneNumberFromString(
+    normalized,
+    countryCode.toUpperCase() as CountryCode,
+  );
+  if (parsed) return parsed.formatInternational();
+  return normalized.startsWith("+") ? normalized : `+${normalized}`;
+}
+
+export function phoneDigitsForLink(countryCode: string, number: string) {
+  return formatDialNumber(countryCode, number).replace(/\D/g, "");
+}
+
+export const BROCHURE_MAX_BYTES = 5 * 1024 * 1024;
+
 const PROFILE_KEY = "hexaCardProfile";
+const BROCHURE_DB = "hexaCardAssets";
+const BROCHURE_STORE = "files";
+const BROCHURE_KEY = "brochure";
 
 export function defaultCardProfile(name = "User", phone = ""): HexaCardProfile {
   return {
@@ -58,6 +101,9 @@ export function defaultCardProfile(name = "User", phone = ""): HexaCardProfile {
       state: "",
       city: "",
       address: "",
+      brochureName: null,
+      brochureMime: null,
+      brochureSize: null,
     },
     social: {
       instagram: "",
@@ -102,6 +148,9 @@ export function getCardProfile(
       contact: {
         ...base.contact,
         ...parsed.contact,
+        brochureName: parsed.contact?.brochureName ?? null,
+        brochureMime: parsed.contact?.brochureMime ?? null,
+        brochureSize: parsed.contact?.brochureSize ?? null,
       },
       social: {
         ...base.social,
@@ -288,4 +337,79 @@ export function cardPublicUrl(profile: HexaCardProfile) {
 export function cardPublicPath(profile: HexaCardProfile) {
   return `/${cardPublicSlug(profile)}`;
 }
+
+function openBrochureDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BROCHURE_DB, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(BROCHURE_STORE)) {
+        db.createObjectStore(BROCHURE_STORE);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("IndexedDB open failed"));
+  });
+}
+
+export async function saveBrochureFile(file: File): Promise<void> {
+  if (file.size > BROCHURE_MAX_BYTES) {
+    throw new Error("Brochure must be 5 MB or smaller");
+  }
+  const db = await openBrochureDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(BROCHURE_STORE, "readwrite");
+    tx.objectStore(BROCHURE_STORE).put(file, BROCHURE_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Failed to save brochure"));
+  });
+  db.close();
+}
+
+export async function getBrochureFile(): Promise<Blob | null> {
+  const db = await openBrochureDb();
+  const blob = await new Promise<Blob | null>((resolve, reject) => {
+    const tx = db.transaction(BROCHURE_STORE, "readonly");
+    const req = tx.objectStore(BROCHURE_STORE).get(BROCHURE_KEY);
+    req.onsuccess = () => resolve((req.result as Blob | undefined) || null);
+    req.onerror = () => reject(req.error || new Error("Failed to load brochure"));
+  });
+  db.close();
+  return blob;
+}
+
+export async function clearBrochureFile(): Promise<void> {
+  const db = await openBrochureDb();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(BROCHURE_STORE, "readwrite");
+    tx.objectStore(BROCHURE_STORE).delete(BROCHURE_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Failed to clear brochure"));
+  });
+  db.close();
+}
+
+export async function openBrochureDownload(fileName?: string | null) {
+  const blob = await getBrochureFile();
+  if (!blob) return false;
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.target = "_blank";
+  a.rel = "noreferrer";
+  a.download = fileName || "brochure";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return true;
+}
+
+export function formatFileSize(bytes: number | null | undefined) {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 

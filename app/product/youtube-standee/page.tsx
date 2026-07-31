@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { YoutubeStandee, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { YoutubeStandee, getProduct } from "@/components/products";
 
 const product = getProduct("youtube-standee");
 

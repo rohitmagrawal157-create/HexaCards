@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Dashboard } from "../Components/Dashboard";
+import { Dashboard } from "@/components/user-dashboard";
 
 export const metadata = {
   title: "Dashboard — HexaCards",

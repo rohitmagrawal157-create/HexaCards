@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { Navbar, Footer } from "../Components/Landing";
-import Login from "../Components/Pages/Login";
+import { Navbar, Footer } from "@/components/landing";
+import Login from "@/components/products/Login";
 
 export const metadata = {
   title: "Sign In — HexaCards",

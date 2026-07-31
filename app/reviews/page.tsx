@@ -4,7 +4,7 @@ import {
   Testimonials,
   Products,
   FAQ,
-} from "../Components/Landing";
+} from "@/components/landing";
 
 export const metadata = {
   title: "Reviews — HexaCards",

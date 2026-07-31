@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { productCatalog, type CatalogProduct } from "./productCatalog";
+import { productCatalog, type CatalogProduct } from "@/lib/product-catalog";
 
 export type CatalogEntry = {
   id: string;

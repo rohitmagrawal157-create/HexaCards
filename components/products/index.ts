@@ -24,14 +24,15 @@ export { default as Checkout } from "./Checkout";
 export { default as CardCustomizer } from "./CardCustomizer";
 export { default as DetailsForm } from "./DetailsForm";
 export { default as Login } from "./Login";
+
 export {
   productCatalog,
   getProduct,
   type CatalogProduct,
-} from "./productCatalog";
+} from "@/lib/product-catalog";
 export {
   isLoggedIn,
   getAuthUser,
   goToCheckout,
   loginPathWithNext,
-} from "./auth";
+} from "@/lib/auth";

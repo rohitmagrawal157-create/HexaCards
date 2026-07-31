@@ -14,12 +14,17 @@ import {
   LayoutDashboard,
   Package,
 } from "lucide-react";
-import { getAuthUser, isLoggedIn, loginPathWithNext } from "./auth";
+import {
+  getAuthUser,
+  isLoggedIn,
+  loginPathWithNext,
+  normalizeIndianPhone,
+} from "@/lib/auth";
 import {
   formatOrderDate,
   saveOrder,
   type HexaOrder,
-} from "./orders";
+} from "@/lib/orders";
 
 type CartItem = {
   id: string;
@@ -124,7 +129,7 @@ export default function Checkout() {
       const lastName = parts.slice(1).join(" ");
       setForm((f) => ({
         ...f,
-        phone: f.phone || user.phone,
+        phone: f.phone || normalizeIndianPhone(user.phone),
         firstName: f.firstName || firstName,
         lastName: f.lastName || lastName,
       }));
@@ -216,13 +221,23 @@ export default function Checkout() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!agreedToTerms || isSubmitting) return;
+
+    const auth = getAuthUser();
+    if (!auth?.phone) {
+      router.replace(loginPathWithNext("/checkout"));
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const productTitle = cartItems[0]?.title ?? "Hexa NFC Business Card";
+      const contactPhone =
+        normalizeIndianPhone(form.phone) || auth.phone;
       const order = saveOrder({
+        ownerPhone: auth.phone,
         customerName: `${form.firstName} ${form.lastName}`.trim(),
-        phone: form.phone,
+        phone: contactPhone,
         email: form.email,
         address: form.address,
         city: form.city,
@@ -247,6 +262,9 @@ export default function Checkout() {
 
       setPlacedOrder(order);
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error("Failed to place order", err);
+      window.alert("Could not place your order. Please sign in again and retry.");
     } finally {
       setIsSubmitting(false);
     }
@@ -462,10 +480,21 @@ export default function Checkout() {
                 <input
                   id="phone"
                   type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={form.phone}
-                  onChange={(e) => updateField("phone", e.target.value)}
+                  onChange={(e) =>
+                    updateField(
+                      "phone",
+                      normalizeIndianPhone(e.target.value),
+                    )
+                  }
                   className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-4 py-3 transition-colors focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 focus:outline-none"
                 />
+                <p className="mt-1.5 text-xs text-[#8a8174]">
+                  Linked to your HexaCards login so the order shows in your
+                  dashboard.
+                </p>
               </div>
             </div>
 

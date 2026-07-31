@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../Components/Landing";
-import { NavServices } from "../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { NavServices } from "@/components/products";
 
 export const metadata = {
   title: "Services — HexaCards",

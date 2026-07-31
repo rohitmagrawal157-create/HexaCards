@@ -1,4 +1,4 @@
-import { HowItWorks, FAQ, Clients, Products, Testimonials } from "../Landing";
+import { HowItWorks, FAQ, Clients, Products, Testimonials } from "@/components/landing";
 import ProductDetails from "./ProductDetails";
 
 type ProductPageLayoutProps = {

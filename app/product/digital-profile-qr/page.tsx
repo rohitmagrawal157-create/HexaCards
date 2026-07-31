@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { DigitalProfileQr, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { DigitalProfileQr, getProduct } from "@/components/products";
 
 const product = getProduct("digital-profile-qr");
 

@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { YoutubeCard, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { YoutubeCard, getProduct } from "@/components/products";
 
 const product = getProduct("youtube-card");
 

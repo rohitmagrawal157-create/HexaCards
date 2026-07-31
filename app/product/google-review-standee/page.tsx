@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { GoogleReviewStandee } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { GoogleReviewStandee } from "@/components/products";
 
 export const metadata = {
   title: "Review Standee — HexaCards",

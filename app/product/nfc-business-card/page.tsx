@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { NfcBusinessCard, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { NfcBusinessCard, getProduct } from "@/components/products";
 
 const product = getProduct("nfc-business-card");
 

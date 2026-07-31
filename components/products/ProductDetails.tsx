@@ -13,7 +13,7 @@ import {
   UserRound,
   Share2,
 } from "lucide-react";
-import { getProduct, type CatalogProduct } from "./productCatalog";
+import { getProduct, type CatalogProduct } from "@/lib/product-catalog";
 
 function formatInr(n: number) {
   return `₹${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;

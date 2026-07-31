@@ -9,8 +9,8 @@ import {
   Testimonials,
   FAQ,
   Footer,
-} from "./Components/Landing";
-import Franchise from "./Components/Landing/Franchise";
+  Franchise,
+} from "@/components/landing";
 
 export default function HomePage() {
   return (

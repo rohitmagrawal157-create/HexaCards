@@ -28,7 +28,7 @@ import {
 } from "./cardFinishes";
 import { GOLD_GRADIENT, GOLD_SOLID, GOLD_STOPS } from "./goldCard";
 import { SILVER_GRADIENT } from "./silverCard";
-import { goToCheckout } from "./auth";
+import { goToCheckout } from "@/lib/auth";
 
 type Side = "front" | "back";
 

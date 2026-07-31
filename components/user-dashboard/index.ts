@@ -6,4 +6,4 @@ export {
   getCardProfile,
   saveCardProfile,
   type HexaCardProfile,
-} from "./cardProfile";
+} from "@/lib/card-profile";

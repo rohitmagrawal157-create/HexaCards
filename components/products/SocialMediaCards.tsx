@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { HowItWorks, FAQ } from "../Landing";
-import ProductsCatalog, { STANDEE_CATALOG } from "./ProductsCatalog";
+import { HowItWorks, FAQ } from "@/components/landing";
+import ProductsCatalog, { SOCIAL_MEDIA_CATALOG } from "./ProductsCatalog";
 
 /**
- * Review Standee category hub:
+ * Social Media Cards category hub:
  * Landing → grid (Google → Instagram → YouTube) → product detail
  */
-export default function GoogleReviewStandee() {
+export default function SocialMediaCards() {
   return (
     <>
       <div className="border-b border-black/[0.06] bg-white/80">
@@ -17,10 +17,10 @@ export default function GoogleReviewStandee() {
               Category
             </p>
             <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-[#141414] sm:text-4xl">
-              Review Standee
+              Social Media Cards
             </h1>
             <p className="mt-2 text-sm text-[#5c5346] sm:text-base">
-              Choose Google, Instagram, or YouTube standee — then open the
+              Choose Google Reviews, Instagram, or YouTube — then open the
               product details to order.
             </p>
           </div>
@@ -35,10 +35,10 @@ export default function GoogleReviewStandee() {
       </div>
 
       <ProductsCatalog
-        entries={STANDEE_CATALOG}
-        eyebrow="Review standee"
-        title="Pick your standee"
-        // description="1. Google Standee · 2. Instagram Standee · 3. YouTube Standee — countertop displays that collect reviews and followers on autopilot."
+        entries={SOCIAL_MEDIA_CATALOG}
+        eyebrow="Social media"
+        title="Pick your platform"
+        description="1. Google Reviews · 2. Instagram · 3. YouTube — each card opens your page in one tap or scan."
         compact
       />
       <HowItWorks />

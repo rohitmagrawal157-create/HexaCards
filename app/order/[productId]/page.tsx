@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { DetailsForm, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { DetailsForm, getProduct } from "@/components/products";
 
 type PageProps = {
   params: Promise<{ productId: string }> | { productId: string };

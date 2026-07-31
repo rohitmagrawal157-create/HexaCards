@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import PublicCard from "../Components/Dashboard/PublicCard";
+import PublicCard from "@/components/user-dashboard/PublicCard";
 
 export const metadata = {
   title: "Digital Card — HexaCards",

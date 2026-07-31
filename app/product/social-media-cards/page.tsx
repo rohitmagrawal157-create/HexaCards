@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { SocialMediaCards } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { SocialMediaCards } from "@/components/products";
 
 export const metadata = {
   title: "Social Media Cards — HexaCards",

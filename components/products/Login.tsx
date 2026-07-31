@@ -13,7 +13,7 @@ import {
   setAuthUser,
   verifyDemoOtp,
   type HexaAuthUser,
-} from "./auth";
+} from "@/lib/auth";
 
 type Step = "phone" | "otp";
 

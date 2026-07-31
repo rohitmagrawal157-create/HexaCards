@@ -9,8 +9,8 @@ import {
   cardPublicUrl,
   getCardProfile,
   type HexaCardProfile,
-} from "./cardProfile";
-import { getAuthUser } from "../Pages/auth";
+} from "@/lib/card-profile";
+import { getAuthUser } from "@/lib/auth";
 import ProfileBanner from "./ProfileBanner";
 
 export default function PublicCard() {

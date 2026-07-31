@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { WoodenCard, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { WoodenCard, getProduct } from "@/components/products";
 
 const product = getProduct("wooden-card");
 

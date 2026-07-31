@@ -9,17 +9,21 @@ import {
   CreditCard,
   Eye,
   FolderOpen,
+  Globe,
   Headphones,
   LogOut,
+  Mail,
   Menu,
   MessageSquare,
   Package,
   Pencil,
+  Phone,
   Plus,
   QrCode,
   RefreshCw,
   Shield,
   ShoppingBag,
+  Trash2,
   Users,
   X,
 } from "lucide-react";
@@ -29,19 +33,27 @@ import {
   isLoggedIn,
   loginPathWithNext,
   type HexaAuthUser,
-} from "../Pages/auth";
+} from "@/lib/auth";
 import {
   formatOrderDate,
-  getOrders,
+  getOrdersForPhone,
   statusLabel,
   type HexaOrder,
   type HexaOrderStatus,
-} from "../Pages/orders";
+} from "@/lib/orders";
 import {
   getCardProfile,
   cardPublicUrl,
   cardPublicPath,
-} from "./cardProfile";
+} from "@/lib/card-profile";
+import {
+  deleteCardMessage,
+  formatMessageDate,
+  getCardMessages,
+  markAllMessagesRead,
+  markMessageRead,
+  type CardMessage,
+} from "@/lib/card-messages";
 
 type NavKey =
   | "cards"
@@ -172,6 +184,8 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [orders, setOrders] = useState<HexaOrder[]>([]);
+  const [messages, setMessages] = useState<CardMessage[]>([]);
+  const unreadCount = messages.filter((m) => !m.read).length;
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -193,30 +207,68 @@ export default function Dashboard() {
       router.replace(loginPathWithNext("/dashboard"));
       return;
     }
-    setUser(getAuthUser());
-    setOrders(getOrders());
-    setAuthReady(true);
 
-    function onAuthChange() {
-      if (!isLoggedIn()) {
+    function syncWorkspace() {
+      const auth = getAuthUser();
+      if (!auth) {
         setAuthReady(false);
         router.replace(loginPathWithNext("/dashboard"));
         return;
       }
-      setUser(getAuthUser());
+      setUser(auth);
+      setOrders(getOrdersForPhone(auth.phone));
+      setMessages(getCardMessages());
+      setAuthReady(true);
+    }
+
+    syncWorkspace();
+
+    function onAuthChange() {
+      syncWorkspace();
     }
 
     function onOrdersChange() {
-      setOrders(getOrders());
+      const current = getAuthUser();
+      setOrders(current ? getOrdersForPhone(current.phone) : []);
+    }
+
+    function onMessagesChange() {
+      setMessages(getCardMessages());
+    }
+
+    function onVisibility() {
+      if (document.visibilityState === "visible") syncWorkspace();
+    }
+
+    function onStorage(e: StorageEvent) {
+      if (e.key === "hexaOrders" || e.key === "hexaAuthUser") {
+        syncWorkspace();
+      }
     }
 
     window.addEventListener("hexa-auth-change", onAuthChange);
     window.addEventListener("hexa-orders-change", onOrdersChange);
+    window.addEventListener("hexa-card-messages-change", onMessagesChange);
+    window.addEventListener("focus", syncWorkspace);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("storage", onStorage);
     return () => {
       window.removeEventListener("hexa-auth-change", onAuthChange);
       window.removeEventListener("hexa-orders-change", onOrdersChange);
+      window.removeEventListener("hexa-card-messages-change", onMessagesChange);
+      window.removeEventListener("focus", syncWorkspace);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("storage", onStorage);
     };
   }, [router]);
+
+  // Re-read orders whenever the user lands on cards/orders (e.g. from checkout)
+  useEffect(() => {
+    if (!authReady) return;
+    const auth = getAuthUser();
+    if (!auth) return;
+    setOrders(getOrdersForPhone(auth.phone));
+  }, [authReady, active, searchParams]);
 
   const avatar = useMemo(() => (user ? initials(user.name) : "HC"), [user]);
   const copy = sectionMeta(active);
@@ -228,8 +280,10 @@ export default function Dashboard() {
 
   function handleRefresh() {
     setRefreshing(true);
-    setUser(getAuthUser());
-    setOrders(getOrders());
+    const next = getAuthUser();
+    setUser(next);
+    setOrders(next ? getOrdersForPhone(next.phone) : []);
+    setMessages(getCardMessages());
     window.setTimeout(() => setRefreshing(false), 500);
   }
 
@@ -362,7 +416,9 @@ export default function Dashboard() {
                   badge={
                     item.key === "orders" && orders.length > 0
                       ? String(orders.length)
-                      : undefined
+                      : item.key === "messages" && unreadCount > 0
+                        ? String(unreadCount)
+                        : undefined
                   }
                 />
               ))}
@@ -436,10 +492,9 @@ export default function Dashboard() {
             <CardsPanel user={user} orders={orders} />
           ) : null}
           {active === "messages" ? (
-            <EmptyPanel
-              icon={MessageSquare}
-              title="Inbox is empty"
-              text="When someone taps your card or saves your contact, messages will show up here."
+            <MessagesPanel
+              messages={messages}
+              onChange={() => setMessages(getCardMessages())}
             />
           ) : null}
           {active === "orders" ? <OrdersPanel orders={orders} /> : null}
@@ -475,6 +530,7 @@ function CardsPanel({
 }) {
   const [qrOpen, setQrOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const hasCard = orders.length > 0;
   const totalSpend = orders.reduce((sum, o) => sum + o.total, 0);
   const profile = getCardProfile(user.name, user.phone);
   const cardName = profile.contact.cardName.trim() || user.name;
@@ -499,8 +555,8 @@ function CardsPanel({
         {[
           {
             label: "Active cards",
-            value: "1",
-            hint: "Digital profile live",
+            value: hasCard ? "1" : "0",
+            hint: hasCard ? "Digital profile live" : "Unlocks after first order",
             icon: CreditCard,
           },
           {
@@ -543,89 +599,99 @@ function CardsPanel({
         })}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <article className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <div className="relative aspect-[16/10] bg-[#111]">
-            <Image
-              src="/Images/Products/digitalCard.jpg"
-              alt="Hexa NFC card"
-              fill
-              className="object-cover opacity-90"
-              sizes="(max-width: 1024px) 100vw, 480px"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-            <div className="absolute top-3 left-3">
-              <span className="rounded-md bg-white/15 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase backdrop-blur-sm">
-                Primary card
-              </span>
-            </div>
-            <div className="absolute right-4 bottom-4 left-4 text-white">
-              <p className="font-dashboard text-xl font-extrabold tracking-[-0.02em] text-white">
-                {cardName}
-              </p>
-              <p className="mt-0.5 text-sm text-white/80">{cardTitle}</p>
-              <p className="mt-1 truncate font-mono text-[11px] text-white/60">
-                {shareUrl.replace(/^https:\/\//, "")}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 divide-x divide-black/[0.06] border-b border-black/[0.06]">
-            {[
-              { label: "Visits", value: "0" },
-              { label: "Saves", value: "0" },
-              { label: "Shares", value: "0" },
-            ].map((m) => (
-              <div key={m.label} className="px-3 py-3 text-center">
-                <p className="text-base font-bold tabular-nums">{m.value}</p>
-                <p className="text-[10px] font-semibold tracking-wide text-[#8a8174] uppercase">
-                  {m.label}
+      <div
+        className={
+          hasCard ? "grid gap-5 lg:grid-cols-2" : "grid gap-5"
+        }
+      >
+        {hasCard ? (
+          <article className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+            <div className="relative aspect-[16/10] bg-[#111]">
+              <Image
+                src="/Images/Products/digitalCard.jpg"
+                alt="Hexa NFC card"
+                fill
+                className="object-cover opacity-90"
+                sizes="(max-width: 1024px) 100vw, 480px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+              <div className="absolute top-3 left-3">
+                <span className="rounded-md bg-white/15 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase backdrop-blur-sm">
+                  Primary card
+                </span>
+              </div>
+              <div className="absolute right-4 bottom-4 left-4 text-white">
+                <p className="font-dashboard text-xl font-extrabold tracking-[-0.02em] text-white">
+                  {cardName}
+                </p>
+                <p className="mt-0.5 text-sm text-white/80">{cardTitle}</p>
+                <p className="mt-1 truncate font-mono text-[11px] text-white/60">
+                  {shareUrl.replace(/^https:\/\//, "")}
                 </p>
               </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-            <button
-              type="button"
-              onClick={() => setQrOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
-            >
-              <QrCode className="h-3.5 w-3.5" />
-              QR Code
-            </button>
-            <div className="flex items-center gap-1">
-              <Link
-                href={cardPublicPath(profile)}
-                target="_blank"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
-                aria-label="View card"
-              >
-                <Eye className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/dashboard/edit-card"
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
-                aria-label="Edit card"
-              >
-                <Pencil className="h-4 w-4" />
-              </Link>
             </div>
-          </div>
-        </article>
+
+            <div className="grid grid-cols-3 divide-x divide-black/[0.06] border-b border-black/[0.06]">
+              {[
+                { label: "Visits", value: "0" },
+                { label: "Saves", value: "0" },
+                { label: "Shares", value: "0" },
+              ].map((m) => (
+                <div key={m.label} className="px-3 py-3 text-center">
+                  <p className="text-base font-bold tabular-nums">{m.value}</p>
+                  <p className="text-[10px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                    {m.label}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+              <button
+                type="button"
+                onClick={() => setQrOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
+              >
+                <QrCode className="h-3.5 w-3.5" />
+                QR Code
+              </button>
+              <div className="flex items-center gap-1">
+                <Link
+                  href={cardPublicPath(profile)}
+                  target="_blank"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
+                  aria-label="View card"
+                >
+                  <Eye className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/dashboard/edit-card"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
+                  aria-label="Edit card"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </article>
+        ) : null}
 
         <Link
           href="/products"
-          className="group flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-black/15 bg-white px-6 text-center transition-all hover:border-[#BC7C10]/50 hover:bg-[#FFFCF7]"
+          className={`group flex flex-col items-center justify-center rounded-xl border border-dashed border-black/15 bg-white px-6 text-center transition-all hover:border-[#BC7C10]/50 hover:bg-[#FFFCF7] ${
+            hasCard ? "min-h-[300px]" : "min-h-[280px] max-w-xl mx-auto w-full"
+          }`}
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAFAF8] text-[#BC7C10] ring-1 ring-black/[0.05] transition-colors group-hover:bg-[#FFF8ED]">
             <Plus className="h-6 w-6" strokeWidth={1.75} />
           </span>
           <p className="mt-4 font-dashboard text-lg font-extrabold tracking-[-0.02em] text-[#141414]">
-            Get a new card
+            {hasCard ? "Get a new card" : "Order your first card"}
           </p>
-          <p className="mt-1 max-w-[220px] text-sm text-[#6b6560]">
-            Order NFC cards, standees, or review products for your brand.
+          <p className="mt-1 max-w-[260px] text-sm text-[#6b6560]">
+            {hasCard
+              ? "Order NFC cards, standees, or review products for your brand."
+              : "Your digital card appears here after a successful payment and order."}
           </p>
           <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold text-[#BC7C10]">
             Browse catalog
@@ -885,6 +951,150 @@ function SupportPanel() {
             </Link>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MessagesPanel({
+  messages,
+  onChange,
+}: {
+  messages: CardMessage[];
+  onChange: () => void;
+}) {
+  if (messages.length === 0) {
+    return (
+      <EmptyPanel
+        icon={MessageSquare}
+        title="Inbox is empty"
+        text="When someone fills the Contact Us form on your digital card, their message will appear here."
+      />
+    );
+  }
+
+  const unread = messages.filter((m) => !m.read).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-black/[0.06] bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div>
+          <p className="text-sm font-semibold text-[#141414]">
+            {messages.length} message{messages.length === 1 ? "" : "s"}
+          </p>
+          <p className="text-xs text-[#6b6560]">
+            {unread
+              ? `${unread} unread from your card contact form`
+              : "All caught up"}
+          </p>
+        </div>
+        {unread > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              markAllMessagesRead();
+              onChange();
+            }}
+            className="rounded-lg border border-black/[0.08] px-3 py-2 text-xs font-semibold text-[#141414] hover:bg-[#FAFAF8]"
+          >
+            Mark all read
+          </button>
+        ) : null}
+      </div>
+
+      <div className="space-y-3">
+        {messages.map((msg) => (
+          <article
+            key={msg.id}
+            className={`rounded-xl border bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] ${
+              msg.read
+                ? "border-black/[0.06]"
+                : "border-[#BC7C10]/35 ring-1 ring-[#BC7C10]/15"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-dashboard text-base font-extrabold tracking-[-0.02em] text-[#141414]">
+                    {msg.name}
+                  </p>
+                  {!msg.read ? (
+                    <span className="rounded-md bg-[#FFF8ED] px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-[#9a650d] uppercase">
+                      New
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs text-[#8a8174]">
+                  {formatMessageDate(msg.createdAt)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteCardMessage(msg.id);
+                  onChange();
+                }}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8a8174] hover:bg-[#FFF5F5] hover:text-[#E24C4C]"
+                aria-label="Delete message"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              {msg.email ? (
+                <a
+                  href={`mailto:${msg.email}`}
+                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
+                >
+                  <Mail className="h-3.5 w-3.5 text-[#8a8174]" />
+                  {msg.email}
+                </a>
+              ) : null}
+              {msg.phone ? (
+                <a
+                  href={`tel:${msg.phone}`}
+                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
+                >
+                  <Phone className="h-3.5 w-3.5 text-[#8a8174]" />
+                  {msg.phone}
+                </a>
+              ) : null}
+              {msg.website ? (
+                <a
+                  href={
+                    msg.website.startsWith("http")
+                      ? msg.website
+                      : `https://${msg.website}`
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
+                >
+                  <Globe className="h-3.5 w-3.5 text-[#8a8174]" />
+                  {msg.website}
+                </a>
+              ) : null}
+            </div>
+
+            <p className="mt-3 rounded-lg bg-[#FAFAF8] px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-[#4a4a52]">
+              {msg.message}
+            </p>
+
+            {!msg.read ? (
+              <button
+                type="button"
+                onClick={() => {
+                  markMessageRead(msg.id);
+                  onChange();
+                }}
+                className="mt-3 text-xs font-semibold text-[#BC7C10] hover:text-[#9a650d]"
+              >
+                Mark as read
+              </button>
+            ) : null}
+          </article>
+        ))}
       </div>
     </div>
   );

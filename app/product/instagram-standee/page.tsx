@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { InstagramStandee, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { InstagramStandee, getProduct } from "@/components/products";
 
 const product = getProduct("instagram-standee");
 

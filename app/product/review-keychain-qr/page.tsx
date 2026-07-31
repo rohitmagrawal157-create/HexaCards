@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { ReviewKeychainQr, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { ReviewKeychainQr, getProduct } from "@/components/products";
 
 const product = getProduct("review-keychain-qr");
 

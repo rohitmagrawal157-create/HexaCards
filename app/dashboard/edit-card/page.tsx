@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import EditCard from "../../Components/Dashboard/EditCard";
+import EditCard from "@/components/user-dashboard/EditCard";
 
 export const metadata = {
   title: "Edit Card — HexaCards",

@@ -357,3 +357,111 @@ body {
     transform: translate3d(0, 0, 0);
   }
 }
+
+/* react-international-phone — HexaCards professional skin */
+.hexa-phone-field {
+  --react-international-phone-height: 44px;
+  --react-international-phone-font-size: 14px;
+  --react-international-phone-border-radius: 10px;
+  --react-international-phone-border-color: rgba(0, 0, 0, 0.1);
+  --react-international-phone-background-color: #fafaf8;
+  --react-international-phone-text-color: #141414;
+  --react-international-phone-selected-dropdown-item-background-color: #fff8ed;
+  --react-international-phone-selected-dropdown-item-text-color: #141414;
+  --react-international-phone-dropdown-item-dial-code-color: #8a8174;
+  --react-international-phone-country-selector-background-color: #fafaf8;
+  --react-international-phone-country-selector-background-color-hover: #f3f1ec;
+  --react-international-phone-country-selector-border-color: rgba(0, 0, 0, 0.1);
+  --react-international-phone-country-selector-arrow-color: #8a8174;
+  --react-international-phone-dropdown-shadow: 0 12px 32px rgba(20, 20, 20, 0.14);
+  --react-international-phone-dropdown-item-height: 40px;
+  --react-international-phone-flag-width: 22px;
+  --react-international-phone-flag-height: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.hexa-phone-field:focus-within {
+  z-index: 40;
+}
+
+.hexa-phone-field .react-international-phone-input-container {
+  width: 100%;
+}
+
+.hexa-phone-field .hexa-phone-country-btn {
+  min-width: 72px;
+  padding: 0 10px;
+  border-right: 0;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.hexa-phone-field .hexa-phone-input-el {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.hexa-phone-field
+  .react-international-phone-input-container:focus-within
+  .hexa-phone-country-btn,
+.hexa-phone-field
+  .react-international-phone-input-container:focus-within
+  .hexa-phone-input-el {
+  border-color: rgba(188, 124, 16, 0.55) !important;
+  background: #fff !important;
+}
+
+.hexa-phone-field
+  .react-international-phone-input-container:focus-within
+  .hexa-phone-input-el {
+  box-shadow: 0 0 0 2px rgba(188, 124, 16, 0.14);
+}
+
+.hexa-phone-dropdown {
+  z-index: 80 !important;
+  top: calc(100% + 6px) !important;
+  width: min(320px, 85vw) !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  padding: 6px !important;
+}
+
+.hexa-phone-dropdown-item {
+  gap: 4px;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  min-height: 40px !important;
+}
+
+.hexa-phone-dropdown-item:hover,
+.hexa-phone-dropdown-item.react-international-phone-country-selector-dropdown__list-item--focused,
+.hexa-phone-dropdown-item.react-international-phone-country-selector-dropdown__list-item--selected {
+  background: #fff8ed !important;
+}
+
+.hexa-phone-dropdown-name {
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  color: #141414 !important;
+}
+
+.hexa-phone-dropdown-dial {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #8a8174 !important;
+}
+

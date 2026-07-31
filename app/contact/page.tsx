@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { MapPin, Mail, Phone } from "lucide-react";
-import { Navbar, Footer, FAQ } from "../Components/Landing";
+import { Navbar, Footer, FAQ } from "@/components/landing";
 
 export const metadata = {
   title: "Contact Us — HexaCards",

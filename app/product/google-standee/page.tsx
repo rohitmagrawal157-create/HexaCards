@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../../Components/Landing";
-import { GoogleStandee, getProduct } from "../../Components/Pages";
+import { Navbar, Footer } from "@/components/landing";
+import { GoogleStandee, getProduct } from "@/components/products";
 
 const product = getProduct("google-standee");
 
