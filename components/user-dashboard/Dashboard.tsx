@@ -2,22 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
+  ChevronDown,
   CreditCard,
   Eye,
   FolderOpen,
-  Globe,
   Headphones,
   LogOut,
-  Mail,
   Menu,
   MessageSquare,
   Package,
   Pencil,
-  Phone,
   Plus,
   QrCode,
   RefreshCw,
@@ -652,24 +650,24 @@ function CardsPanel({
                 onClick={() => setQrOpen(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
               >
-                <QrCode className="h-3.5 w-3.5" />
+                <QrCode className="h-4 w-4" />
                 QR Code
               </button>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <Link
                   href={cardPublicPath(profile)}
                   target="_blank"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
-                  aria-label="View card"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-4 w-4" strokeWidth={2} />
+                  View
                 </Link>
                 <Link
                   href="/dashboard/edit-card"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
-                  aria-label="Edit card"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#BC7C10] px-3 py-2 text-xs font-semibold text-white hover:bg-[#9a650d]"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className="h-4 w-4" strokeWidth={2} />
+                  Edit
                 </Link>
               </div>
             </div>
@@ -963,6 +961,9 @@ function MessagesPanel({
   messages: CardMessage[];
   onChange: () => void;
 }) {
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const MESSAGE_LIMIT = 90;
+
   if (messages.length === 0) {
     return (
       <EmptyPanel
@@ -974,6 +975,21 @@ function MessagesPanel({
   }
 
   const unread = messages.filter((m) => !m.read).length;
+
+  function isLongMessage(text: string) {
+    return text.trim().length > MESSAGE_LIMIT;
+  }
+
+  function previewMessage(text: string) {
+    const cleaned = text.trim();
+    if (!isLongMessage(cleaned)) return cleaned || "—";
+    return `${cleaned.slice(0, MESSAGE_LIMIT).trimEnd()}…`;
+  }
+
+  function toggleExpand(id: string, long: boolean) {
+    if (!long) return;
+    setExpandedId((current) => (current === id ? null : id));
+  }
 
   return (
     <div className="space-y-4">
@@ -1002,99 +1018,149 @@ function MessagesPanel({
         ) : null}
       </div>
 
-      <div className="space-y-3">
-        {messages.map((msg) => (
-          <article
-            key={msg.id}
-            className={`rounded-xl border bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] ${
-              msg.read
-                ? "border-black/[0.06]"
-                : "border-[#BC7C10]/35 ring-1 ring-[#BC7C10]/15"
-            }`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-dashboard text-base font-extrabold tracking-[-0.02em] text-[#141414]">
-                    {msg.name}
-                  </p>
-                  {!msg.read ? (
-                    <span className="rounded-md bg-[#FFF8ED] px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-[#9a650d] uppercase">
-                      New
-                    </span>
-                  ) : null}
-                </div>
-                <p className="mt-1 text-xs text-[#8a8174]">
-                  {formatMessageDate(msg.createdAt)}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  deleteCardMessage(msg.id);
-                  onChange();
-                }}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#8a8174] hover:bg-[#FFF5F5] hover:text-[#E24C4C]"
-                aria-label="Delete message"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              {msg.email ? (
-                <a
-                  href={`mailto:${msg.email}`}
-                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
-                >
-                  <Mail className="h-3.5 w-3.5 text-[#8a8174]" />
-                  {msg.email}
-                </a>
-              ) : null}
-              {msg.phone ? (
-                <a
-                  href={`tel:${msg.phone}`}
-                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
-                >
-                  <Phone className="h-3.5 w-3.5 text-[#8a8174]" />
-                  {msg.phone}
-                </a>
-              ) : null}
-              {msg.website ? (
-                <a
-                  href={
-                    msg.website.startsWith("http")
-                      ? msg.website
-                      : `https://${msg.website}`
-                  }
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 font-medium text-[#141414] hover:text-[#BC7C10]"
-                >
-                  <Globe className="h-3.5 w-3.5 text-[#8a8174]" />
-                  {msg.website}
-                </a>
-              ) : null}
-            </div>
-
-            <p className="mt-3 rounded-lg bg-[#FAFAF8] px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap text-[#4a4a52]">
-              {msg.message}
-            </p>
-
-            {!msg.read ? (
-              <button
-                type="button"
-                onClick={() => {
-                  markMessageRead(msg.id);
-                  onChange();
-                }}
-                className="mt-3 text-xs font-semibold text-[#BC7C10] hover:text-[#9a650d]"
-              >
-                Mark as read
-              </button>
-            ) : null}
-          </article>
-        ))}
+      <div className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[900px] table-fixed border-collapse text-left">
+            <thead>
+              <tr className="border-b border-black/[0.06] bg-[#FAFAF8]">
+                <th className="w-[14%] px-4 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Name
+                </th>
+                <th className="w-[18%] px-4 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Email
+                </th>
+                <th className="w-[12%] px-4 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Phone no.
+                </th>
+                <th className="w-[32%] px-4 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Message
+                </th>
+                <th className="w-[14%] px-4 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Date
+                </th>
+                <th className="w-[10%] px-4 py-3 text-right text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                  Delete
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {messages.map((msg) => {
+                const long = isLongMessage(msg.message || "");
+                const open = expandedId === msg.id;
+                return (
+                  <Fragment key={msg.id}>
+                    <tr
+                      className={`border-b border-black/[0.05] ${
+                        open ? "border-b-0" : "last:border-b-0"
+                      } ${msg.read ? "bg-white" : "bg-[#FFFCF7]"} ${
+                        long ? "cursor-pointer hover:bg-[#FAFAF8]" : "hover:bg-[#FAFAF8]"
+                      }`}
+                      onClick={() => {
+                        if (!msg.read) {
+                          markMessageRead(msg.id);
+                          onChange();
+                        }
+                        toggleExpand(msg.id, long);
+                      }}
+                    >
+                      <td className="px-4 py-3.5 align-middle">
+                        <div className="flex items-center gap-2">
+                          {!msg.read ? (
+                            <span
+                              className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#BC7C10]"
+                              aria-label="Unread"
+                            />
+                          ) : (
+                            <span className="h-1.5 w-1.5 shrink-0" aria-hidden />
+                          )}
+                          <span className="truncate text-sm font-semibold text-[#141414]">
+                            {msg.name || "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 align-middle">
+                        {msg.email ? (
+                          <a
+                            href={`mailto:${msg.email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="block truncate text-sm text-[#141414] hover:text-[#BC7C10]"
+                          >
+                            {msg.email}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-[#8a8174]">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                        {msg.phone ? (
+                          <a
+                            href={`tel:${msg.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-sm tabular-nums text-[#141414] hover:text-[#BC7C10]"
+                          >
+                            {msg.phone}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-[#8a8174]">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 align-middle">
+                        <div className="flex items-start gap-1.5">
+                          <p className="min-w-0 flex-1 truncate text-sm leading-snug text-[#4a4a52]">
+                            {previewMessage(msg.message || "")}
+                          </p>
+                          {long ? (
+                            <ChevronDown
+                              className={`mt-0.5 h-4 w-4 shrink-0 text-[#8a8174] transition-transform ${
+                                open ? "rotate-180" : ""
+                              }`}
+                              aria-hidden
+                            />
+                          ) : null}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5 align-middle whitespace-nowrap">
+                        <span className="text-xs text-[#8a8174]">
+                          {formatMessageDate(msg.createdAt)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 align-middle text-right">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteCardMessage(msg.id);
+                            onChange();
+                          }}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#8a8174] hover:bg-[#FFF5F5] hover:text-[#E24C4C]"
+                          aria-label={`Delete message from ${msg.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                    {open && long ? (
+                      <tr
+                        className={`border-b border-black/[0.05] last:border-b-0 ${
+                          msg.read ? "bg-[#FAFAF8]" : "bg-[#FFF8ED]"
+                        }`}
+                      >
+                        <td colSpan={6} className="px-4 py-3">
+                          <p className="text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                            Full message
+                          </p>
+                          <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#141414]">
+                            {msg.message}
+                          </p>
+                        </td>
+                      </tr>
+                    ) : null}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

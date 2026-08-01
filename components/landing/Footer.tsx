@@ -63,6 +63,10 @@ const socials = [
 ];
 
 export default function Footer() {
+  const officeAddress =
+    "Hexa Cards - Digital Business Cards, Plot No 42, G Sector, opposite Medicover Hospital, Town Center, Cidco, Chhatrapati Sambhajinagar, Maharashtra 431003";
+  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(officeAddress)}`;
+
   return (
     <footer id="footer" className="bg-[#171412] pt-16 pb-8 sm:pt-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
@@ -75,12 +79,19 @@ export default function Footer() {
               <p className="text-xs font-semibold tracking-[0.15em] text-[#BC7C10] uppercase">
                 Address
               </p>
-              <p className="mt-1 text-lg text-white">
-              Hexa Cards - Digital Business Cards
-              Plot No 42, 'G' Sector, opposite Medicover Hospital, Town Center, Cidco,Chhatrapati Sambhajinagar,
+              <a
+                href={directionsHref}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 block text-lg text-white transition-colors hover:text-[#F2C16F]"
+                aria-label="Get directions to Hexa Cards on Google Maps"
+              >
+                Hexa Cards - Digital Business Cards
                 <br />
-                 Maharashtra 431003
-              </p>
+                Plot No 42, &apos;G&apos; Sector, opposite Medicover Hospital, Town Center, Cidco, Chhatrapati Sambhajinagar,
+                <br />
+                Maharashtra 431003
+              </a>
             </div>
           </div>
 

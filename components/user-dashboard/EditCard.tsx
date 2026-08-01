@@ -41,6 +41,10 @@ import {
   saveBrochureFile,
   saveCardProfile,
   BROCHURE_MAX_BYTES,
+  CARD_ACCENT_COLORS,
+  CARD_BANNER_PRESETS,
+  DEFAULT_CARD_BANNER,
+  multicolorWheelStyle,
   type HexaCardProfile,
 } from "@/lib/card-profile";
 import PhoneNumberField from "./PhoneNumberField";
@@ -59,14 +63,7 @@ const TABS: { key: EditTab; label: string; icon: typeof Phone }[] = [
   { key: "appearance", label: "Appearance", icon: Palette },
 ];
 
-const ACCENTS = [
-  "#BC7C10",
-  "#141414",
-  "#1565C0",
-  "#00B813",
-  "#E53935",
-  "#C2185B",
-];
+const ACCENTS = [...CARD_ACCENT_COLORS];
 
 function fieldClass() {
   return "mt-1.5 w-full rounded-lg border border-black/10 bg-[#FAFAF8] px-3.5 py-2.5 text-sm text-[#141414] outline-none transition-colors placeholder:text-[#9a9a9a] focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15";
@@ -258,7 +255,7 @@ export default function EditCard() {
         ...profile,
         appearance: {
           ...profile.appearance,
-          coverImage: null,
+          coverImage: DEFAULT_CARD_BANNER,
           logoImage: null,
           shareImage: null,
         },
@@ -555,7 +552,7 @@ export default function EditCard() {
                   </Field>
 
                   <div className="sm:col-span-2">
-                    <p className={labelClass()}>E-Brochure</p>
+                    <p className={labelClass()}>Brochure</p>
                     <div className="mt-1.5 rounded-xl border border-dashed border-black/15 bg-[#FAFAF8] p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -735,19 +732,62 @@ export default function EditCard() {
               {tab === "appearance" ? (
                 <div className="space-y-6">
                   <p className="text-sm text-[#6b6560]">
-                    Upload images used on your digital card and when sharing the
-                    card profile link.
+                    Choose a banner background and accent color for your digital
+                    card.
                   </p>
 
-                  <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <p className={labelClass()}>Background banner</p>
+                    <p className="mt-1 text-xs text-[#8a8174]">
+                      First option is the default Hexa banner. Pick a preset or
+                      upload your own.
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                      {CARD_BANNER_PRESETS.map((preset, index) => {
+                        const selected =
+                          (profile.appearance.coverImage ||
+                            DEFAULT_CARD_BANNER) === preset.src;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() =>
+                              updateAppearance("coverImage", preset.src)
+                            }
+                            className={`overflow-hidden rounded-xl border-2 text-left transition ${
+                              selected
+                                ? "border-[#BC7C10] ring-2 ring-[#BC7C10]/25"
+                                : "border-black/10 hover:border-[#BC7C10]/40"
+                            }`}
+                          >
+                            <span
+                              className="block aspect-[16/9] bg-cover bg-center"
+                              style={{ backgroundImage: `url("${preset.src}")` }}
+                            />
+                            <span className="block px-2.5 py-1.5 text-[11px] font-semibold text-[#141414]">
+                              {index === 0 ? "Default banner" : preset.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <ImageUpload
-                      label="Cover image"
-                      hint="Square or banner crop"
-                      value={profile.appearance.coverImage}
+                      label="Custom cover"
+                      hint="Upload your own banner"
+                      value={
+                        profile.appearance.coverImage?.startsWith("data:")
+                          ? profile.appearance.coverImage
+                          : null
+                      }
                       inputRef={coverRef}
                       onPick={() => coverRef.current?.click()}
                       onChange={(file) => void openImageCrop(file, "background")}
-                      onClear={() => updateAppearance("coverImage", null)}
+                      onClear={() =>
+                        updateAppearance("coverImage", DEFAULT_CARD_BANNER)
+                      }
                     />
                     <ImageUpload
                       label="Logo / profile"
@@ -758,27 +798,19 @@ export default function EditCard() {
                       onChange={(file) => void openImageCrop(file, "profile")}
                       onClear={() => updateAppearance("logoImage", null)}
                     />
-                    {/* <ImageUpload
-                      label="Share image"
-                      hint="Square crop · 1080×1080"
-                      value={profile.appearance.shareImage}
-                      inputRef={shareRef}
-                      onPick={() => shareRef.current?.click()}
-                      onChange={(file) => void openImageCrop(file, "share")}
-                      onClear={() => updateAppearance("shareImage", null)}
-                    /> */}
                   </div>
 
                   <div>
                     <p className={labelClass()}>Accent color</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       {ACCENTS.map((color) => (
                         <button
                           key={color}
                           type="button"
                           onClick={() => updateAppearance("accentColor", color)}
                           className={`h-9 w-9 rounded-full ring-2 ring-offset-2 ${
-                            profile.appearance.accentColor === color
+                            profile.appearance.accentColor.toLowerCase() ===
+                            color.toLowerCase()
                               ? "ring-[#141414]"
                               : "ring-transparent"
                           }`}
@@ -786,27 +818,47 @@ export default function EditCard() {
                           aria-label={`Accent ${color}`}
                         />
                       ))}
+                      <label
+                        className={`relative h-9 w-9 shrink-0 cursor-pointer overflow-hidden rounded-full border border-black/15 shadow-sm ring-2 ring-offset-2 ${
+                          /^#[0-9A-Fa-f]{6}$/.test(
+                            profile.appearance.accentColor,
+                          ) &&
+                          !(ACCENTS as readonly string[]).some(
+                            (c) =>
+                              c.toLowerCase() ===
+                              profile.appearance.accentColor.toLowerCase(),
+                          )
+                            ? "ring-[#141414]"
+                            : "ring-transparent"
+                        }`}
+                        title="Pick any color"
+                      >
+                        <span
+                          className="pointer-events-none absolute inset-0 rounded-full"
+                          style={multicolorWheelStyle()}
+                          aria-hidden
+                        />
+                        <input
+                          type="color"
+                          value={
+                            /^#[0-9A-Fa-f]{6}$/.test(
+                              profile.appearance.accentColor,
+                            )
+                              ? profile.appearance.accentColor
+                              : "#BC7C10"
+                          }
+                          onChange={(e) =>
+                            updateAppearance("accentColor", e.target.value)
+                          }
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                          aria-label="Open color picker"
+                        />
+                      </label>
                     </div>
-                  </div>
-
-                  <div>
-                    <p className={labelClass()}>Theme</p>
-                    <div className="mt-2 flex gap-2">
-                      {(["dark", "light"] as const).map((theme) => (
-                        <button
-                          key={theme}
-                          type="button"
-                          onClick={() => updateAppearance("theme", theme)}
-                          className={`rounded-lg px-4 py-2 text-[13px] font-semibold capitalize ${
-                            profile.appearance.theme === theme
-                              ? "bg-[#141414] text-white"
-                              : "border border-black/10 bg-white text-[#141414] hover:bg-[#FAFAF8]"
-                          }`}
-                        >
-                          {theme}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="mt-2 text-xs text-[#8a8174]">
+                      Pick a preset, or click the color wheel to open the color
+                      picker.
+                    </p>
                   </div>
                 </div>
               ) : null}

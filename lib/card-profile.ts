@@ -39,8 +39,60 @@ export type CardAppearance = {
   logoImage: string | null;
   shareImage: string | null;
   accentColor: string;
-  theme: "dark" | "light";
 };
+
+/** Default card banner used when no custom cover is set */
+export const DEFAULT_CARD_BANNER = "/Images/banner.webp";
+
+export const CARD_BANNER_PRESETS = [
+  { id: "banner", label: "Banner", src: DEFAULT_CARD_BANNER },
+  { id: "digital", label: "Digital card", src: "/Images/Products/digitalCard.jpg" },
+  { id: "office", label: "Workspace", src: "/Images/step1.webp" },
+  { id: "network", label: "Network", src: "/Images/step2.webp" },
+  { id: "connect", label: "Connect", src: "/Images/step3.webp" },
+] as const;
+
+export const CARD_ACCENT_COLORS = [
+  "#BC7C10",
+  "#141414",
+  "#1565C0",
+  "#0D9488",
+  "#00B813",
+  "#E53935",
+  "#C2185B",
+  "#7C3AED",
+  "#EA580C",
+  "#0891B2",
+  "#CA8A04",
+  "#BE185D",
+] as const;
+
+/** Legacy value — treated as a solid accent (no gradients) */
+export const MULTICOLOR_ACCENT = "multicolor";
+
+/** Color-wheel look for the custom color picker trigger only */
+export function multicolorWheelStyle() {
+  return {
+    backgroundColor: "#E91E63",
+    backgroundImage:
+      "conic-gradient(from 0deg, #E91E63, #FF5722, #FF9800, #FFEB3B, #CDDC39, #8BC34A, #4CAF50, #00BCD4, #2196F3, #9C27B0, #E91E63)",
+  } as const;
+}
+
+export function isMulticolorAccent(color: string | null | undefined) {
+  return (color || "").trim().toLowerCase() === MULTICOLOR_ACCENT;
+}
+
+/** Resolved accent tokens for card UI — solid colors only */
+export function resolveCardAccent(color: string | null | undefined) {
+  const raw = (color || "#BC7C10").trim();
+  const solid = isMulticolorAccent(raw) ? "#E91E63" : raw;
+  return {
+    solid,
+    soft: `${solid}33`,
+    muted: `${solid}55`,
+  };
+}
 
 export type HexaCardProfile = {
   contact: CardContactInfo;
@@ -118,11 +170,10 @@ export function defaultCardProfile(name = "User", phone = ""): HexaCardProfile {
       services: [],
     },
     appearance: {
-      coverImage: null,
+      coverImage: DEFAULT_CARD_BANNER,
       logoImage: null,
       shareImage: null,
       accentColor: "#BC7C10",
-      theme: "dark",
     },
     updatedAt: new Date().toISOString(),
   };
@@ -172,6 +223,11 @@ export function getCardProfile(
       appearance: {
         ...base.appearance,
         ...parsed.appearance,
+        coverImage:
+          parsed.appearance?.coverImage || DEFAULT_CARD_BANNER,
+        accentColor: isMulticolorAccent(parsed.appearance?.accentColor)
+          ? "#E91E63"
+          : parsed.appearance?.accentColor || base.appearance.accentColor,
       },
     };
   } catch {
@@ -229,7 +285,7 @@ export function saveCardProfile(profile: HexaCardProfile): HexaCardProfile {
         ...next,
         appearance: {
           ...next.appearance,
-          coverImage: null,
+          coverImage: DEFAULT_CARD_BANNER,
           logoImage: null,
           shareImage: null,
         },

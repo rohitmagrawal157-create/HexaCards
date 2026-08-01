@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { ExternalLink, MapPin, Mail, Phone } from "lucide-react";
 import { Navbar, Footer, FAQ } from "@/components/landing";
+
+const officeAddress =
+  "Hexa Cards - Digital Business Cards, Plot No 42, G Sector, opposite Medicover Hospital, Town Center, Cidco, Chhatrapati Sambhajinagar, Maharashtra 431003";
+const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(officeAddress)}`;
 
 export const metadata = {
   title: "Contact Us — HexaCards",
@@ -43,6 +47,15 @@ export default function ContactPage() {
                 Town Center, Cidco, Chhatrapati Sambhajinagar, Maharashtra
                 431003
               </p>
+              <a
+                href={directionsHref}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-1.5 text-sm font-bold text-[#BC7C10] transition-colors hover:text-[#9a650d]"
+              >
+                Get directions
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
             </div>
 
             <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm">

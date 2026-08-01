@@ -33,18 +33,18 @@ const PROFILE_MODES: AspectMode[] = [
 
 const BACKGROUND_MODES: AspectMode[] = [
   {
-    key: "square",
-    label: "Square",
-    aspect: 1,
-    outputWidth: 1080,
-    outputHeight: 1080,
-  },
-  {
     key: "banner",
     label: "Banner",
     aspect: 16 / 9,
     outputWidth: 1400,
     outputHeight: 788,
+  },
+  {
+    key: "square",
+    label: "Square",
+    aspect: 1,
+    outputWidth: 1080,
+    outputHeight: 1080,
   },
 ];
 
