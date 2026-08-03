@@ -3,6 +3,25 @@ import {
   type CountryCode,
 } from "libphonenumber-js";
 
+export type CardLayoutId =
+  | "classic"
+  | "basic"
+  | "modern"
+  | "compact"
+  | "bold"
+  | "elegant";
+
+const AVAILABLE_LAYOUTS: CardLayoutId[] = ["classic", "basic"];
+
+export function normalizeCardLayout(
+  value: string | null | undefined,
+): CardLayoutId {
+  if (value && (AVAILABLE_LAYOUTS as string[]).includes(value)) {
+    return value as CardLayoutId;
+  }
+  return "classic";
+}
+
 export type CardContactInfo = {
   cardName: string;
   title: string;
@@ -39,18 +58,53 @@ export type CardAppearance = {
   logoImage: string | null;
   shareImage: string | null;
   accentColor: string;
+  /** Card layout id — classic & basic available; more coming soon */
+  layout: CardLayoutId;
 };
 
-/** Default card banner used when no custom cover is set */
-export const DEFAULT_CARD_BANNER = "/Images/banner.webp";
+/** Default fixed card background for all new cards */
+export const DEFAULT_CARD_BANNER = "/Images/background_img.jpg";
+
+/** Default avatar shown on new cards until the user uploads their own */
+export const DEFAULT_CARD_AVATAR = "/Images/avatar_default.svg";
 
 export const CARD_BANNER_PRESETS = [
-  { id: "banner", label: "Banner", src: DEFAULT_CARD_BANNER },
-  { id: "digital", label: "Digital card", src: "/Images/Products/digitalCard.jpg" },
-  { id: "office", label: "Workspace", src: "/Images/step1.webp" },
-  { id: "network", label: "Network", src: "/Images/step2.webp" },
-  { id: "connect", label: "Connect", src: "/Images/step3.webp" },
+  { id: "default", label: "Default", src: DEFAULT_CARD_BANNER },
 ] as const;
+
+export const CARD_AVATAR_PRESETS = [
+  { id: "default", label: "Default", src: DEFAULT_CARD_AVATAR },
+] as const;
+
+const LEGACY_DEFAULT_COVERS = new Set([
+  "/Images/banner.webp",
+  "/Images/banner.png",
+]);
+
+/** Keep custom uploads; map missing/legacy stock banners to the fixed default. */
+export function normalizeCoverImage(cover: string | null | undefined) {
+  if (!cover) return DEFAULT_CARD_BANNER;
+  if (cover.startsWith("data:")) return cover;
+  if (LEGACY_DEFAULT_COVERS.has(cover)) return DEFAULT_CARD_BANNER;
+  return cover;
+}
+
+/** Keep custom uploads; missing avatar uses the default avatar image. */
+export function normalizeLogoImage(logo: string | null | undefined) {
+  if (!logo) return DEFAULT_CARD_AVATAR;
+  if (logo.startsWith("data:")) return logo;
+  return logo;
+}
+
+export function isDefaultCoverImage(cover: string | null | undefined) {
+  const normalized = normalizeCoverImage(cover);
+  return normalized === DEFAULT_CARD_BANNER;
+}
+
+export function isDefaultLogoImage(logo: string | null | undefined) {
+  const normalized = normalizeLogoImage(logo);
+  return normalized === DEFAULT_CARD_AVATAR;
+}
 
 export const CARD_ACCENT_COLORS = [
   "#BC7C10",
@@ -171,9 +225,10 @@ export function defaultCardProfile(name = "User", phone = ""): HexaCardProfile {
     },
     appearance: {
       coverImage: DEFAULT_CARD_BANNER,
-      logoImage: null,
+      logoImage: DEFAULT_CARD_AVATAR,
       shareImage: null,
       accentColor: "#BC7C10",
+      layout: "classic",
     },
     updatedAt: new Date().toISOString(),
   };
@@ -223,11 +278,14 @@ export function getCardProfile(
       appearance: {
         ...base.appearance,
         ...parsed.appearance,
-        coverImage:
-          parsed.appearance?.coverImage || DEFAULT_CARD_BANNER,
+        coverImage: normalizeCoverImage(parsed.appearance?.coverImage),
+        logoImage: normalizeLogoImage(parsed.appearance?.logoImage),
         accentColor: isMulticolorAccent(parsed.appearance?.accentColor)
           ? "#E91E63"
           : parsed.appearance?.accentColor || base.appearance.accentColor,
+        layout: normalizeCardLayout(
+          (parsed.appearance as { layout?: string } | undefined)?.layout,
+        ),
       },
     };
   } catch {
@@ -256,6 +314,10 @@ function writeProfile(next: HexaCardProfile) {
 export function saveCardProfile(profile: HexaCardProfile): HexaCardProfile {
   const next: HexaCardProfile = {
     ...profile,
+    appearance: {
+      ...profile.appearance,
+      layout: normalizeCardLayout(profile.appearance?.layout),
+    },
     updatedAt: new Date().toISOString(),
   };
 
@@ -286,7 +348,7 @@ export function saveCardProfile(profile: HexaCardProfile): HexaCardProfile {
         appearance: {
           ...next.appearance,
           coverImage: DEFAULT_CARD_BANNER,
-          logoImage: null,
+          logoImage: DEFAULT_CARD_AVATAR,
           shareImage: null,
         },
       };

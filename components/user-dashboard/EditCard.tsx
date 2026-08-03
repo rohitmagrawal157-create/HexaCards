@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,7 +11,6 @@ import {
   Check,
   Eye,
   Globe,
-  ImagePlus,
   Link2,
   Menu,
   Palette,
@@ -42,9 +41,12 @@ import {
   saveCardProfile,
   BROCHURE_MAX_BYTES,
   CARD_ACCENT_COLORS,
-  CARD_BANNER_PRESETS,
+  DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
+  isDefaultCoverImage,
+  isDefaultLogoImage,
   multicolorWheelStyle,
+  type CardLayoutId,
   type HexaCardProfile,
 } from "@/lib/card-profile";
 import PhoneNumberField from "./PhoneNumberField";
@@ -53,6 +55,9 @@ import ImageCropModal, {
   readFileAsDataUrl,
   type CropKind,
 } from "./ImageCropModal";
+import PhoneFrame from "@/components/Layouts/PhoneFrame";
+import LayoutPhonePreview from "@/components/Layouts/LayoutPhonePreview";
+import { CARD_LAYOUTS } from "@/components/Layouts";
 
 type EditTab = "contact" | "social" | "businessInfo" | "appearance";
 
@@ -82,15 +87,18 @@ export default function EditCard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   const [serviceInput, setServiceInput] = useState("");
-  const coverRef = useRef<HTMLInputElement>(null);
-  const logoRef = useRef<HTMLInputElement>(null);
-  const shareRef = useRef<HTMLInputElement>(null);
   const brochureRef = useRef<HTMLInputElement>(null);
   const [brochureError, setBrochureError] = useState("");
   const [cropState, setCropState] = useState<{
     src: string;
     kind: CropKind;
   } | null>(null);
+  const [defaultConfirm, setDefaultConfirm] = useState<
+    null | "cover" | "logo"
+  >(null);
+  const [layoutConfirm, setLayoutConfirm] = useState<CardLayoutId | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -134,6 +142,60 @@ export default function EditCard() {
     );
   }
 
+  function requestDefaultImage(kind: "cover" | "logo") {
+    if (!profile) return;
+    if (kind === "cover" && isDefaultCoverImage(profile.appearance.coverImage)) {
+      return;
+    }
+    if (kind === "logo" && isDefaultLogoImage(profile.appearance.logoImage)) {
+      return;
+    }
+    setDefaultConfirm(kind);
+  }
+
+  function applyDefaultImage() {
+    if (!defaultConfirm) return;
+    if (defaultConfirm === "cover") {
+      updateAppearance("coverImage", DEFAULT_CARD_BANNER);
+    } else {
+      updateAppearance("logoImage", DEFAULT_CARD_AVATAR);
+    }
+    setDefaultConfirm(null);
+  }
+
+  function requestLayoutChange(id: CardLayoutId) {
+    if (!profile) return;
+    const meta = CARD_LAYOUTS.find((l) => l.id === id);
+    if (!meta?.available) return;
+    if ((profile.appearance.layout ?? "classic") === id) return;
+    setLayoutConfirm(id);
+  }
+
+  function applyLayout() {
+    if (!layoutConfirm || !profile) return;
+    const id = layoutConfirm;
+    const next: HexaCardProfile = {
+      ...profile,
+      appearance: {
+        ...profile.appearance,
+        layout: id,
+      },
+    };
+    setLayoutConfirm(null);
+    try {
+      const saved = saveCardProfile(next);
+      setProfile(saved);
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1800);
+    } catch {
+      // Keep the UI on the chosen layout even if storage fails
+      setProfile(next);
+      window.alert(
+        "Layout updated in the editor, but could not be saved. Please tap Save.",
+      );
+    }
+  }
+
   function updateBusinessAbout(value: string) {
     setProfile((p) =>
       p ? { ...p, business: { ...p.business, about: value } } : p,
@@ -143,32 +205,47 @@ export default function EditCard() {
   function addService() {
     const name = serviceInput.trim();
     if (!name || !profile) return;
-    if (profile.business.services.some((s) => s.toLowerCase() === name.toLowerCase())) {
+    const existing = Array.isArray(profile.business?.services)
+      ? profile.business.services
+      : [];
+    // No maximum — only block exact duplicate names
+    if (existing.some((s) => s.toLowerCase() === name.toLowerCase())) {
       setServiceInput("");
+      window.alert("That service is already on your list.");
       return;
     }
-    setProfile({
-      ...profile,
-      business: {
-        ...profile.business,
-        services: [...profile.business.services, name],
-      },
+    setProfile((p) => {
+      if (!p) return p;
+      const current = Array.isArray(p.business?.services)
+        ? p.business.services
+        : [];
+      return {
+        ...p,
+        business: {
+          ...p.business,
+          about: p.business?.about ?? "",
+          services: [...current, name],
+        },
+      };
     });
     setServiceInput("");
   }
 
   function removeService(index: number) {
-    setProfile((p) =>
-      p
-        ? {
-            ...p,
-            business: {
-              ...p.business,
-              services: p.business.services.filter((_, i) => i !== index),
-            },
-          }
-        : p,
-    );
+    setProfile((p) => {
+      if (!p) return p;
+      const current = Array.isArray(p.business?.services)
+        ? p.business.services
+        : [];
+      return {
+        ...p,
+        business: {
+          ...p.business,
+          about: p.business?.about ?? "",
+          services: current.filter((_, i) => i !== index),
+        },
+      };
+    });
   }
 
   async function openImageCrop(file: File | undefined, kind: CropKind) {
@@ -256,7 +333,7 @@ export default function EditCard() {
         appearance: {
           ...profile.appearance,
           coverImage: DEFAULT_CARD_BANNER,
-          logoImage: null,
+          logoImage: DEFAULT_CARD_AVATAR,
           shareImage: null,
         },
       };
@@ -653,7 +730,15 @@ export default function EditCard() {
                   </Field>
 
                   <div>
-                    <p className={labelClass()}>Service / product name</p>
+                    <div className="flex items-end justify-between gap-2">
+                      <p className={labelClass()}>Service / product name</p>
+                      <p className="text-[11px] text-[#8a8174]">
+                        {Array.isArray(profile.business?.services)
+                          ? profile.business.services.length
+                          : 0}{" "}
+                        added · no limit
+                      </p>
+                    </div>
                     <div className="mt-1.5 flex gap-2">
                       <input
                         className={`${fieldClass()} mt-0 flex-1`}
@@ -676,11 +761,15 @@ export default function EditCard() {
                         Add
                       </button>
                     </div>
+                    <p className="mt-1.5 text-[11px] text-[#8a8174]">
+                      Add as many services as you need — there is no maximum.
+                    </p>
                   </div>
 
                   <div className="overflow-hidden rounded-xl border border-black/[0.08]">
+                    <div className="max-h-[420px] overflow-y-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-[#FAFAF8] text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                      <thead className="sticky top-0 z-10 bg-[#FAFAF8] text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
                         <tr>
                           <th className="px-4 py-3">Sr. No</th>
                           <th className="px-4 py-3">Name</th>
@@ -688,7 +777,10 @@ export default function EditCard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {profile.business.services.length === 0 ? (
+                        {!(Array.isArray(profile.business?.services)
+                          ? profile.business.services
+                          : []
+                        ).length ? (
                           <tr>
                             <td
                               colSpan={3}
@@ -699,7 +791,10 @@ export default function EditCard() {
                             </td>
                           </tr>
                         ) : (
-                          profile.business.services.map((service, index) => (
+                          (Array.isArray(profile.business?.services)
+                            ? profile.business.services
+                            : []
+                          ).map((service, index) => (
                             <tr
                               key={`${service}-${index}`}
                               className="border-t border-black/[0.06]"
@@ -725,79 +820,171 @@ export default function EditCard() {
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               ) : null}
 
               {tab === "appearance" ? (
-                <div className="space-y-6">
-                  <p className="text-sm text-[#6b6560]">
-                    Choose a banner background and accent color for your digital
-                    card.
-                  </p>
-
+                <div className="space-y-7">
                   <div>
-                    <p className={labelClass()}>Background banner</p>
-                    <p className="mt-1 text-xs text-[#8a8174]">
-                      First option is the default Hexa banner. Pick a preset or
-                      upload your own.
+                    <p className={labelClass()}>Card layout</p>
+                    <p className="mt-1 text-sm text-[#6b6560]">
+                      Preview each layout on a phone. Tap a device to switch —
+                      your card content stays the same.
                     </p>
-                    <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-                      {CARD_BANNER_PRESETS.map((preset, index) => {
-                        const selected =
-                          (profile.appearance.coverImage ||
-                            DEFAULT_CARD_BANNER) === preset.src;
+                    <div className="mt-5 flex flex-wrap justify-center gap-6 sm:justify-start sm:gap-8">
+                      {CARD_LAYOUTS.map((layout) => {
+                        const active =
+                          (profile.appearance.layout ?? "classic") ===
+                          layout.id;
+                        const locked = !layout.available;
+                        const previewName =
+                          profile.contact.cardName.trim() || user.name;
+                        const previewTitle =
+                          [
+                            profile.contact.title,
+                            profile.contact.businessName,
+                          ]
+                            .filter(Boolean)
+                            .join(" - ") || "Hexa NFC Business Card";
+
                         return (
-                          <button
-                            key={preset.id}
-                            type="button"
-                            onClick={() =>
-                              updateAppearance("coverImage", preset.src)
+                          <PhoneFrame
+                            key={layout.id}
+                            label={layout.label}
+                            badge={
+                              active ? "Active" : locked ? "Soon" : undefined
                             }
-                            className={`overflow-hidden rounded-xl border-2 text-left transition ${
-                              selected
-                                ? "border-[#BC7C10] ring-2 ring-[#BC7C10]/25"
-                                : "border-black/10 hover:border-[#BC7C10]/40"
-                            }`}
+                            active={active}
+                            locked={locked}
+                            onClick={() => {
+                              if (locked || active) return;
+                              requestLayoutChange(layout.id);
+                            }}
                           >
-                            <span
-                              className="block aspect-[16/9] bg-cover bg-center"
-                              style={{ backgroundImage: `url("${preset.src}")` }}
-                            />
-                            <span className="block px-2.5 py-1.5 text-[11px] font-semibold text-[#141414]">
-                              {index === 0 ? "Default banner" : preset.label}
-                            </span>
-                          </button>
+                            {locked ? (
+                              <div className="flex h-full items-center justify-center bg-[#F3EEE6]">
+                                <span className="text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                                  Coming soon
+                                </span>
+                              </div>
+                            ) : (
+                              <LayoutPhonePreview
+                                layoutId={layout.id}
+                                name={previewName}
+                                titleLine={previewTitle}
+                                coverUrl={profile.appearance.coverImage}
+                                avatarUrl={profile.appearance.logoImage}
+                                accent={profile.appearance.accentColor}
+                                mobile={profile.contact.mobile}
+                                email={profile.contact.email}
+                              />
+                            )}
+                          </PhoneFrame>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <ImageUpload
-                      label="Custom cover"
-                      hint="Upload your own banner"
-                      value={
-                        profile.appearance.coverImage?.startsWith("data:")
-                          ? profile.appearance.coverImage
-                          : null
-                      }
-                      inputRef={coverRef}
-                      onPick={() => coverRef.current?.click()}
-                      onChange={(file) => void openImageCrop(file, "background")}
-                      onClear={() =>
-                        updateAppearance("coverImage", DEFAULT_CARD_BANNER)
-                      }
-                    />
-                    <ImageUpload
-                      label="Logo / profile"
-                      hint="Square crop · 512×512"
-                      value={profile.appearance.logoImage}
-                      inputRef={logoRef}
-                      onPick={() => logoRef.current?.click()}
-                      onChange={(file) => void openImageCrop(file, "profile")}
-                      onClear={() => updateAppearance("logoImage", null)}
-                    />
+                  <div className="grid gap-5 sm:grid-cols-[140px_minmax(0,1fr)] sm:items-start">
+                    {/* Left — profile */}
+                    <div className="flex flex-col items-center sm:items-start">
+                      <p className={labelClass()}>Profile photo</p>
+                      <div className="relative mt-3 h-[112px] w-[112px] overflow-hidden rounded-md shadow-[0_6px_20px_rgba(0,0,0,0.12)] ring-0.1 ring-[#141414] ring-offset-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            profile.appearance.logoImage || DEFAULT_CARD_AVATAR
+                          }
+                          alt=""
+                          className="h-full w-full object-cover object-center"
+                        />
+                      </div>
+                      <p className="mt-2 text-center text-[11px] text-[#8a8174] sm:text-left">
+                        {isDefaultLogoImage(profile.appearance.logoImage)
+                          ? "Using default"
+                          : "Current photo"}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => requestDefaultImage("logo")}
+                        disabled={isDefaultLogoImage(
+                          profile.appearance.logoImage,
+                        )}
+                        className={`mt-4 flex flex-col items-center gap-1.5 disabled:cursor-default ${
+                          isDefaultLogoImage(profile.appearance.logoImage)
+                            ? "opacity-50"
+                            : "hover:opacity-90"
+                        }`}
+                        aria-label="Use default profile photo"
+                      >
+                        <span className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-dashed border-black/20 shadow-sm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={DEFAULT_CARD_AVATAR}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        </span>
+                        <span className="text-[11px] font-semibold text-[#141414]">
+                          Default
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Right — background */}
+                    <div className="min-w-0">
+                      <p className={labelClass()}>Card background</p>
+                      <div className="relative mt-3 h-[112px] w-[212px] overflow-hidden rounded-md shadow-[0_8px_24px_rgba(0,0,0,0.1)] ring-0.1 ring-[#141414] ring-offset-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={
+                            profile.appearance.coverImage || DEFAULT_CARD_BANNER
+                          }
+                          alt=""
+                          className="h-full w-full object-cover object-center"
+                        />
+                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-left text-[11px] font-semibold tracking-wide text-white uppercase">
+                          {isDefaultCoverImage(profile.appearance.coverImage)
+                            ? "Using default"
+                            : "Current background"}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => requestDefaultImage("cover")}
+                          disabled={isDefaultCoverImage(
+                            profile.appearance.coverImage,
+                          )}
+                          className={`flex flex-col items-start gap-1.5 disabled:cursor-default ${
+                            isDefaultCoverImage(profile.appearance.coverImage)
+                              ? "opacity-50"
+                              : "hover:opacity-90"
+                          }`}
+                          aria-label="Use default card background"
+                        >
+                          <span className="relative h-16 w-28 overflow-hidden rounded-lg border-2 border-dashed border-black/20 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={DEFAULT_CARD_BANNER}
+                              alt=""
+                              className="h-full w-full object-cover"
+                            />
+                            <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1 py-0.5 text-center text-[10px] font-semibold text-white">
+                              Default
+                            </span>
+                          </span>
+                        </button>
+                        {/* <p className="pb-1 text-[11px] text-[#8a8174]">
+                          Click Default to restore. Upload custom from the card
+                          preview.
+                        </p> */}
+                      </div>
+                    </div>
                   </div>
 
                   <div>
@@ -856,8 +1043,8 @@ export default function EditCard() {
                       </label>
                     </div>
                     <p className="mt-2 text-xs text-[#8a8174]">
-                      Pick a preset, or click the color wheel to open the color
-                      picker.
+                      Pick a preset, or click the color wheel for a custom
+                      color.
                     </p>
                   </div>
                 </div>
@@ -933,6 +1120,104 @@ export default function EditCard() {
           onComplete={applyCroppedImage}
         />
       ) : null}
+
+      {defaultConfirm ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="default-image-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h2
+              id="default-image-title"
+              className="font-dashboard text-lg font-bold text-[#141414]"
+            >
+              Use default image?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#6b6560]">
+              {defaultConfirm === "cover"
+                ? "Do you want to replace your card background with the default image?"
+                : "Do you want to replace your profile photo with the default avatar?"}
+            </p>
+            <div className="mt-4 overflow-hidden rounded-xl border border-black/10 bg-[#FAFAF8]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={
+                  defaultConfirm === "cover"
+                    ? DEFAULT_CARD_BANNER
+                    : DEFAULT_CARD_AVATAR
+                }
+                alt=""
+                className={
+                  defaultConfirm === "cover"
+                    ? "aspect-[16/9] w-full object-cover"
+                    : "mx-auto h-28 w-28 object-cover"
+                }
+              />
+            </div>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setDefaultConfirm(null)}
+                className="flex-1 rounded-lg border border-black/10 bg-white px-3 py-2.5 text-[13px] font-semibold text-[#141414] hover:bg-[#FAFAF8]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyDefaultImage}
+                className="flex-1 rounded-lg bg-[#BC7C10] px-3 py-2.5 text-[13px] font-bold text-white hover:bg-[#9a650d]"
+              >
+                Update image
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {layoutConfirm ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="layout-confirm-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h2
+              id="layout-confirm-title"
+              className="font-dashboard text-lg font-bold text-[#141414]"
+            >
+              Change layout?
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#6b6560]">
+              Are you sure you want to switch to the{" "}
+              <span className="font-semibold text-[#141414]">
+                {CARD_LAYOUTS.find((l) => l.id === layoutConfirm)?.label ??
+                  layoutConfirm}
+              </span>{" "}
+              layout? Your photos, details, and accent color will stay the
+              same. This is saved right away.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setLayoutConfirm(null)}
+                className="flex-1 rounded-lg border border-black/10 bg-white px-3 py-2.5 text-[13px] font-semibold text-[#141414] hover:bg-[#FAFAF8]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyLayout}
+                className="flex-1 rounded-lg bg-[#BC7C10] px-3 py-2.5 text-[13px] font-bold text-white hover:bg-[#9a650d]"
+              >
+                Change layout
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -951,76 +1236,5 @@ function Field({
       <span className={labelClass()}>{label}</span>
       {children}
     </label>
-  );
-}
-
-function ImageUpload({
-  label,
-  hint,
-  value,
-  inputRef,
-  onPick,
-  onChange,
-  onClear,
-}: {
-  label: string;
-  hint: string;
-  value: string | null;
-  inputRef: RefObject<HTMLInputElement | null>;
-  onPick: () => void;
-  onChange: (file: File | undefined) => void;
-  onClear: () => void;
-}) {
-  return (
-    <div className="rounded-xl border border-black/[0.06] bg-[#FAFAF8] p-3">
-      <p className="text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
-        {label}
-      </p>
-      <p className="mt-0.5 text-[11px] text-[#9a9a9a]">{hint}</p>
-      <button
-        type="button"
-        onClick={onPick}
-        className="relative mt-3 flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-black/15 bg-white"
-      >
-        {value ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={value} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="flex flex-col items-center gap-1 text-[#8a8174]">
-            <ImagePlus className="h-5 w-5" />
-            <span className="text-[11px] font-semibold">Upload</span>
-          </span>
-        )}
-      </button>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          onChange(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-      <div className="mt-2 flex gap-2">
-        <button
-          type="button"
-          onClick={onPick}
-          className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-black/10 bg-white py-1.5 text-[11px] font-semibold"
-        >
-          <Upload className="h-3 w-3" />
-          Choose
-        </button>
-        {value ? (
-          <button
-            type="button"
-            onClick={onClear}
-            className="rounded-lg px-2 py-1.5 text-[11px] font-semibold text-[#E24C4C]"
-          >
-            Remove
-          </button>
-        ) : null}
-      </div>
-    </div>
   );
 }

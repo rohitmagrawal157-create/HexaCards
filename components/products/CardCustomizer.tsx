@@ -1327,7 +1327,7 @@ export default function CardCustomizer() {
                   value={subTitle}
                   maxLength={48}
                   onChange={(e) => setSubTitle(e.target.value)}
-                  placeholder="e.g. Founder · Hexa Cards"
+                  placeholder="e.g. Founder · CEO · Director · Manager"
                   className="w-full rounded-lg border border-black/10 bg-[#FFFCF7] px-3 py-2 text-xs text-[#141414] outline-none transition-all placeholder:text-[#5c5346]/45 focus:border-[#BC7C10]/50 focus:bg-white focus:ring-2 focus:ring-[#BC7C10]/15 sm:rounded-xl sm:px-3.5 sm:py-3 sm:text-sm"
                 />
               </label>

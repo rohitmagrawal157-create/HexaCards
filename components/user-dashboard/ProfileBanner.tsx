@@ -1,10 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import {
   Camera,
-  CheckCircle2,
   Phone,
   Mail,
   Globe,
@@ -13,8 +12,6 @@ import {
   FileText,
   Home,
   ChevronUp,
-  ImagePlus,
-  X,
 } from "lucide-react";
 import {
   FaFacebookF,
@@ -27,20 +24,17 @@ import {
 } from "react-icons/fa";
 import {
   cardPublicUrl,
+  DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
   formatDialNumber,
+  normalizeCardLayout,
   openBrochureDownload,
   phoneDigitsForLink,
   resolveCardAccent,
   type HexaCardProfile,
 } from "@/lib/card-profile";
-import { saveCardMessage } from "@/lib/card-messages";
-import {
-  getInvisibleRecaptchaToken,
-  isRecaptchaConfigured,
-  ensureInvisibleRecaptcha,
-  verifyRecaptchaOnServer,
-} from "@/lib/recaptcha";
+import Basic from "@/components/Layouts/Basic";
+import CardContactForm from "./CardContactForm";
 
 type ProfileBannerProps = {
   profile: HexaCardProfile;
@@ -61,45 +55,13 @@ export default function ProfileBanner({
 }: ProfileBannerProps) {
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
-  const recaptchaRef = useRef<HTMLDivElement>(null);
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
-  const [contactSent, setContactSent] = useState(false);
-  const [contactError, setContactError] = useState("");
-  const [contactSubmitting, setContactSubmitting] = useState(false);
   const [waShareNumber, setWaShareNumber] = useState("");
-  const captchaEnabled = isRecaptchaConfigured();
-
-  useEffect(() => {
-    if (!captchaEnabled) return;
-    let cancelled = false;
-
-    // Prefetch script + widget so submit is not blocked
-    const boot = async () => {
-      await new Promise<void>((r) => requestAnimationFrame(() => r()));
-      const el = recaptchaRef.current;
-      if (!el || cancelled) return;
-      try {
-        await ensureInvisibleRecaptcha(el);
-      } catch {
-        // Submit path will retry / show a clear error
-      }
-    };
-
-    void boot();
-    return () => {
-      cancelled = true;
-    };
-  }, [captchaEnabled]);
 
   const accentTheme = resolveCardAccent(profile.appearance.accentColor);
   const accent = accentTheme.solid;
   const accentSoft = accentTheme.soft;
   const accentMuted = accentTheme.muted;
+  const cardLayout = normalizeCardLayout(profile.appearance?.layout);
   const name =
     profile.contact.cardName.trim() ||
     userName ||
@@ -155,53 +117,6 @@ export default function ProfileBanner({
       "_blank",
       "noopener,noreferrer",
     );
-  }
-
-  async function handleContactSubmit(e: FormEvent) {
-    e.preventDefault();
-    setContactError("");
-    if (
-      !contactForm.name.trim() ||
-      !contactForm.email.trim() ||
-      !contactForm.message.trim()
-    ) {
-      setContactError("Please fill name, email, and message.");
-      return;
-    }
-    if (contactForm.phone && contactForm.phone.length !== 10) {
-      setContactError("Phone number must be 10 digits.");
-      return;
-    }
-    if (contactSubmitting) return;
-    setContactSubmitting(true);
-
-    try {
-      if (captchaEnabled) {
-        const el = recaptchaRef.current;
-        if (!el) {
-          setContactError("Security check is unavailable. Refresh and retry.");
-          return;
-        }
-        const token = await getInvisibleRecaptchaToken(el);
-        const verified = await verifyRecaptchaOnServer(token);
-        if (!verified.ok) {
-          setContactError(verified.error || "Security check failed.");
-          return;
-        }
-      }
-
-      saveCardMessage({ ...contactForm, website: "" });
-      setContactForm({ name: "", email: "", phone: "", message: "" });
-      setContactSent(true);
-    } catch (err) {
-      setContactError(
-        err instanceof Error
-          ? err.message
-          : "Could not send message. Please try again.",
-      );
-    } finally {
-      setContactSubmitting(false);
-    }
   }
 
   const coverUrl =
@@ -266,6 +181,48 @@ export default function ProfileBanner({
     },
   ].filter((s) => s.href && s.href !== "#");
 
+  if (cardLayout === "basic") {
+    return (
+      <>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadBackground) onUploadBackground(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadProfile) onUploadProfile(file);
+            e.target.value = "";
+          }}
+        />
+        <Basic
+          profile={profile}
+          onChangeBackground={
+            onUploadBackground
+              ? () => coverInputRef.current?.click()
+              : undefined
+          }
+          onChangeProfile={
+            onUploadProfile
+              ? () => profileInputRef.current?.click()
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+
   return (
     <div
       className="mx-auto max-w-[520px] overflow-hidden rounded-2xl border-2 bg-white shadow-[0_12px_40px_rgba(0,0,0,0.1)]"
@@ -320,7 +277,7 @@ export default function ProfileBanner({
         </button>
       </div>
 
-      {/* Banner + overlapping profile (avatar is sibling so it is not clipped) */}
+      {/* Banner + overlapping profile */}
       <div className="relative">
         <div
           className={`relative h-44 w-full overflow-hidden bg-[#d8dde3] sm:h-48 ${
@@ -353,11 +310,10 @@ export default function ProfileBanner({
                 e.stopPropagation();
                 coverInputRef.current?.click();
               }}
-              className="absolute top-3 left-3 z-30 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold text-white shadow-md transition-opacity hover:opacity-90"
-              style={{ backgroundColor: accent }}
+              aria-label="Change background image"
+              className="absolute right-3 bottom-3 z-30 flex h-8 w-8 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition hover:bg-[#F0F2F5] active:scale-[0.97]"
             >
-              <ImagePlus className="h-3.5 w-3.5" />
-              Change background
+              <Camera className="h-[15px] w-[15px]" strokeWidth={2.25} />
             </button>
           ) : null}
         </div>
@@ -369,31 +325,21 @@ export default function ProfileBanner({
               className="flex h-[112px] w-[112px] items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-[#f5f5f4] shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
               style={{ outline: `2px solid ${accent}` }}
             >
-              {profile.appearance.logoImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.appearance.logoImage}
-                  alt=""
-                  className="h-full w-full object-cover object-center"
-                />
-              ) : (
-                <span
-                  className="text-2xl font-bold tracking-tight"
-                  style={{ color: accentMuted }}
-                >
-                  {name.slice(0, 2).toUpperCase()}
-                </span>
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={profile.appearance.logoImage || DEFAULT_CARD_AVATAR}
+                alt=""
+                className="h-full w-full object-cover object-center"
+              />
             </div>
             {onUploadProfile ? (
               <button
                 type="button"
                 onClick={() => profileInputRef.current?.click()}
                 aria-label="Change profile picture"
-                className="absolute right-1 bottom-1 z-30 flex h-9 w-9 items-center justify-center rounded-full border-[3px] border-white text-white shadow-md transition-opacity hover:opacity-90"
-                style={{ backgroundColor: accent }}
+                className="absolute right-0.5 bottom-0.5 z-30 flex h-8 w-8 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-[0_1px_2px_rgba(0,0,0,0.12)] transition hover:bg-[#F0F2F5] active:scale-[0.97]"
               >
-                <Camera className="h-4 w-4" />
+                <Camera className="h-[15px] w-[15px]" strokeWidth={2.25} />
               </button>
             ) : null}
           </div>
@@ -598,186 +544,10 @@ export default function ProfileBanner({
         </div>
       ) : null}
 
-      <div
-        className="mx-4 mb-6 rounded-2xl border bg-white p-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]"
-        style={{ borderColor: accentMuted }}
-      >
-        <h3
-          className="text-center text-base font-extrabold tracking-wide uppercase"
-          style={{ color: accent }}
-        >
-          Contact Us
-        </h3>
-        <form className="relative mt-4 space-y-3" onSubmit={handleContactSubmit}>
-          <input
-            className="w-full rounded-xl border bg-[#F5F5F5] px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#9a9a9a] focus:bg-white"
-            style={{ borderColor: accentSoft }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = accent;
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${accentSoft}`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = accentSoft;
-              e.currentTarget.style.boxShadow = "none";
-            }}
-            placeholder="Your Name"
-            value={contactForm.name}
-            onChange={(e) =>
-              setContactForm((f) => ({ ...f, name: e.target.value }))
-            }
-            autoComplete="name"
-          />
-          <input
-            type="email"
-            className="w-full rounded-xl border bg-[#F5F5F5] px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#9a9a9a] focus:bg-white"
-            style={{ borderColor: accentSoft }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = accent;
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${accentSoft}`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = accentSoft;
-              e.currentTarget.style.boxShadow = "none";
-            }}
-            placeholder="Email Address"
-            value={contactForm.email}
-            onChange={(e) =>
-              setContactForm((f) => ({ ...f, email: e.target.value }))
-            }
-            autoComplete="email"
-          />
-          <input
-            className="w-full rounded-xl border bg-[#F5F5F5] px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#9a9a9a] focus:bg-white"
-            style={{ borderColor: accentSoft }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = accent;
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${accentSoft}`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = accentSoft;
-              e.currentTarget.style.boxShadow = "none";
-            }}
-            placeholder="Phone Number (10 digits)"
-            value={contactForm.phone}
-            onChange={(e) =>
-              setContactForm((f) => ({
-                ...f,
-                phone: e.target.value.replace(/\D/g, "").slice(0, 10),
-              }))
-            }
-            autoComplete="tel"
-            inputMode="numeric"
-            maxLength={10}
-          />
-          <textarea
-            rows={4}
-            className="w-full resize-none rounded-xl border bg-[#F5F5F5] px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#9a9a9a] focus:bg-white"
-            style={{ borderColor: accentSoft }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = accent;
-              e.currentTarget.style.boxShadow = `0 0 0 2px ${accentSoft}`;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = accentSoft;
-              e.currentTarget.style.boxShadow = "none";
-            }}
-            placeholder="Message or Inquiry"
-            value={contactForm.message}
-            onChange={(e) =>
-              setContactForm((f) => ({ ...f, message: e.target.value }))
-            }
-          />
-          {contactError ? (
-            <p className="text-left text-xs font-medium text-[#E24C4C]">
-              {contactError}
-            </p>
-          ) : null}
-          {/* Invisible reCAPTCHA — keep in layout (not display:none) so Google can render */}
-          <div
-            ref={recaptchaRef}
-            className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
-            aria-hidden
-          />
-          <button
-            type="submit"
-            disabled={contactSubmitting}
-            className="w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ backgroundColor: accent }}
-          >
-            {contactSubmitting ? "Verifying…" : "Send Message"}
-          </button>
-          {captchaEnabled ? (
-            <p className="text-[10px] leading-relaxed text-[#9a9a9a]">
-              Protected by Invisible reCAPTCHA.{" "}
-              <a
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:text-[#6b6560]"
-              >
-                Privacy
-              </a>{" "}
-              ·{" "}
-              <a
-                href="https://policies.google.com/terms"
-                target="_blank"
-                rel="noreferrer"
-                className="underline underline-offset-2 hover:text-[#6b6560]"
-              >
-                Terms
-              </a>
-            </p>
-          ) : null}
-        </form>
-      </div>
-
-      {contactSent ? (
-        <div
-          className="fixed inset-0 z-[85] flex items-center justify-center bg-black/45 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="contact-success-title"
-          onClick={() => setContactSent(false)}
-        >
-          <div
-            className="relative w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setContactSent(false)}
-              className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-lg text-[#8a8174] hover:bg-[#FAFAF8]"
-              aria-label="Close"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <span
-              className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
-              style={{ backgroundColor: accentSoft, color: accent }}
-            >
-              <CheckCircle2 className="h-8 w-8" strokeWidth={1.75} />
-            </span>
-            <h4
-              id="contact-success-title"
-              className="mt-4 text-lg font-extrabold tracking-tight text-[#141414]"
-            >
-              Message sent
-            </h4>
-            <p className="mt-2 text-sm leading-relaxed text-[#6b6560]">
-              Thanks for reaching out. Your message has been delivered — the
-              card owner can view it in their dashboard.
-            </p>
-            <button
-              type="button"
-              onClick={() => setContactSent(false)}
-              className="mt-5 w-full rounded-xl px-4 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: accent }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <CardContactForm
+        accentColor={accent}
+        className="mx-4 mb-6"
+      />
 
       <div
         className="relative border-t-2 bg-[#f7f7f5] px-4 pt-6 pb-8 text-center"

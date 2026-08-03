@@ -93,3 +93,24 @@ export function formatMessageDate(iso: string) {
     return iso;
   }
 }
+
+/** Compact date for table columns — dd/mm/yyyy with time below */
+export function formatMessageDateShort(iso: string) {
+  try {
+    const d = new Date(iso);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    const time = d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return {
+      date: `${day}/${month}/${year}`,
+      time,
+    };
+  } catch {
+    return { date: iso, time: "" };
+  }
+}
