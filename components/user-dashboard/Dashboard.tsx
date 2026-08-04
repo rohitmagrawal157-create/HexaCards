@@ -1003,23 +1003,23 @@ function MessagesPanel({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] table-fixed border-collapse text-left">
             <thead>
-              <tr className="border-b border-black/[0.06] bg-[#FAFAF8]">
-                <th className="w-[16%] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+              <tr className="bg-[#BC7C10]">
+                <th className="w-[16%] px-3 py-3.5 text-[12px] font-bold tracking-wide text-white uppercase">
                   Name
                 </th>
-                <th className="w-[20%] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                <th className="w-[20%] px-3 py-3.5 text-[12px] font-bold tracking-wide text-white uppercase">
                   Email
                 </th>
-                <th className="w-[12%] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                <th className="w-[12%] px-3 py-3.5 text-[12px] font-bold tracking-wide text-white uppercase">
                   Phone
                 </th>
-                <th className="w-[36%] px-3 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                <th className="w-[36%] px-3 py-3.5 text-[12px] font-bold tracking-wide text-white uppercase">
                   Message
                 </th>
-                <th className="w-[9%] whitespace-nowrap px-1.5 py-3 text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                <th className="w-[9%] whitespace-nowrap px-1.5 py-3.5 text-[12px] font-bold tracking-wide text-white uppercase">
                   Date
                 </th>
-                <th className="w-[4%] px-0.5 py-3 text-center text-[11px] font-semibold tracking-wide text-[#8a8174] uppercase">
+                <th className="w-[4%] px-0.5 py-3.5 text-center text-[12px] font-bold tracking-wide text-white uppercase">
                   <span className="sr-only">Delete</span>
                 </th>
               </tr>

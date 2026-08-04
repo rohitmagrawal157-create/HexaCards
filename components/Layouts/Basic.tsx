@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
   Phone,
   FileText,
@@ -26,6 +25,7 @@ import {
 } from "react-icons/fa";
 import BasicLayout from "./BasicLayout";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
+import CardLayoutFooter from "./CardLayoutFooter";
 import {
   DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
@@ -441,7 +441,6 @@ export default function Basic({
         ) : null}
       </div>
 
-      {/* Social media links */}
       {socialLinks.length > 0 ? (
         <div className="mt-8 pb-6 text-center">
           <h3 className="text-base font-bold text-[#0f0f12]">
@@ -469,29 +468,7 @@ export default function Basic({
         <CardContactForm accentColor={accent} />
       </div>
 
-      {/* Footer */}
-      <div
-        className="relative mt-4 border-t-2 bg-[#f0f0ee] pt-8 pb-10 text-center"
-        style={{ borderColor: accent }}
-      >
-        <Image
-          src="/Images/Hexacards.jpeg"
-          alt="Hexa Cards"
-          width={180}
-          height={50}
-          className="mx-auto h-10 w-auto object-contain"
-        />
-
-        <button
-          type="button"
-          aria-label="Scroll to top"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="absolute right-4 bottom-4 flex h-11 w-11 items-center justify-center text-white"
-          style={{ backgroundColor: accent }}
-        >
-          <ChevronUp className="h-5 w-5" />
-        </button>
-      </div>
+      <CardLayoutFooter accent={accent} />
     </div>
   );
 }

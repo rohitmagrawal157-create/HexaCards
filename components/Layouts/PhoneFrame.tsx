@@ -3,17 +3,35 @@
 import type { ReactNode } from "react";
 
 type PhoneFrameProps = {
+  /** Layout preview content rendered inside the screen */
   children: ReactNode;
+  /** Currently selected layout — adds dark ring, disables click */
   active?: boolean;
+  /** Coming-soon layout — faded + “Soon” overlay, not clickable */
   locked?: boolean;
+  /** Name under the phone (e.g. Classic, Basic) */
   label?: string;
+  /** Optional pill under the phone (e.g. Active / Soon) */
   badge?: string;
+  /** Called when user taps a non-active, non-locked phone */
   onClick?: () => void;
+  /** Extra classes on the outer wrapper */
   className?: string;
 };
 
 /**
  * Slim iPhone-style device chrome for layout previews in Appearance.
+ *
+ * Visual / size parameters (CSS):
+ * - Outer width:     max-w-[158px]
+ * - Bezel thickness: p-[3px]
+ * - Bezel color:     #111113
+ * - Corner radius:   rounded-[1.65rem] (outer) / rounded-[1.45rem] (screen)
+ * - Screen height:   h-[320px]
+ * - Dynamic Island:  58×14px, centered top
+ * - Side buttons:    mute + volume (left), power (right) — decorative only
+ * - Active ring:     ring-1 ring-[#141414] ring-offset-2
+ * - Hover ring:      ring-[#BC7C10]/50 (when interactive)
  */
 export default function PhoneFrame({
   children,
@@ -34,7 +52,7 @@ export default function PhoneFrame({
         disabled={!interactive}
         aria-pressed={active}
         aria-label={label ? `Select ${label} layout` : "Layout preview"}
-        className={`group relative w-[158px] shrink-0 text-left transition ${
+        className={`group relative mx-auto w-full max-w-[158px] text-left transition ${
           interactive ? "cursor-pointer hover:-translate-y-0.5" : "cursor-default"
         } ${locked ? "opacity-55" : ""}`}
       >
@@ -44,7 +62,7 @@ export default function PhoneFrame({
             active
               ? "ring-[#141414]"
               : interactive
-                ? "ring-transparent group-hover:ring-[#BC7C10]/50"
+                ? "ring-transparent group-hover:ring-[#BC7C10]/45"
                 : "ring-transparent"
           }`}
         >
@@ -61,7 +79,7 @@ export default function PhoneFrame({
               <span className="absolute top-1/2 right-2.5 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-[#1a3a5c]" />
             </div>
 
-            {/* Screen content — fills the phone body under the island */}
+            {/* Screen content */}
             <div className="pointer-events-none h-[320px] overflow-hidden bg-white select-none">
               {children}
             </div>

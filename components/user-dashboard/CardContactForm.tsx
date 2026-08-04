@@ -107,16 +107,23 @@ export default function CardContactForm({
   return (
     <>
       <div
-        className={`rounded-2xl border bg-white p-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)] ${className}`}
+        className={`overflow-hidden rounded-2xl border bg-white shadow-[0_8px_28px_rgba(0,0,0,0.06)] ${className}`}
         style={{ borderColor: accentMuted }}
       >
-        <h3
-          className="text-center text-base font-extrabold tracking-wide uppercase"
-          style={{ color: accent }}
+        {/* Theme header bar — accent brown + white text */}
+        <div
+          className="px-4 py-3.5 text-center"
+          style={{ backgroundColor: accent }}
         >
-          Contact Us
-        </h3>
-        <form className="relative mt-4 space-y-3" onSubmit={handleContactSubmit}>
+          <h3 className="text-base font-extrabold tracking-wide text-white uppercase">
+            Leave a Message
+          </h3>
+          <p className="mt-0.5 text-xs font-medium text-white/85">
+            We will get back to you soon
+          </p>
+        </div>
+
+        <form className="relative space-y-3 p-5" onSubmit={handleContactSubmit}>
           <input
             className="w-full rounded-xl border bg-[#F5F5F5] px-4 py-3 text-sm text-[#141414] outline-none transition placeholder:text-[#9a9a9a] focus:bg-white"
             style={{ borderColor: accentSoft }}

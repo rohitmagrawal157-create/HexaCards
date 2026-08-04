@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRef, useState } from "react";
 import {
   Camera,
@@ -10,8 +9,6 @@ import {
   MapPin,
   UserPlus,
   FileText,
-  Home,
-  ChevronUp,
 } from "lucide-react";
 import {
   FaFacebookF,
@@ -34,7 +31,9 @@ import {
   type HexaCardProfile,
 } from "@/lib/card-profile";
 import Basic from "@/components/Layouts/Basic";
-import CardContactForm from "./CardContactForm";
+import Modern from "@/components/Layouts/modern";
+import Compact from "@/components/Layouts/compact";
+import CardLayoutBottom from "@/components/Layouts/CardLayoutBottom";
 
 type ProfileBannerProps = {
   profile: HexaCardProfile;
@@ -83,7 +82,6 @@ export default function ProfileBanner({
     "flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-[11px] font-semibold text-white transition-opacity hover:opacity-90";
   const infoCardClass =
     "min-w-0 rounded-xl border p-3 text-left transition-colors";
-  const sectionCardClass = "rounded-2xl border bg-white p-4";
 
   async function handleBrochureClick() {
     if (!hasBrochure) return;
@@ -207,6 +205,90 @@ export default function ProfileBanner({
           }}
         />
         <Basic
+          profile={profile}
+          onChangeBackground={
+            onUploadBackground
+              ? () => coverInputRef.current?.click()
+              : undefined
+          }
+          onChangeProfile={
+            onUploadProfile
+              ? () => profileInputRef.current?.click()
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+
+  if (cardLayout === "modern") {
+    return (
+      <>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadBackground) onUploadBackground(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadProfile) onUploadProfile(file);
+            e.target.value = "";
+          }}
+        />
+        <Modern
+          profile={profile}
+          onChangeBackground={
+            onUploadBackground
+              ? () => coverInputRef.current?.click()
+              : undefined
+          }
+          onChangeProfile={
+            onUploadProfile
+              ? () => profileInputRef.current?.click()
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+
+  if (cardLayout === "compact") {
+    return (
+      <>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadBackground) onUploadBackground(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadProfile) onUploadProfile(file);
+            e.target.value = "";
+          }}
+        />
+        <Compact
           profile={profile}
           onChangeBackground={
             onUploadBackground
@@ -483,100 +565,17 @@ export default function ProfileBanner({
         ) : null}
       </div>
 
-      <div
-        className={`mx-4 mb-5 ${sectionCardClass}`}
-        style={{ borderColor: accentMuted }}
-      >
-        <div className="flex items-center gap-2">
-          <Home className="h-4 w-4" strokeWidth={1.75} style={{ color: accent }} />
-          <h3 className="text-base font-bold text-[#0f0f12]">
-            Business Information
-          </h3>
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-[#4a4a52]">
-          {about ||
-            "Add company details in the Company tab — about your business and services will show here."}
-        </p>
-
-        <h4 className="mt-4 text-sm font-bold text-[#0f0f12]">
-          Services / Products
-        </h4>
-        {services.length > 0 ? (
-          <ul className="mt-2 space-y-2">
-            {services.map((service) => (
-              <li key={service} className="flex items-start gap-2">
-                <span
-                  className="mt-1.5 h-0 w-0 shrink-0 border-y-[5px] border-l-[7px] border-y-transparent"
-                  style={{ borderLeftColor: accent }}
-                  aria-hidden
-                />
-                <span className="text-sm text-[#4a4a52]">{service}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-xs text-[#8a8a92]">
-            Add services or products from the Company tab.
-          </p>
-        )}
-      </div>
-
-      {socialLinks.length > 0 ? (
-        <div className="pb-5 text-center">
-          <h3 className="text-base font-bold text-[#0f0f12]">
-            Social Media Links
-          </h3>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2.5">
-            {socialLinks.map(({ label, Icon, href }) => (
-              <a
-                key={label}
-                href={href.startsWith("http") ? href : `https://${href}`}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={label}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-                style={{ backgroundColor: accent }}
-              >
-                <Icon className="h-4 w-4" />
-              </a>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      <CardContactForm
-        accentColor={accent}
-        className="mx-4 mb-6"
+      <CardLayoutBottom
+        accent={accent}
+        accentMuted={accentMuted}
+        about={about}
+        services={services}
+        socialLinks={socialLinks.map(({ label, Icon, href }) => ({
+          label,
+          Icon,
+          href,
+        }))}
       />
-
-      <div
-        className="relative border-t-2 bg-[#f7f7f5] px-4 pt-6 pb-8 text-center"
-        style={{ borderColor: accent }}
-      >
-        <Image
-          src="/Images/Hexacards.png"
-          alt="Hexa Cards"
-          width={180}
-          height={50}
-          className="mx-auto h-8 w-auto object-contain"
-        />
-        <a
-          href="/products"
-          className="mt-3 inline-block text-sm font-bold"
-          style={{ color: accent }}
-        >
-          Create Your Own NFC Card
-        </a>
-        <button
-          type="button"
-          aria-label="Scroll to top"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="absolute right-4 bottom-4 flex h-9 w-9 items-center justify-center rounded-md text-white transition-opacity hover:opacity-90"
-          style={{ backgroundColor: accent }}
-        >
-          <ChevronUp className="h-4 w-4" />
-        </button>
-      </div>
     </div>
   );
 }

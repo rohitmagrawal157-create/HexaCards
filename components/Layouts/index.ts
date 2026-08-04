@@ -1,10 +1,14 @@
 export { default as BasicLayout } from "./BasicLayout";
 export type { BasicHeaderProps } from "./BasicLayout";
 export { default as Basic } from "./Basic";
+export { default as Modern } from "./modern";
+export { default as Compact } from "./compact";
+export { default as CardLayoutBottom } from "./CardLayoutBottom";
+export { default as CardLayoutFooter } from "./CardLayoutFooter";
 export { default as PhoneFrame } from "./PhoneFrame";
 export { default as LayoutPhonePreview } from "./LayoutPhonePreview";
 
-/** Six card layouts — Classic & Basic are live; others coming soon */
+/** Card layouts — Classic, Basic, Modern & Compact are live */
 export const CARD_LAYOUTS = [
   {
     id: "classic",
@@ -18,18 +22,18 @@ export const CARD_LAYOUTS = [
     description: "Centered avatar with quick-action icons",
     available: true,
   },
-  // {
-  //   id: "modern",
-  //   label: "Modern",
-  //   description: "Coming soon",
-  //   available: false,
-  // },
-  // {
-  //   id: "compact",
-  //   label: "Compact",
-  //   description: "Coming soon",
-  //   available: false,
-  // },
+  {
+    id: "modern",
+    label: "Modern",
+    description: "Stacked contact rows with quick icons",
+    available: true,
+  },
+  {
+    id: "compact",
+    label: "Compact",
+    description: "Tabbed contact, socials & message form",
+    available: true,
+  },
   // {
   //   id: "bold",
   //   label: "Bold",

@@ -833,7 +833,7 @@ export default function EditCard() {
                       Preview each layout on a phone. Tap a device to switch —
                       your card content stays the same.
                     </p>
-                    <div className="mt-5 flex flex-wrap justify-center gap-6 sm:justify-start sm:gap-8">
+                    <div className="mt-5 grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10">
                       {CARD_LAYOUTS.map((layout) => {
                         const active =
                           (profile.appearance.layout ?? "classic") ===
