@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { MapPin, Mail, Phone } from "lucide-react";
+import { Clock3, MapPin, Mail, Phone } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -99,13 +99,33 @@ export default function Footer() {
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#FBF3E4] text-[#171412]">
               <Mail className="h-5 w-5" strokeWidth={2} />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold tracking-[0.15em] text-[#BC7C10] uppercase">
-                Email
+                Support
               </p>
-              <p className="mt-1 text-lg text-white">
-              info@hexacards.com
-              </p>
+              <a
+                href="mailto:info@hexacards.com"
+                className="mt-1 block break-all text-lg font-medium text-white transition-colors hover:text-[#F2C16F]"
+              >
+                info@hexacards.com
+              </a>
+              <div className="mt-3 flex items-start gap-2 border-t border-white/10 pt-3">
+                <Clock3
+                  className="mt-0.5 h-4 w-4 shrink-0 text-[#BC7C10]"
+                  strokeWidth={2}
+                  aria-hidden
+                />
+                <div>
+                  <p className="text-xs font-semibold tracking-wide text-white/45 uppercase">
+                    Business hours
+                  </p>
+                  <p className="mt-0.5 text-sm leading-relaxed text-white/80">
+                    Monday–Saturday
+                    <br />
+                    10:00 AM–6:00 PM
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -9,14 +9,23 @@ import {
   Share2,
   UserPlus,
   MessageCircle,
+  FileText,
 } from "lucide-react";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaTwitter,
+  FaYoutube,
+  FaGoogle,
+} from "react-icons/fa";
 import {
   DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
 } from "@/lib/card-profile";
 
 type LayoutPhonePreviewProps = {
-  layoutId: "classic" | "basic" | "modern" | "compact" | string;
+  layoutId: "classic" | "basic" | "modern" | "compact" | "social" | string;
   name: string;
   titleLine: string;
   coverUrl?: string | null;
@@ -96,6 +105,135 @@ export default function LayoutPhonePreview({
       <ChevronDown className="h-3 w-3 opacity-90" strokeWidth={2.5} />
     </div>
   );
+
+  if (layoutId === "social") {
+    return (
+      <div className="flex h-full flex-col bg-[#FAFAF8]">
+        <div className="flex items-center gap-1 border-b border-black/[0.06] bg-white px-1.5 py-1">
+          <span className="min-w-0 flex-1 truncate text-[7px] text-[#a0a0a8]">
+            Enter WhatsApp Number
+          </span>
+          <span
+            className="rounded px-1.5 py-0.5 text-[7px] font-bold text-white"
+            style={{ backgroundColor: accent }}
+          >
+            Share
+          </span>
+        </div>
+        <div
+          className="relative bg-cover bg-center"
+          style={{ backgroundImage: `url("${escUrl(cover)}")` }}
+        >
+          <div className="relative flex justify-end px-2 pt-2">
+            <span
+              className="flex h-4 w-4 items-center justify-center rounded-full border border-white/70 bg-white/90"
+              style={{ color: accent }}
+            >
+              <Share2 className="h-2 w-2" strokeWidth={2.5} />
+            </span>
+          </div>
+          <div className="relative z-10 mt-3 flex justify-center">
+            <div
+              className="h-12 w-12 overflow-hidden rounded-full border-[2.5px] bg-white shadow"
+              style={{ borderColor: accent }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={avatar} alt="" className="h-full w-full object-cover" />
+            </div>
+          </div>
+        </div>
+        <div
+          className="relative mx-2 -mt-5 rounded-2xl border bg-white px-2 pt-7 pb-2 shadow-sm"
+          style={{ borderColor: `${accent}33` }}
+        >
+          <p className="truncate text-center text-[9px] font-extrabold text-[#141414]">
+            {name}
+          </p>
+          <p className="mt-0.5 line-clamp-1 text-center text-[6px] text-[#8a8a92]">
+            {titleLine}
+          </p>
+          <p className="mt-1 text-center text-[5.5px] font-bold" style={{ color: accent }}>
+            View more
+          </p>
+          <div className="mt-2 flex items-center gap-1">
+            <span
+              className="flex-1 rounded-full py-1 text-center text-[6px] font-bold text-white"
+              style={{ backgroundColor: accent }}
+            >
+              Exchange
+            </span>
+            <span
+              className="flex h-5 w-5 items-center justify-center rounded-full border bg-white"
+              style={{ borderColor: `${accent}33`, color: accent }}
+            >
+              <UserPlus className="h-2.5 w-2.5" strokeWidth={2.5} />
+            </span>
+          </div>
+        </div>
+        <div className="mx-2 mt-2 rounded-lg border border-black/[0.06] bg-white p-1.5">
+          <p className="text-[7px] font-bold text-[#141414]">
+            Contact Information
+          </p>
+          <div className="mt-1 grid grid-cols-5 gap-1">
+            {[
+              { bg: "#34A853", Icon: Phone },
+              { bg: "#25D366", Icon: MessageCircle },
+              { bg: "#EA4335", Icon: Mail },
+              { bg: "#4285F4", Icon: MapPin },
+              { bg: "#BC7C10", Icon: FileText },
+            ].map(({ bg, Icon }, i) => (
+                <span
+                  key={i}
+                  className="mx-auto flex h-5 w-5 items-center justify-center rounded-md text-white shadow-sm"
+                  style={{ backgroundColor: bg }}
+                >
+                  <Icon className="h-2.5 w-2.5" strokeWidth={2.4} />
+                </span>
+              ))}
+          </div>
+        </div>
+        <div className="mx-2 mt-1.5 rounded-lg border border-black/[0.06] bg-white p-1.5">
+          <p className="text-[7px] font-bold text-[#141414]">Social Media</p>
+          <div className="mt-1 grid grid-cols-3 gap-1">
+            {[
+              { label: "Instagram", bg: "#C13584", Icon: FaInstagram },
+              { label: "Facebook", bg: "#1877F2", Icon: FaFacebookF },
+              { label: "LinkedIn", bg: "#0A66C2", Icon: FaLinkedinIn },
+              { label: "Twitter", bg: "#1DA1F2", Icon: FaTwitter },
+              { label: "YouTube", bg: "#FF0000", Icon: FaYoutube },
+              { label: "Google", bg: "#4285F4", Icon: FaGoogle },
+            ].map(({ label, bg, Icon }, i) => (
+              <span
+                key={i}
+                className="flex min-w-0 items-center gap-1 rounded border border-black/[0.06] bg-[#FCFCFB] p-1"
+              >
+                <span
+                  className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[4px]"
+                  style={{ backgroundColor: `${bg}14`, color: bg }}
+                >
+                  <Icon className="h-2 w-2" />
+                </span>
+                <span className="truncate text-[4.5px] font-semibold text-[#252529]">
+                  {label}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div
+          className="mt-auto border-t bg-[#f7f7f5] px-2 py-2 text-center"
+          style={{ borderColor: `${accent}55` }}
+        >
+          <p className="text-[7px] font-extrabold tracking-wide" style={{ color: accent }}>
+            HEXA CARDS
+          </p>
+          <p className="mt-0.5 text-[5px] font-semibold text-[#8a8a92]">
+            Create Your Own NFC Card
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (layoutId === "compact") {
     const topIcons = [Phone, MessageCircle, Globe, UserPlus, Share2];

@@ -18,14 +18,15 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
-  FaTwitter,
   FaYoutube,
   FaGoogle,
   FaWhatsapp,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import BasicLayout from "./BasicLayout";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
+import CardShareModal from "./CardShareModal";
 import {
   DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
@@ -123,6 +124,7 @@ export default function Basic({
   const profile = normalizeProfile(rawProfile);
   const [businessOpen, setBusinessOpen] = useState(true);
   const [waShareNumber, setWaShareNumber] = useState("");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const accentTheme = resolveCardAccent(profile.appearance.accentColor);
   const accent = accentTheme.solid;
   const accentSoft = accentTheme.soft;
@@ -197,7 +199,7 @@ export default function Basic({
     {
       label: "Share",
       Icon: Share2,
-      onClick: () => handleWhatsAppShare(),
+      onClick: () => setShareModalOpen(true),
     },
   ];
 
@@ -221,9 +223,9 @@ export default function Basic({
       href: profile.social?.linkedin,
     },
     {
-      label: "Twitter",
-      Icon: FaTwitter,
-      bg: "#1DA1F2",
+      label: "X",
+      Icon: FaXTwitter,
+      bg: "#111111",
       href: profile.social?.twitter,
     },
     {
@@ -250,7 +252,7 @@ export default function Basic({
     >
       {/* WhatsApp share bar */}
       <div
-        className="flex items-center justify-between gap-2 border-b bg-white px-4 py-3"
+        className="flex items-center justify-between gap-2 border-b bg-white px-4 py-2"
         style={{ borderColor: accentSoft }}
       >
         <input
@@ -267,7 +269,8 @@ export default function Basic({
         <button
           type="button"
           onClick={() => handleWhatsAppShare(waShareNumber)}
-          className="flex shrink-0 items-center gap-1.5 rounded-md bg-[#25D366] px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ backgroundColor: accent }}
         >
           <FaWhatsapp className="h-4 w-4" />
           Share
@@ -442,11 +445,11 @@ export default function Basic({
       </div>
 
       {socialLinks.length > 0 ? (
-        <div className="mt-8 pb-6 text-center">
-          <h3 className="text-base font-bold text-[#0f0f12]">
+        <div className="mx-4 mt-6 rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+          <h3 className="text-sm font-bold text-[#0f0f12]">
             Social Media Links
           </h3>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-4 grid grid-cols-4 gap-x-3 gap-y-4">
             {socialLinks.map(({ label, Icon, bg, href }) => (
               <a
                 key={label}
@@ -454,10 +457,17 @@ export default function Basic({
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-                style={{ backgroundColor: bg }}
+                className="group flex min-w-0 flex-col items-center gap-1.5"
               >
-                <Icon className="h-4 w-4" />
+                <span
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
+                  style={{ backgroundColor: bg }}
+                >
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
+                  {label}
+                </span>
               </a>
             ))}
           </div>
@@ -469,6 +479,13 @@ export default function Basic({
       </div>
 
       <CardLayoutFooter accent={accent} />
+
+      <CardShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        accent={accent}
+        cardName={name || "HexaCards"}
+      />
     </div>
   );
 }

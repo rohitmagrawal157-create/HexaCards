@@ -9,7 +9,6 @@ import {
   MapPin,
   UserPlus,
   Share2,
-  X,
   ChevronUp,
   ChevronDown,
   ChevronRight,
@@ -21,12 +20,13 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
-  FaTwitter,
   FaYoutube,
   FaGoogle,
 } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
+import CardShareModal from "./CardShareModal";
 import {
   DEFAULT_CARD_AVATAR,
   DEFAULT_CARD_BANNER,
@@ -253,38 +253,10 @@ export default function Compact({
     { label: "Facebook", Icon: FaFacebookF, bg: "#1877F2", href: profile.social.facebook },
     { label: "Instagram", Icon: FaInstagram, bg: "#C13584", href: profile.social.instagram },
     { label: "LinkedIn", Icon: FaLinkedinIn, bg: "#0A66C2", href: profile.social.linkedin },
-    { label: "Twitter", Icon: FaTwitter, bg: "#1DA1F2", href: profile.social.twitter },
+    { label: "X", Icon: FaXTwitter, bg: "#111111", href: profile.social.twitter },
     { label: "YouTube", Icon: FaYoutube, bg: "#FF0000", href: profile.social.youtube },
     { label: "Google", Icon: FaGoogle, bg: "#4285F4", href: profile.social.googleReview },
   ].filter((s) => s.href && s.href.trim());
-
-  const shareLinks = [
-    {
-      label: "WhatsApp",
-      Icon: FaWhatsapp,
-      onClick: () => handleWhatsAppShare(),
-    },
-    {
-      label: "Facebook",
-      Icon: FaFacebookF,
-      href: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`,
-    },
-    {
-      label: "Twitter",
-      Icon: FaTwitter,
-      href: `https://twitter.com/intent/tweet?text=${encodeURIComponent("Check out my HexaCards digital profile")}`,
-    },
-    {
-      label: "LinkedIn",
-      Icon: FaLinkedinIn,
-      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== "undefined" ? window.location.href : "")}`,
-    },
-    {
-      label: "Email",
-      Icon: Mail,
-      href: `mailto:?subject=${encodeURIComponent(name)}&body=${encodeURIComponent(`Check out my digital business card`)}`,
-    },
-  ];
 
   return (
     <div
@@ -293,7 +265,7 @@ export default function Compact({
     >
       {/* WhatsApp share bar */}
       <div
-        className="flex items-center justify-between gap-2 border-b bg-white px-4 py-3"
+        className="flex items-center justify-between gap-2 border-b bg-white px-4 py-2"
         style={{ borderColor: accentSoft }}
       >
         <input
@@ -310,7 +282,8 @@ export default function Compact({
         <button
           type="button"
           onClick={() => handleWhatsAppShare(waShareNumber)}
-          className="flex shrink-0 items-center gap-1.5 rounded-md bg-[#25D366] px-4 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          className="flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          style={{ backgroundColor: accent }}
         >
           <FaWhatsapp className="h-4 w-4" />
           Share
@@ -508,7 +481,7 @@ export default function Compact({
           {activeTab === "socials" ? (
             <div>
               {socialLinks.length > 0 ? (
-                <div className="flex flex-wrap gap-2.5 rounded-xl border border-black/[0.06] bg-white p-4">
+                <div className="grid grid-cols-4 gap-x-3 gap-y-4 rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
                   {socialLinks.map(({ label, Icon, bg, href }) => (
                     <a
                       key={label}
@@ -516,10 +489,17 @@ export default function Compact({
                       target="_blank"
                       rel="noreferrer"
                       aria-label={label}
-                      className="flex h-11 w-11 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-                      style={{ backgroundColor: bg }}
+                      className="group flex min-w-0 flex-col items-center gap-1.5"
                     >
-                      <Icon className="h-4 w-4" />
+                      <span
+                        className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
+                        style={{ backgroundColor: bg }}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </span>
+                      <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
+                        {label}
+                      </span>
                     </a>
                   ))}
                 </div>
@@ -598,72 +578,12 @@ export default function Compact({
 
       <CardLayoutFooter accent={accent} />
 
-      {/* Share modal */}
-      {shareModalOpen ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"
-          onClick={() => setShareModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl bg-white p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#141414]">Share this card</h3>
-              <button
-                type="button"
-                onClick={() => setShareModalOpen(false)}
-                aria-label="Close"
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {shareLinks.map(({ label, Icon, href, onClick }) =>
-                onClick ? (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={onClick}
-                    aria-label={`Share via ${label}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-50 text-[#141414] transition-colors"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = accent;
-                      e.currentTarget.style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "";
-                      e.currentTarget.style.color = "";
-                    }}
-                  >
-                    <Icon className="h-[18px] w-[18px]" />
-                  </button>
-                ) : (
-                  <a
-                    key={label}
-                    href={href}
-                    target={label === "Email" ? undefined : "_blank"}
-                    rel="noreferrer"
-                    aria-label={`Share via ${label}`}
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-50 text-[#141414] transition-colors"
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = accent;
-                      e.currentTarget.style.color = "#fff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "";
-                      e.currentTarget.style.color = "";
-                    }}
-                  >
-                    <Icon className="h-[18px] w-[18px]" />
-                  </a>
-                ),
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <CardShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        accent={accent}
+        cardName={name}
+      />
     </div>
   );
 }

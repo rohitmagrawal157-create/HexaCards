@@ -6,11 +6,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
+  Clock3,
   CreditCard,
   Eye,
   FolderOpen,
   Headphones,
   LogOut,
+  Mail,
   Menu,
   MessageSquare,
   Package,
@@ -421,9 +423,9 @@ export default function Dashboard() {
               ))}
             </nav>
 
-            <p className="mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] text-[#9a9a9a] uppercase">
+            {/* <p className="mb-1.5 px-3 text-[10px] font-semibold tracking-[0.14em] text-[#9a9a9a] uppercase">
               Growth
-            </p>
+            </p> */}
             {/* <nav className="mb-5 space-y-0.5">
               {REFERRAL_ITEMS.map((item) => (
                 <NavButton
@@ -919,12 +921,14 @@ function SupportPanel() {
   return (
     <div className="max-w-2xl rounded-xl border border-black/[0.06] bg-white p-6 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-8">
       <div className="flex items-start gap-4">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FFF8ED] text-[#BC7C10] ring-1 ring-[#BC7C10]/20">
           <Headphones className="h-5 w-5" strokeWidth={1.75} />
         </span>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-base font-semibold">Talk to HexaCards support</p>
+            <p className="text-base font-semibold text-[#141414]">
+              Talk to HexaCards support
+            </p>
             <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-emerald-700 uppercase ring-1 ring-emerald-100">
               Live
             </span>
@@ -933,13 +937,48 @@ function SupportPanel() {
             Need help with NFC cards, shipping, or your digital profile? Our
             team typically replies within one business day.
           </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <a
+              href="mailto:info@hexacards.com"
+              className="flex items-start gap-3 rounded-xl border border-[#BC7C10]/20 bg-[#FFFCF7] p-3.5 transition hover:border-[#BC7C10]/40 hover:bg-[#FFF8ED]"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#BC7C10] shadow-sm ring-1 ring-black/[0.04]">
+                <Mail className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-[11px] font-bold tracking-[0.12em] text-[#BC7C10] uppercase">
+                  Email
+                </span>
+                <span className="mt-0.5 block break-all text-sm font-semibold text-[#141414]">
+                  info@hexacards.com
+                </span>
+              </span>
+            </a>
+
+            <div className="flex items-start gap-3 rounded-xl border border-[#BC7C10]/20 bg-[#FFFCF7] p-3.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[#BC7C10] shadow-sm ring-1 ring-black/[0.04]">
+                <Clock3 className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold tracking-[0.12em] text-[#BC7C10] uppercase">
+                  Business hours
+                </p>
+                <p className="mt-0.5 text-sm font-semibold text-[#141414]">
+                  Monday–Saturday
+                </p>
+                <p className="text-sm text-[#6b6560]">10:00 AM–6:00 PM</p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-5 flex flex-wrap gap-2">
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center rounded-lg bg-[#141414] px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-[#2a2a2a]"
+            <a
+              href="mailto:info@hexacards.com"
+              className="inline-flex items-center justify-center rounded-lg bg-[#BC7C10] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#9a650d]"
             >
               Contact support
-            </Link>
+            </a>
             <Link
               href="/products"
               className="inline-flex items-center justify-center rounded-lg border border-black/[0.08] px-4 py-2.5 text-[13px] font-semibold text-[#141414] hover:bg-[#FAFAF8]"

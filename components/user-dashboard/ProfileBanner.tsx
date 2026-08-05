@@ -33,7 +33,9 @@ import {
 import Basic from "@/components/Layouts/Basic";
 import Modern from "@/components/Layouts/modern";
 import Compact from "@/components/Layouts/compact";
+import Social from "@/components/Layouts/social";
 import CardLayoutBottom from "@/components/Layouts/CardLayoutBottom";
+import CardShareModal from "@/components/Layouts/CardShareModal";
 
 type ProfileBannerProps = {
   profile: HexaCardProfile;
@@ -55,6 +57,7 @@ export default function ProfileBanner({
   const coverInputRef = useRef<HTMLInputElement>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
   const [waShareNumber, setWaShareNumber] = useState("");
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   const accentTheme = resolveCardAccent(profile.appearance.accentColor);
   const accent = accentTheme.solid;
@@ -305,6 +308,48 @@ export default function ProfileBanner({
     );
   }
 
+  if (cardLayout === "social") {
+    return (
+      <>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadBackground) onUploadBackground(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadProfile) onUploadProfile(file);
+            e.target.value = "";
+          }}
+        />
+        <Social
+          profile={profile}
+          onChangeBackground={
+            onUploadBackground
+              ? () => coverInputRef.current?.click()
+              : undefined
+          }
+          onChangeProfile={
+            onUploadProfile
+              ? () => profileInputRef.current?.click()
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+
   return (
     <div
       className="mx-auto max-w-[520px] overflow-hidden rounded-2xl border-2 bg-white shadow-[0_12px_40px_rgba(0,0,0,0.1)]"
@@ -458,7 +503,7 @@ export default function ProfileBanner({
           ) : null}
           <button
             type="button"
-            onClick={() => handleWhatsAppShare()}
+            onClick={() => setShareModalOpen(true)}
             className={ctaClass}
             style={{ backgroundColor: accent }}
           >
@@ -575,6 +620,13 @@ export default function ProfileBanner({
           Icon,
           href,
         }))}
+      />
+
+      <CardShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        accent={accent}
+        cardName={name}
       />
     </div>
   );

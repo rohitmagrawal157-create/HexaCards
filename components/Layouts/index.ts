@@ -3,12 +3,14 @@ export type { BasicHeaderProps } from "./BasicLayout";
 export { default as Basic } from "./Basic";
 export { default as Modern } from "./modern";
 export { default as Compact } from "./compact";
+export { default as Social } from "./social";
 export { default as CardLayoutBottom } from "./CardLayoutBottom";
 export { default as CardLayoutFooter } from "./CardLayoutFooter";
+export { default as CardShareModal } from "./CardShareModal";
 export { default as PhoneFrame } from "./PhoneFrame";
 export { default as LayoutPhonePreview } from "./LayoutPhonePreview";
 
-/** Card layouts — Classic, Basic, Modern & Compact are live */
+/** Card layouts — Classic, Basic, Modern, Compact & Social are live */
 export const CARD_LAYOUTS = [
   {
     id: "classic",
@@ -34,12 +36,12 @@ export const CARD_LAYOUTS = [
     description: "Tabbed contact, socials & message form",
     available: true,
   },
-  // {
-  //   id: "bold",
-  //   label: "Bold",
-  //   description: "Coming soon",
-  //   available: false,
-  // },
+  {
+    id: "social",
+    label: "Social",
+    description: "Dark brand card with social icon grid",
+    available: true,
+  },
   // {
   //   id: "elegant",
   //   label: "Elegant",

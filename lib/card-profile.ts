@@ -8,6 +8,7 @@ export type CardLayoutId =
   | "basic"
   | "modern"
   | "compact"
+  | "social"
   | "bold"
   | "elegant";
 
@@ -16,6 +17,7 @@ const AVAILABLE_LAYOUTS: CardLayoutId[] = [
   "basic",
   "modern",
   "compact",
+  "social",
 ];
 
 export function normalizeCardLayout(
@@ -63,7 +65,7 @@ export type CardAppearance = {
   logoImage: string | null;
   shareImage: string | null;
   accentColor: string;
-  /** Card layout id — classic, basic, modern & compact available; more coming soon */
+  /** Card layout id — classic, basic, modern, compact & social available */
   layout: CardLayoutId;
 };
 
