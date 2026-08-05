@@ -20,10 +20,10 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
+  FaTwitter,
   FaYoutube,
   FaGoogle,
 } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
 import CardShareModal from "./CardShareModal";
@@ -253,7 +253,7 @@ export default function Compact({
     { label: "Facebook", Icon: FaFacebookF, bg: "#1877F2", href: profile.social.facebook },
     { label: "Instagram", Icon: FaInstagram, bg: "#C13584", href: profile.social.instagram },
     { label: "LinkedIn", Icon: FaLinkedinIn, bg: "#0A66C2", href: profile.social.linkedin },
-    { label: "X", Icon: FaXTwitter, bg: "#111111", href: profile.social.twitter },
+    { label: "Twitter", Icon: FaTwitter, bg: "#1DA1F2", href: profile.social.twitter },
     { label: "YouTube", Icon: FaYoutube, bg: "#FF0000", href: profile.social.youtube },
     { label: "Google", Icon: FaGoogle, bg: "#4285F4", href: profile.social.googleReview },
   ].filter((s) => s.href && s.href.trim());
@@ -481,7 +481,7 @@ export default function Compact({
           {activeTab === "socials" ? (
             <div>
               {socialLinks.length > 0 ? (
-                <div className="grid grid-cols-4 gap-x-3 gap-y-4 rounded-2xl border border-black/[0.06] bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-black/[0.06] bg-white p-3 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
                   {socialLinks.map(({ label, Icon, bg, href }) => (
                     <a
                       key={label}
@@ -489,16 +489,16 @@ export default function Compact({
                       target="_blank"
                       rel="noreferrer"
                       aria-label={label}
-                      className="group flex min-w-0 flex-col items-center gap-1.5"
+                      className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-black/[0.07] bg-[#FCFCFB] p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
                     >
                       <span
-                        className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                        style={{ backgroundColor: bg }}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: `${bg}14`, color: bg }}
                       >
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-[18px] w-[18px]" />
                       </span>
-                      <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                        {label}
+                      <span className="min-w-0 truncate text-xs font-semibold text-[#252529]">
+                        {label === "Twitter" ? "Twitter / X" : label}
                       </span>
                     </a>
                   ))}

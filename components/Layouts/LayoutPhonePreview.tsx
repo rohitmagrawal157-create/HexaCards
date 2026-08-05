@@ -205,15 +205,15 @@ export default function LayoutPhonePreview({
             ].map(({ label, bg, Icon }, i) => (
               <span
                 key={i}
-                className="flex min-w-0 items-center gap-1 rounded border border-black/[0.06] bg-[#FCFCFB] p-1"
+                className="flex min-w-0 flex-col items-center gap-0.5"
               >
                 <span
-                  className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[4px]"
-                  style={{ backgroundColor: `${bg}14`, color: bg }}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] text-white shadow-sm"
+                  style={{ backgroundColor: bg }}
                 >
-                  <Icon className="h-2 w-2" />
+                  <Icon className="h-2.5 w-2.5" />
                 </span>
-                <span className="truncate text-[4.5px] font-semibold text-[#252529]">
+                <span className="w-full truncate text-center text-[4.5px] font-medium text-[#6a6a72]">
                   {label}
                 </span>
               </span>

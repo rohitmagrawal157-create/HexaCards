@@ -19,10 +19,10 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
+  FaTwitter,
   FaYoutube,
   FaGoogle,
 } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
 import CardShareModal from "./CardShareModal";
@@ -212,7 +212,7 @@ export default function Modern({
     { label: "Facebook", Icon: FaFacebookF, bg: "#1877F2", href: profile.social.facebook },
     { label: "Instagram", Icon: FaInstagram, bg: "#C13584", href: profile.social.instagram },
     { label: "LinkedIn", Icon: FaLinkedinIn, bg: "#0A66C2", href: profile.social.linkedin },
-    { label: "X", Icon: FaXTwitter, bg: "#111111", href: profile.social.twitter },
+    { label: "Twitter", Icon: FaTwitter, bg: "#1DA1F2", href: profile.social.twitter },
     { label: "YouTube", Icon: FaYoutube, bg: "#FF0000", href: profile.social.youtube },
     { label: "Google", Icon: FaGoogle, bg: "#4285F4", href: profile.social.googleReview },
   ].filter((s) => s.href && s.href.trim());
@@ -488,7 +488,7 @@ export default function Modern({
           <h4 className="text-sm font-bold text-[#141414]">
             Social Media Links
           </h4>
-          <div className="mt-4 grid grid-cols-4 gap-x-3 gap-y-4">
+          <div className="mt-3 flex flex-wrap gap-2.5">
             {socialLinks.map(({ label, Icon, bg, href }) => (
               <a
                 key={label}
@@ -496,17 +496,11 @@ export default function Modern({
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="group flex min-w-0 flex-col items-center gap-1.5"
+                title={label}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-white shadow-sm transition-transform hover:scale-105"
+                style={{ backgroundColor: bg }}
               >
-                <span
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="h-6 w-6" />
-                </span>
-                <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                  {label}
-                </span>
+                <Icon className="h-4 w-4" />
               </a>
             ))}
           </div>

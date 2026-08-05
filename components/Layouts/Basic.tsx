@@ -18,11 +18,11 @@ import {
   FaFacebookF,
   FaInstagram,
   FaLinkedinIn,
+  FaTwitter,
   FaYoutube,
   FaGoogle,
   FaWhatsapp,
 } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
 import BasicLayout from "./BasicLayout";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
@@ -223,9 +223,9 @@ export default function Basic({
       href: profile.social?.linkedin,
     },
     {
-      label: "X",
-      Icon: FaXTwitter,
-      bg: "#111111",
+      label: "Twitter",
+      Icon: FaTwitter,
+      bg: "#1DA1F2",
       href: profile.social?.twitter,
     },
     {
@@ -449,7 +449,7 @@ export default function Basic({
           <h3 className="text-sm font-bold text-[#0f0f12]">
             Social Media Links
           </h3>
-          <div className="mt-4 grid grid-cols-4 gap-x-3 gap-y-4">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             {socialLinks.map(({ label, Icon, bg, href }) => (
               <a
                 key={label}
@@ -457,17 +457,11 @@ export default function Basic({
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="group flex min-w-0 flex-col items-center gap-1.5"
+                title={label}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-white shadow-sm transition-transform hover:scale-105"
+                style={{ backgroundColor: bg }}
               >
-                <span
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="h-6 w-6" />
-                </span>
-                <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                  {label}
-                </span>
+                <Icon className="h-4 w-4" />
               </a>
             ))}
           </div>
