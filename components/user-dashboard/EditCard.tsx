@@ -14,6 +14,7 @@ import {
   Link2,
   Menu,
   Palette,
+  Pencil,
   Phone,
   Plus,
   Share2,
@@ -900,38 +901,43 @@ export default function EditCard() {
                           alt=""
                           className="h-full w-full object-cover object-center"
                         />
+                        <div className="absolute right-1.5 bottom-1.5 flex items-center gap-1">
+                          <label
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white text-[#141414] shadow-md ring-1 ring-black/10 transition hover:bg-[#FFF8ED] hover:text-[#BC7C10]"
+                            title="Edit photo"
+                            aria-label="Edit profile photo"
+                          >
+                            <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                void openImageCrop(file, "profile");
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => requestDefaultImage("logo")}
+                            disabled={isDefaultLogoImage(
+                              profile.appearance.logoImage,
+                            )}
+                            title="Delete photo"
+                            aria-label="Delete profile photo"
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#E24C4C] shadow-md ring-1 ring-black/10 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                          </button>
+                        </div>
                       </div>
                       <p className="mt-2 text-center text-[11px] text-[#8a8174] sm:text-left">
                         {isDefaultLogoImage(profile.appearance.logoImage)
                           ? "Using default"
                           : "Current photo"}
                       </p>
-
-                      <button
-                        type="button"
-                        onClick={() => requestDefaultImage("logo")}
-                        disabled={isDefaultLogoImage(
-                          profile.appearance.logoImage,
-                        )}
-                        className={`mt-4 flex flex-col items-center gap-1.5 disabled:cursor-default ${
-                          isDefaultLogoImage(profile.appearance.logoImage)
-                            ? "opacity-50"
-                            : "hover:opacity-90"
-                        }`}
-                        aria-label="Use default profile photo"
-                      >
-                        <span className="relative h-14 w-14 overflow-hidden rounded-full border-2 border-dashed border-black/20 shadow-sm">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={DEFAULT_CARD_AVATAR}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
-                        </span>
-                        <span className="text-[11px] font-semibold text-[#141414]">
-                          Default
-                        </span>
-                      </button>
                     </div>
 
                     {/* Right — background */}
@@ -946,43 +952,42 @@ export default function EditCard() {
                           alt=""
                           className="h-full w-full object-cover object-center"
                         />
-                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-left text-[11px] font-semibold tracking-wide text-white uppercase">
+                        <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pt-8 pb-2.5 text-left text-[11px] font-semibold tracking-wide text-white uppercase">
                           {isDefaultCoverImage(profile.appearance.coverImage)
                             ? "Using default"
                             : "Current background"}
                         </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-end gap-3">
-                        <button
-                          type="button"
-                          onClick={() => requestDefaultImage("cover")}
-                          disabled={isDefaultCoverImage(
-                            profile.appearance.coverImage,
-                          )}
-                          className={`flex flex-col items-start gap-1.5 disabled:cursor-default ${
-                            isDefaultCoverImage(profile.appearance.coverImage)
-                              ? "opacity-50"
-                              : "hover:opacity-90"
-                          }`}
-                          aria-label="Use default card background"
-                        >
-                          <span className="relative h-16 w-28 overflow-hidden rounded-lg border-2 border-dashed border-black/20 shadow-sm">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={DEFAULT_CARD_BANNER}
-                              alt=""
-                              className="h-full w-full object-cover"
+                        <div className="absolute right-1.5 bottom-1.5 z-10 flex items-center gap-1">
+                          <label
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white text-[#141414] shadow-md ring-1 ring-black/10 transition hover:bg-[#FFF8ED] hover:text-[#BC7C10]"
+                            title="Edit background"
+                            aria-label="Edit card background"
+                          >
+                            <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                void openImageCrop(file, "background");
+                                e.target.value = "";
+                              }}
                             />
-                            <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1 py-0.5 text-center text-[10px] font-semibold text-white">
-                              Default
-                            </span>
-                          </span>
-                        </button>
-                        {/* <p className="pb-1 text-[11px] text-[#8a8174]">
-                          Click Default to restore. Upload custom from the card
-                          preview.
-                        </p> */}
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => requestDefaultImage("cover")}
+                            disabled={isDefaultCoverImage(
+                              profile.appearance.coverImage,
+                            )}
+                            title="Delete background"
+                            aria-label="Delete card background"
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#E24C4C] shadow-md ring-1 ring-black/10 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

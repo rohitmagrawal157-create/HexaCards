@@ -9,6 +9,7 @@ export type CardLayoutId =
   | "modern"
   | "compact"
   | "social"
+  | "minimalist"
   | "bold"
   | "elegant";
 
@@ -18,6 +19,7 @@ const AVAILABLE_LAYOUTS: CardLayoutId[] = [
   "modern",
   "compact",
   "social",
+  "minimalist",
 ];
 
 export function normalizeCardLayout(
@@ -70,7 +72,7 @@ export type CardAppearance = {
 };
 
 /** Default fixed card background for all new cards */
-export const DEFAULT_CARD_BANNER = "/Images/background_img.jpg";
+export const DEFAULT_CARD_BANNER = "/Images/background_img.jpeg";
 
 /** Default avatar shown on new cards until the user uploads their own */
 export const DEFAULT_CARD_AVATAR = "/Images/avatar_default.svg";

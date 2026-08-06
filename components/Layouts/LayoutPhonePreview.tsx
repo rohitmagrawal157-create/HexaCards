@@ -10,6 +10,7 @@ import {
   UserPlus,
   MessageCircle,
   FileText,
+  Camera,
 } from "lucide-react";
 import {
   FaFacebookF,
@@ -18,6 +19,7 @@ import {
   FaTwitter,
   FaYoutube,
   FaGoogle,
+  FaWhatsapp,
 } from "react-icons/fa";
 import {
   DEFAULT_CARD_AVATAR,
@@ -25,7 +27,7 @@ import {
 } from "@/lib/card-profile";
 
 type LayoutPhonePreviewProps = {
-  layoutId: "classic" | "basic" | "modern" | "compact" | "social" | string;
+  layoutId: "classic" | "basic" | "modern" | "compact" | "social" | "minimalist" | string;
   name: string;
   titleLine: string;
   coverUrl?: string | null;
@@ -160,13 +162,13 @@ export default function LayoutPhonePreview({
               className="flex-1 rounded-full py-1 text-center text-[6px] font-bold text-white"
               style={{ backgroundColor: accent }}
             >
-              Exchange
+              Save Contact
             </span>
             <span
               className="flex h-5 w-5 items-center justify-center rounded-full border bg-white"
               style={{ borderColor: `${accent}33`, color: accent }}
             >
-              <UserPlus className="h-2.5 w-2.5" strokeWidth={2.5} />
+              <Share2 className="h-2.5 w-2.5" strokeWidth={2.5} />
             </span>
           </div>
         </div>
@@ -174,11 +176,12 @@ export default function LayoutPhonePreview({
           <p className="text-[7px] font-bold text-[#141414]">
             Contact Information
           </p>
-          <div className="mt-1 grid grid-cols-5 gap-1">
+          <div className="mt-1 grid grid-cols-3 gap-1">
             {[
               { bg: "#34A853", Icon: Phone },
               { bg: "#25D366", Icon: MessageCircle },
               { bg: "#EA4335", Icon: Mail },
+              { bg: "#0A84FF", Icon: Globe },
               { bg: "#4285F4", Icon: MapPin },
               { bg: "#BC7C10", Icon: FileText },
             ].map(({ bg, Icon }, i) => (
@@ -218,6 +221,20 @@ export default function LayoutPhonePreview({
                 </span>
               </span>
             ))}
+          </div>
+        </div>
+        <div
+          className="mx-2 mt-1.5 rounded-lg border bg-white px-1.5 py-1.5"
+          style={{ borderColor: `${accent}33` }}
+        >
+          <p className="text-[7px] font-semibold text-[#141414]">Contact Form</p>
+          <div className="mt-1 space-y-0.5">
+            <span className="block h-1.5 rounded-sm bg-black/[0.06]" />
+            <span className="block h-1.5 w-3/4 rounded-sm bg-black/[0.06]" />
+            <span
+              className="mt-1 block h-2 w-full rounded-sm"
+              style={{ backgroundColor: accent }}
+            />
           </div>
         </div>
         <div
@@ -475,6 +492,98 @@ export default function LayoutPhonePreview({
         <div className="mt-2 flex min-h-0 flex-1 flex-col justify-between">
           {contactCards}
           {businessBar}
+        </div>
+      </div>
+    );
+  }
+
+  // Minimalist — mirrors live card layout
+  if (layoutId === "minimalist") {
+    const miniIcons = [Phone, Mail, Globe, FaWhatsapp, MapPin];
+
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-white">
+        <div
+          className="relative h-[72px] w-full shrink-0 bg-cover bg-center"
+          style={{ backgroundImage: `url("${escUrl(cover)}")` }}
+        >
+          <span className="absolute right-1 bottom-1 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-sm">
+            <Camera className="h-2 w-2" strokeWidth={2.5} />
+          </span>
+        </div>
+        <div className="relative z-10 -mt-6 px-2 pr-6">
+          <span
+            className="absolute right-1 top-0 z-20 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white shadow-sm"
+            style={{ color: accent }}
+          >
+            <Share2 className="h-2 w-2" strokeWidth={2.5} />
+          </span>
+          <div className="h-12 w-12 overflow-hidden rounded-full border-[2.5px] border-white bg-[#f5f5f4] shadow">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={avatar} alt="" className="h-full w-full object-cover" />
+          </div>
+          <p className="mt-1.5 truncate text-[9px] font-extrabold text-[#0f0f12]">
+            {name}
+          </p>
+          <p className="mt-0.5 line-clamp-1 text-[6px] text-[#8a8a92]">
+            {titleLine}
+          </p>
+        </div>
+        <div className="mt-2 flex justify-center gap-1 px-2">
+          {miniIcons.map((Icon, i) => (
+            <span
+              key={i}
+              className="flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm"
+              style={{ color: accent }}
+            >
+              <Icon className="h-[10px] w-[10px]" strokeWidth={2.5} />
+            </span>
+          ))}
+        </div>
+        <div className="mt-2 flex items-center gap-1 px-2">
+          <span
+            className="min-w-0 flex-1 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase"
+            style={{ backgroundColor: accent }}
+          >
+            Save Contact
+          </span>
+          <span
+            className="flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase"
+            style={{ backgroundColor: accent }}
+          >
+            <FileText className="h-2 w-2 shrink-0" />
+            Brochure
+          </span>
+        </div>
+        <div className="mt-1.5 flex justify-center gap-1 px-2">
+          {[FaFacebookF, FaLinkedinIn, FaInstagram, FaGoogle].map((Icon, i) => (
+            <span
+              key={i}
+              className="flex h-4 w-4 items-center justify-center rounded-full text-white"
+              style={{ backgroundColor: accent }}
+            >
+              <Icon className="h-2 w-2" />
+            </span>
+          ))}
+        </div>
+        <div className="mt-2 space-y-1 px-2">
+          {["Business Information", "Contact Form", "Learn More"].map(
+            (label) => (
+              <div
+                key={label}
+                className="flex items-center justify-between rounded-md px-1.5 py-1 text-white"
+                style={{ backgroundColor: accent }}
+              >
+                <span className="text-[6px] font-semibold">{label}</span>
+                <span className="h-2.5 w-2.5 rounded-full bg-white/25" />
+              </div>
+            ),
+          )}
+        </div>
+        <div className="mt-auto shrink-0 bg-[#f7f7f5] px-2 py-1.5">
+          <p className="text-center text-[5px] font-semibold" style={{ color: accent }}>
+            Hexa Cards
+          </p>
         </div>
       </div>
     );

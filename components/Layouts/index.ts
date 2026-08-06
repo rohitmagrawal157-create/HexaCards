@@ -4,13 +4,14 @@ export { default as Basic } from "./Basic";
 export { default as Modern } from "./modern";
 export { default as Compact } from "./compact";
 export { default as Social } from "./social";
+export { default as Minimalist } from "./Minimalist";
 export { default as CardLayoutBottom } from "./CardLayoutBottom";
 export { default as CardLayoutFooter } from "./CardLayoutFooter";
 export { default as CardShareModal } from "./CardShareModal";
 export { default as PhoneFrame } from "./PhoneFrame";
 export { default as LayoutPhonePreview } from "./LayoutPhonePreview";
 
-/** Card layouts — Classic, Basic, Modern, Compact & Social are live */
+/** Card layouts — Classic, Basic, Modern, Compact, Social & Minimalist are live */
 export const CARD_LAYOUTS = [
   {
     id: "classic",
@@ -42,12 +43,12 @@ export const CARD_LAYOUTS = [
     description: "Dark brand card with social icon grid",
     available: true,
   },
-  // {
-  //   id: "elegant",
-  //   label: "Elegant",
-  //   description: "Coming soon",
-  //   available: false,
-  // },
+  {
+    id: "minimalist",
+    label: "Minimalist",
+    description: "Clean banner with circular quick actions",
+    available: true,
+  },
 ] as const;
 
 export type CardLayoutId = (typeof CARD_LAYOUTS)[number]["id"];

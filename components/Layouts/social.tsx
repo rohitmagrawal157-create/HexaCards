@@ -6,7 +6,6 @@ import {
   Phone,
   MapPin,
   Share2,
-  UserPlus,
   Camera,
   ChevronDown,
   ChevronUp,
@@ -19,8 +18,10 @@ import {
   FaLinkedinIn,
   FaYoutube,
   FaGoogle,
+  FaGlobe,
 } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
+import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
 import CardShareModal from "./CardShareModal";
 import {
@@ -48,6 +49,59 @@ type GridItem = {
   Icon: any;
 };
 
+const ICON_TILE =
+  "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg";
+const ICON_GLYPH = "h-5 w-5 shrink-0";
+
+function GridIconTile({
+  label,
+  href,
+  onClick,
+  bg,
+  Icon,
+}: GridItem) {
+  const inner = (
+    <>
+      <span className={ICON_TILE} style={{ backgroundColor: bg }}>
+        <Icon className={ICON_GLYPH} />
+      </span>
+      <span className="w-full truncate text-center text-[11px] font-medium leading-tight text-[#4a4a52]">
+        {label}
+      </span>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-label={label}
+        title={label}
+        className="group flex min-w-0 flex-col items-center gap-1.5"
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <a
+      href={href || "#"}
+      target={href?.startsWith("http") ? "_blank" : undefined}
+      rel={href?.startsWith("http") ? "noreferrer" : undefined}
+      aria-label={label}
+      title={label}
+      className="group flex min-w-0 flex-col items-center gap-1.5"
+      onClick={(e) => {
+        if (!href || href === "#") e.preventDefault();
+      }}
+    >
+      {inner}
+    </a>
+  );
+}
+
 /**
  * Social card layout — dark brand card with centered avatar,
  * exchange-contact CTA, and a colored social/contact icon grid.
@@ -58,7 +112,7 @@ export default function Social({
   onChangeProfile,
 }: SocialProps) {
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
+  const [bioExpanded, setBioExpanded] = useState(false);
   const [waShareNumber, setWaShareNumber] = useState("");
 
   const accentTheme = resolveCardAccent(profile.appearance.accentColor);
@@ -80,6 +134,12 @@ export default function Social({
   const mobile = profile.contact.mobile?.trim() || "";
   const whatsapp = profile.contact.whatsapp?.trim() || mobile;
   const email = profile.contact.email?.trim() || "";
+  const websiteRaw = profile.contact.website?.trim() || "";
+  const websiteHref = websiteRaw
+    ? /^https?:\/\//i.test(websiteRaw)
+      ? websiteRaw
+      : `https://${websiteRaw}`
+    : "";
   const fullAddress = [
     profile.contact.address,
     profile.contact.city,
@@ -125,18 +185,26 @@ export default function Social({
   }
 
   const contactItems: GridItem[] = [];
-  if (email) {
-    contactItems.push({ label: "Email", href: `mailto:${email}`, bg: "#EA4335", Icon: Mail });
-  }
   if (mobileDigits) {
     contactItems.push({ label: "Call", href: `tel:+${mobileDigits}`, bg: "#34A853", Icon: Phone });
   }
   if (waDigits) {
     contactItems.push({ label: "WhatsApp", href: `https://wa.me/${waDigits}`, bg: "#25D366", Icon: FaWhatsapp });
   }
+  if (email) {
+    contactItems.push({ label: "Email", href: `mailto:${email}`, bg: "#EA4335", Icon: Mail });
+  }
+  if (websiteHref) {
+    contactItems.push({
+      label: "Website",
+      href: websiteHref,
+      bg: "#0A84FF",
+      Icon: FaGlobe,
+    });
+  }
   if (fullAddress) {
     contactItems.push({
-      label: "Google Maps",
+      label: "Location",
       href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`,
       bg: "#4285F4",
       Icon: MapPin,
@@ -221,7 +289,7 @@ export default function Social({
               <Camera className="h-4 w-4" strokeWidth={2.25} />
             </button>
           ) : null}
-          <button
+          {/* <button
             type="button"
             onClick={() => setShareModalOpen(true)}
             aria-label="Share"
@@ -229,7 +297,7 @@ export default function Social({
             style={{ color: accent }}
           >
             <Share2 className="h-4 w-4" />
-          </button>
+          </button> */}
         </div>
 
         <div className="relative mt-6 flex justify-center">
@@ -280,25 +348,33 @@ export default function Social({
             <p className="mt-1 text-sm text-[#8a8a92]">Hexa NFC Business Card</p>
           )}
           {bio ? (
-            <p className="mt-2 text-xs leading-relaxed text-[#8a8a92]">{bio}</p>
+            <p
+              className={`mt-2 text-xs leading-relaxed text-[#8a8a92] ${
+                bioExpanded ? "" : "line-clamp-5"
+              }`}
+            >
+              {bio}
+            </p>
           ) : null}
 
-          <button
-            type="button"
-            onClick={() => setServicesOpen((v) => !v)}
-            aria-expanded={servicesOpen}
-            className="mt-2 inline-flex items-center gap-1 text-xs font-bold transition-opacity hover:opacity-80"
-            style={{ color: accent }}
-          >
-            {servicesOpen ? "View less" : "View more"}
-            {servicesOpen ? (
-              <ChevronUp className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-          </button>
+          {bio || services.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setBioExpanded((v) => !v)}
+              aria-expanded={bioExpanded}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-bold transition-opacity hover:opacity-80"
+              style={{ color: accent }}
+            >
+              {bioExpanded ? "View less" : "View more"}
+              {bioExpanded ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+            </button>
+          ) : null}
 
-          {servicesOpen ? (
+          {bioExpanded && services.length > 0 ? (
             <div
               className="mt-3 rounded-xl border bg-[#FAFAF8] p-3 text-left"
               style={{ borderColor: accentMuted }}
@@ -306,27 +382,21 @@ export default function Social({
               <h3 className="text-xs font-bold text-[#141414]">
                 Services / Products
               </h3>
-              {services.length > 0 ? (
-                <ul className="mt-2 space-y-1.5">
-                  {services.map((service, index) => (
-                    <li
-                      key={`${service}-${index}`}
-                      className="flex items-start gap-2"
-                    >
-                      <span
-                        className="mt-1.5 h-0 w-0 shrink-0 border-y-[4px] border-l-[6px] border-y-transparent"
-                        style={{ borderLeftColor: accent }}
-                        aria-hidden
-                      />
-                      <span className="text-xs text-[#4a4a52]">{service}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-1.5 text-[11px] text-[#8a8a92]">
-                  Add services from the Business Info tab.
-                </p>
-              )}
+              <ul className="mt-2 space-y-1.5">
+                {services.map((service, index) => (
+                  <li
+                    key={`${service}-${index}`}
+                    className="flex items-start gap-2"
+                  >
+                    <span
+                      className="mt-1.5 h-0 w-0 shrink-0 border-y-[4px] border-l-[6px] border-y-transparent"
+                      style={{ borderLeftColor: accent }}
+                      aria-hidden
+                    />
+                    <span className="text-xs text-[#4a4a52]">{service}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : null}
         </div>
@@ -345,14 +415,15 @@ export default function Social({
           >
             Save Contact
           </a>
-          <a
-            href="#save-contact"
-            aria-label="Add contact"
+          <button
+            type="button"
+            onClick={() => setShareModalOpen(true)}
+            aria-label="Share"
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border bg-white transition-colors hover:bg-[#FAFAF8]"
             style={{ borderColor: accentMuted, color: accent }}
           >
-            <UserPlus className="h-4 w-4" />
-          </a>
+            <Share2 className="h-4 w-4" />
+          </button>
         </div>
 
         {/* {mobile ? (
@@ -370,49 +441,10 @@ export default function Social({
           Contact Information
         </h2>
         {contactItems.length > 0 ? (
-          <div className="mt-4 grid grid-cols-4 gap-x-3 gap-y-4">
-            {contactItems.map(({ label, href, onClick, bg, Icon }) =>
-              onClick ? (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={onClick}
-                  aria-label={label}
-                  title={label}
-                  className="group flex min-w-0 flex-col items-center gap-1.5"
-                >
-                  <span
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                    style={{ backgroundColor: bg }}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </span>
-                  <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                    {label}
-                  </span>
-                </button>
-              ) : (
-                <a
-                  key={label}
-                  href={href}
-                  target={href?.startsWith("http") ? "_blank" : undefined}
-                  rel={href?.startsWith("http") ? "noreferrer" : undefined}
-                  aria-label={label}
-                  title={label}
-                  className="group flex min-w-0 flex-col items-center gap-1.5"
-                >
-                  <span
-                    className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                    style={{ backgroundColor: bg }}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </span>
-                  <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                    {label}
-                  </span>
-                </a>
-              ),
-            )}
+          <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-4">
+            {contactItems.map((item) => (
+              <GridIconTile key={item.label} {...item} />
+            ))}
           </div>
         ) : (
           <p className="mt-2 text-xs text-[#8a8a92]">
@@ -427,27 +459,9 @@ export default function Social({
       >
         <h2 className="text-sm font-extrabold text-[#141414]">Social Media</h2>
         {socialItems.length > 0 ? (
-          <div className="mt-4 grid grid-cols-4 gap-x-3 gap-y-4">
-            {socialItems.map(({ label, href, bg, Icon }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={label}
-                title={label}
-                className="group flex min-w-0 flex-col items-center gap-1.5"
-              >
-                <span
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_4px_10px_rgba(0,0,0,0.14)] transition group-hover:-translate-y-0.5 group-hover:shadow-lg"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="h-6 w-6" />
-                </span>
-                <span className="w-full truncate text-center text-[11px] font-medium text-[#4a4a52]">
-                  {label}
-                </span>
-              </a>
+          <div className="mt-4 grid grid-cols-3 gap-x-3 gap-y-4">
+            {socialItems.map((item) => (
+              <GridIconTile key={item.label} {...item} />
             ))}
           </div>
         ) : (
@@ -457,7 +471,12 @@ export default function Social({
         )}
       </section>
 
-      <div className="mt-6">
+      {/* Contact form — bottom */}
+      <div className="mx-4 mt-4 mb-2">
+        <CardContactForm accentColor={accent} />
+      </div>
+
+      <div className="mt-4">
         <CardLayoutFooter accent={accent} />
       </div>
 

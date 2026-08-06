@@ -34,6 +34,7 @@ import Basic from "@/components/Layouts/Basic";
 import Modern from "@/components/Layouts/modern";
 import Compact from "@/components/Layouts/compact";
 import Social from "@/components/Layouts/social";
+import Minimalist from "@/components/Layouts/Minimalist";
 import CardLayoutBottom from "@/components/Layouts/CardLayoutBottom";
 import CardShareModal from "@/components/Layouts/CardShareModal";
 
@@ -334,6 +335,48 @@ export default function ProfileBanner({
           }}
         />
         <Social
+          profile={profile}
+          onChangeBackground={
+            onUploadBackground
+              ? () => coverInputRef.current?.click()
+              : undefined
+          }
+          onChangeProfile={
+            onUploadProfile
+              ? () => profileInputRef.current?.click()
+              : undefined
+          }
+        />
+      </>
+    );
+  }
+
+  if (cardLayout === "minimalist") {
+    return (
+      <>
+        <input
+          ref={coverInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadBackground) onUploadBackground(file);
+            e.target.value = "";
+          }}
+        />
+        <input
+          ref={profileInputRef}
+          type="file"
+          accept="image/*"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file && onUploadProfile) onUploadProfile(file);
+            e.target.value = "";
+          }}
+        />
+        <Minimalist
           profile={profile}
           onChangeBackground={
             onUploadBackground

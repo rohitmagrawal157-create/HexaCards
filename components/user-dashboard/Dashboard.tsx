@@ -974,7 +974,11 @@ function SupportPanel() {
 
           <div className="mt-5 flex flex-wrap gap-2">
             <a
-              href="mailto:info@hexacards.com"
+              href={`https://wa.me/919226286898?text=${encodeURIComponent(
+                "Hi HexaCards support, I need help with my NFC card / digital profile.",
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-lg bg-[#BC7C10] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#9a650d]"
             >
               Contact support
