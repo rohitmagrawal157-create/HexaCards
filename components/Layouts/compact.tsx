@@ -23,7 +23,11 @@ import {
   FaTwitter,
   FaYoutube,
   FaGoogle,
+  FaTelegramPlane,
+  FaSnapchatGhost,
+  FaPinterestP,
 } from "react-icons/fa";
+import { SiTripadvisor } from "react-icons/si";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
 import CardShareModal from "./CardShareModal";
@@ -255,7 +259,11 @@ export default function Compact({
     { label: "LinkedIn", Icon: FaLinkedinIn, bg: "#0A66C2", href: profile.social.linkedin },
     { label: "Twitter", Icon: FaTwitter, bg: "#1DA1F2", href: profile.social.twitter },
     { label: "YouTube", Icon: FaYoutube, bg: "#FF0000", href: profile.social.youtube },
+    { label: "Telegram", Icon: FaTelegramPlane, bg: "#229ED9", href: profile.social.telegram },
+    { label: "Snapchat", Icon: FaSnapchatGhost, bg: "#FFFC00", href: profile.social.snapchat },
+    { label: "Pinterest", Icon: FaPinterestP, bg: "#E60023", href: profile.social.pinterest },
     { label: "Google", Icon: FaGoogle, bg: "#4285F4", href: profile.social.googleReview },
+    { label: "Tripadvisor", Icon: SiTripadvisor, bg: "#34E0A1", href: profile.social.tripadvisor },
   ].filter((s) => s.href && s.href.trim());
 
   return (
@@ -547,11 +555,11 @@ export default function Compact({
             className="rounded-b-xl border border-t-0 bg-white"
             style={{ borderColor: accentMuted }}
           >
-            <div className="px-5 pt-5 pb-6">
+            <div className="overflow-hidden px-5 pt-5 pb-6">
               <h3 className="text-base font-bold text-[#141414]">
                 Business Information
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#4a4a52]">
+              <p className="mt-2 max-w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere] text-[#4a4a52]">
                 {about ||
                   (profile.contact.businessName
                     ? `${profile.contact.businessName} — connect instantly through this Hexa digital card.`
@@ -561,7 +569,7 @@ export default function Compact({
                 Services / Products
               </h4>
               {services.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-[#3d4657]">
+                <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-[#3d4657] break-words [overflow-wrap:anywhere]">
                   {services.map((service, index) => (
                     <li key={`${service}-${index}`}>{service}</li>
                   ))}

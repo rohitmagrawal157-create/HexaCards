@@ -689,21 +689,19 @@ export default function EditCard() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   {(
                     [
-                      ["instagram", "Instagram"],
                       ["facebook", "Facebook"],
+                      ["instagram", "Instagram"],
                       ["linkedin", "LinkedIn"],
-                      ["twitter", "X / Twitter"],
                       ["youtube", "YouTube"],
+                      ["telegram", "Telegram"],
+                      ["snapchat", "Snapchat"],
+                      ["twitter", "X / Twitter"],
+                      ["pinterest", "Pinterest"],
                       ["googleReview", "Google Review link"],
+                      ["tripadvisor", "Tripadvisor"],
                     ] as const
                   ).map(([key, label]) => (
-                    <Field
-                      key={key}
-                      label={label}
-                      className={
-                        key === "googleReview" ? "sm:col-span-2" : undefined
-                      }
-                    >
+                    <Field key={key} label={label}>
                       <div className="relative">
                         <Link2 className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#9a9a9a]" />
                         <input
@@ -723,7 +721,7 @@ export default function EditCard() {
                   <Field label="About business">
                     <textarea
                       rows={5}
-                      className={fieldClass()}
+                      className={`${fieldClass()} max-w-full resize-y break-words [overflow-wrap:anywhere] whitespace-pre-wrap`}
                       value={profile.business.about}
                       onChange={(e) => updateBusinessAbout(e.target.value)}
                       placeholder="Save your contact by just tapping HexaCards digital business card. Describe your company here…"
@@ -1237,7 +1235,7 @@ function Field({
   className?: string;
 }) {
   return (
-    <label className={`block ${className}`}>
+    <label className={`block min-w-0 ${className}`}>
       <span className={labelClass()}>{label}</span>
       {children}
     </label>

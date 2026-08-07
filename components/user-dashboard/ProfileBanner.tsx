@@ -18,7 +18,11 @@ import {
   FaYoutube,
   FaGoogle,
   FaWhatsapp,
+  FaTelegramPlane,
+  FaSnapchatGhost,
+  FaPinterestP,
 } from "react-icons/fa";
+import { SiTripadvisor } from "react-icons/si";
 import {
   cardPublicUrl,
   DEFAULT_CARD_AVATAR,
@@ -176,10 +180,34 @@ export default function ProfileBanner({
       href: profile.social.youtube || "#",
     },
     {
+      label: "Telegram",
+      Icon: FaTelegramPlane,
+      bg: "#229ED9",
+      href: profile.social.telegram || "#",
+    },
+    {
+      label: "Snapchat",
+      Icon: FaSnapchatGhost,
+      bg: "#FFFC00",
+      href: profile.social.snapchat || "#",
+    },
+    {
+      label: "Pinterest",
+      Icon: FaPinterestP,
+      bg: "#E60023",
+      href: profile.social.pinterest || "#",
+    },
+    {
       label: "Google",
       Icon: FaGoogle,
       bg: "#4285F4",
       href: profile.social.googleReview || "#",
+    },
+    {
+      label: "Tripadvisor",
+      Icon: SiTripadvisor,
+      bg: "#34E0A1",
+      href: profile.social.tripadvisor || "#",
     },
   ].filter((s) => s.href && s.href !== "#");
 

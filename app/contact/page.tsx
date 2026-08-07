@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ExternalLink, MapPin, Mail, Phone } from "lucide-react";
-import { Navbar, Footer, FAQ } from "@/components/landing";
+import { Navbar, Footer, FAQ, ContactUsForm } from "@/components/landing";
 
 const officeAddress =
   "Hexa Cards - Digital Business Cards, Plot No 42, G Sector, opposite Medicover Hospital, Town Center, Cidco, Chhatrapati Sambhajinagar, Maharashtra 431003";
@@ -112,6 +112,8 @@ export default function ContactPage() {
             </Link>
           </div>
         </section>
+
+        <ContactUsForm />
 
         <FAQ />
       </main>

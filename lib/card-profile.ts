@@ -55,6 +55,10 @@ export type CardSocialLinks = {
   twitter: string;
   youtube: string;
   googleReview: string;
+  telegram: string;
+  snapchat: string;
+  pinterest: string;
+  tripadvisor: string;
 };
 
 export type CardBusinessInfo = {
@@ -227,6 +231,10 @@ export function defaultCardProfile(name = "User", phone = ""): HexaCardProfile {
       twitter: "",
       youtube: "",
       googleReview: "",
+      telegram: "",
+      snapchat: "",
+      pinterest: "",
+      tripadvisor: "",
     },
     business: {
       about: "",

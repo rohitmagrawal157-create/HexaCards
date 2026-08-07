@@ -33,7 +33,7 @@ export default function Franchise() {
               </p>
 
               <a
-                href="#footer"
+                href="/franchise"
                 className="mt-6 inline-flex rounded-lg bg-[#BC7C10] px-6 py-3 text-sm font-bold text-white shadow-md shadow-black/30 transition-transform hover:bg-[#9a650d] active:scale-[0.98]"
               >
                 Apply Now

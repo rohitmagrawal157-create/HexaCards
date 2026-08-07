@@ -53,7 +53,7 @@ export default function CardLayoutBottom({
               Business Information
             </h3>
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-[#4a4a52]">
+          <p className="mt-2 max-w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere] text-[#4a4a52]">
             {about ||
               "Add company details in the Company tab — about your business and services will show here."}
           </p>
@@ -73,7 +73,7 @@ export default function CardLayoutBottom({
                     style={{ borderLeftColor: accent }}
                     aria-hidden
                   />
-                  <span className="text-sm text-[#4a4a52]">{service}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-sm text-[#4a4a52]">{service}</span>
                 </li>
               ))}
             </ul>

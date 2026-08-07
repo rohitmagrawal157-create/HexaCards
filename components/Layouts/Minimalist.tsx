@@ -23,7 +23,12 @@ import {
   FaXTwitter,
   FaInstagram,
   FaGoogle,
+  FaYoutube,
+  FaTelegram,
+  FaSnapchat,
+  FaPinterestP,
 } from "react-icons/fa6";
+import { SiTripadvisor } from "react-icons/si";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
 import CardShareModal from "./CardShareModal";
@@ -215,10 +220,19 @@ export default function Minimalist({
     { label: "LinkedIn", Icon: FaLinkedinIn, href: profile.social.linkedin },
     { label: "X", Icon: FaXTwitter, href: profile.social.twitter },
     { label: "Instagram", Icon: FaInstagram, href: profile.social.instagram },
+    { label: "YouTube", Icon: FaYoutube, href: profile.social.youtube },
+    { label: "Telegram", Icon: FaTelegram, href: profile.social.telegram },
+    { label: "Snapchat", Icon: FaSnapchat, href: profile.social.snapchat },
+    { label: "Pinterest", Icon: FaPinterestP, href: profile.social.pinterest },
     {
       label: "Google Reviews",
       Icon: FaGoogle,
       href: profile.social.googleReview,
+    },
+    {
+      label: "Tripadvisor",
+      Icon: SiTripadvisor,
+      href: profile.social.tripadvisor,
     },
   ].filter((s) => s.href && s.href.trim());
 
@@ -333,7 +347,7 @@ export default function Minimalist({
         </div>
       </div>
 
-      {/* Name, title, description */}
+      {/* Name + title only — about lives in Business Information dropdown */}
       <div className="px-6 pt-4 text-left">
         <div className="flex items-center gap-1.5">
           <h1 className="text-xl font-extrabold text-[#0f0f12]">{name}</h1>
@@ -341,9 +355,6 @@ export default function Minimalist({
         </div>
         {titleLine ? (
           <p className="mt-1 text-sm text-[#4a4a52]">{titleLine}</p>
-        ) : null}
-        {about ? (
-          <p className="mt-2 text-sm leading-relaxed text-[#6b6b73]">{about}</p>
         ) : null}
       </div>
 
@@ -455,7 +466,7 @@ export default function Minimalist({
               className="mt-2 rounded-2xl border bg-[#FAFAF8] p-4 text-left"
               style={{ borderColor: accentMuted }}
             >
-              <p className="text-sm leading-relaxed text-[#4a4a52]">
+              <p className="max-w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere] text-[#4a4a52]">
                 {about ||
                   (businessName
                     ? `${businessName} — connect instantly through this Hexa digital card.`
@@ -476,7 +487,7 @@ export default function Minimalist({
                         style={{ borderLeftColor: accent }}
                         aria-hidden
                       />
-                      <span className="text-sm text-[#4a4a52]">{service}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-sm text-[#4a4a52]">{service}</span>
                     </li>
                   ))}
                 </ul>

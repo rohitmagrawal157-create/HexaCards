@@ -36,7 +36,7 @@ export const navLinks: NavLink[] = [
     ],
   },
   { label: "Products", href: "/products" },
-  { label: "Services", href: "/services" },
+  { label: "Franchise", href: "/franchise" },
   { label: "Contact Us", href: "/contact" },
 ];
 

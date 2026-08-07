@@ -22,7 +22,11 @@ import {
   FaYoutube,
   FaGoogle,
   FaWhatsapp,
+  FaTelegramPlane,
+  FaSnapchatGhost,
+  FaPinterestP,
 } from "react-icons/fa";
+import { SiTripadvisor } from "react-icons/si";
 import BasicLayout from "./BasicLayout";
 import CardContactForm from "@/components/user-dashboard/CardContactForm";
 import CardLayoutFooter from "./CardLayoutFooter";
@@ -65,6 +69,10 @@ export type BasicProfile = {
     twitter?: string;
     youtube?: string;
     googleReview?: string;
+    telegram?: string;
+    snapchat?: string;
+    pinterest?: string;
+    tripadvisor?: string;
   };
 };
 
@@ -110,6 +118,10 @@ function normalizeProfile(profile: BasicProfile | HexaCardProfile): BasicProfile
         twitter: p.social?.twitter,
         youtube: p.social?.youtube,
         googleReview: p.social?.googleReview,
+        telegram: p.social?.telegram,
+        snapchat: p.social?.snapchat,
+        pinterest: p.social?.pinterest,
+        tripadvisor: p.social?.tripadvisor,
       },
     };
   }
@@ -235,10 +247,34 @@ export default function Basic({
       href: profile.social?.youtube,
     },
     {
+      label: "Telegram",
+      Icon: FaTelegramPlane,
+      bg: "#229ED9",
+      href: profile.social?.telegram,
+    },
+    {
+      label: "Snapchat",
+      Icon: FaSnapchatGhost,
+      bg: "#FFFC00",
+      href: profile.social?.snapchat,
+    },
+    {
+      label: "Pinterest",
+      Icon: FaPinterestP,
+      bg: "#E60023",
+      href: profile.social?.pinterest,
+    },
+    {
       label: "Google",
       Icon: FaGoogle,
       bg: "#4285F4",
       href: profile.social?.googleReview,
+    },
+    {
+      label: "Tripadvisor",
+      Icon: SiTripadvisor,
+      bg: "#34E0A1",
+      href: profile.social?.tripadvisor,
     },
   ].filter((s) => s.href && s.href.trim());
 
@@ -405,11 +441,11 @@ export default function Basic({
             className="rounded-b-xl border border-t-0 bg-white"
             style={{ borderColor: accentMuted }}
           >
-            <div className="p-5">
+            <div className="overflow-hidden p-5">
               <h3 className="text-lg font-bold text-[#0f0f12]">
                 Business Information
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#4a4a52]">
+              <p className="mt-2 max-w-full text-sm leading-relaxed break-words [overflow-wrap:anywhere] text-[#4a4a52]">
                 {profile.business?.about?.trim() ||
                   profile.business?.name ||
                   "Add company details in Edit card."}
@@ -430,7 +466,7 @@ export default function Basic({
                         style={{ borderLeftColor: accent }}
                         aria-hidden
                       />
-                      <span className="text-sm text-[#0f0f12]">{service}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere] text-sm text-[#0f0f12]">{service}</span>
                     </li>
                   ))}
                 </ul>
