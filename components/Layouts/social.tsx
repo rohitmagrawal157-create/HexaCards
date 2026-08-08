@@ -34,11 +34,11 @@ const SOCIAL_ICONS = {
   instagram: "/icons/Hexacards_Icons-02.png",
   linkedin: "/icons/Hexacards_Icons-03.png",
   youtube: "/icons/Hexacards_Icons-04.png",
+  googleReview: "/icons/Hexacards_Icons-09.png",
   telegram: "/icons/Hexacards_Icons-05.png",
   whatsapp: "/icons/Hexacards_Icons-06.png",
   snapchat: "/icons/Hexacards_Icons-07.png",
   website: "/icons/Hexacards_Icons-08.png",
-  googleReview: "/icons/Hexacards_Icons-09.png",
   pinterest: "/icons/Hexacards_Icons-10.png",
   email: "/icons/Hexacards_Icons-11.png",
   twitter: "/icons/Hexacards_Icons-12.png",
@@ -64,7 +64,7 @@ type GridItem = {
 };
 
 const ICON_TILE =
-  "relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-transparent shadow-[0_3px_10px_rgba(0,0,0,0.10)] transition group-hover:-translate-y-0.5 sm:h-16 sm:w-16";
+  "relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-transparent transition group-hover:-translate-y-0.5 sm:h-16 sm:w-16";
 
 function GridIconTile({
   label,
@@ -80,11 +80,7 @@ function GridIconTile({
   const inner = (
     <>
       {imageSrc ? (
-        <span
-          className={`${ICON_TILE} ${
-            imageFit === "contain" ? "bg-white" : "bg-transparent"
-          }`}
-        >
+        <span className={ICON_TILE}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc}
@@ -291,6 +287,16 @@ export default function Social({
         imageSrc: SOCIAL_ICONS.youtube,
       },
       {
+        label: "Google Reviews",
+        href: profile.social.googleReview,
+        imageSrc: SOCIAL_ICONS.googleReview,
+      },
+      {
+        label: "X",
+        href: profile.social.twitter,
+        imageSrc: SOCIAL_ICONS.twitter,
+      },
+      {
         label: "Telegram",
         href: profile.social.telegram,
         imageSrc: SOCIAL_ICONS.telegram,
@@ -300,21 +306,13 @@ export default function Social({
         href: profile.social.snapchat,
         imageSrc: SOCIAL_ICONS.snapchat,
       },
-      {
-        label: "X",
-        href: profile.social.twitter,
-        imageSrc: SOCIAL_ICONS.twitter,
-      },
+      
       {
         label: "Pinterest",
         href: profile.social.pinterest,
         imageSrc: SOCIAL_ICONS.pinterest,
       },
-      {
-        label: "Google Reviews",
-        href: profile.social.googleReview,
-        imageSrc: SOCIAL_ICONS.googleReview,
-      },
+     
       {
         label: "Tripadvisor",
         href: profile.social.tripadvisor,
@@ -510,7 +508,7 @@ export default function Social({
         className="mx-4 mt-5 rounded-2xl border border-black/[0.06] bg-[#FAFAF8] p-3.5 sm:p-4"
         style={{ borderColor: accentMuted }}
       >
-        <h2 className="text-sm font-extrabold text-[#141414]">
+        <h2 className="text-sm font-extrabold text-[#141414] text-center">
           Contact Information
         </h2>
         {contactItems.length > 0 ? (
@@ -531,7 +529,7 @@ export default function Social({
         className="mx-4 mt-4 rounded-2xl border border-black/[0.06] bg-[#FAFAF8] p-3.5 sm:p-4"
         style={{ borderColor: accentMuted }}
       >
-        <h2 className="text-sm font-extrabold text-[#141414]">Social Media</h2>
+        <h2 className="text-sm font-extrabold text-[#141414] text-center">Social Media</h2>
         {socialItems.length > 0 ? (
           <div className="mt-3 grid grid-cols-3 gap-2.5 sm:gap-3">
             {socialItems.map((item) => (

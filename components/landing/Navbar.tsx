@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronDown, LogOut, ShoppingCart, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, UserRound } from "lucide-react";
 import { navLinks } from "./data";
-import {
-  clearAuthUser,
-  getAuthUser,
-  goToCheckout,
-  type HexaAuthUser,
-} from "@/lib/auth";
+import { clearAuthUser, getAuthUser, type HexaAuthUser } from "@/lib/auth";
 
 function linkIsActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -20,7 +15,6 @@ function linkIsActive(pathname: string, href: string) {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
@@ -163,22 +157,8 @@ export default function Navbar() {
             </ul>
           </nav>
 
-          {/* Right: cart + sign in (desktop) / menu (mobile) */}
+          {/* Right: sign in (desktop) / menu (mobile) */}
           <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-2.5">
-            <Link
-              href="/checkout"
-              aria-label="Cart / Checkout"
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition-opacity hover:opacity-70 ${
-                pathname === "/checkout" ? "text-[#BC7C10]" : "text-[#1a1a1a]"
-              }`}
-              onClick={(e) => {
-                // Redirect to login (with return URL) before checkout page loads.
-                e.preventDefault();
-                goToCheckout(router, "/checkout");
-              }}
-            >
-              <ShoppingCart className="h-[18px] w-[18px]" strokeWidth={1.75} />
-            </Link>
             {user ? (
               <div ref={userMenuRef} className="relative hidden items-center gap-1.5 lg:flex">
                 <span className="max-w-[140px] truncate rounded-full bg-[#FFF8ED] px-3 py-2 text-xs font-bold text-[#BC7C10]">
