@@ -1,46 +1,13 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import {
-  Phone,
-  Mail,
-  Globe,
-  FileText,
-  MessageCircle,
-  Share2,
-  ChevronLeft,
   IdCard,
   Link2,
   BookOpen,
   CalendarClock,
-  UserPlus,
 } from "lucide-react";
-
-type IconProps = { className?: string; strokeWidth?: number };
-
-function LinkedinIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M6.94 6.5a1.94 1.94 0 1 1-3.88 0 1.94 1.94 0 0 1 3.88 0zM3.5 8.75h3v11.5h-3V8.75zM9.25 8.75h2.87v1.57h.04c.4-.76 1.38-1.56 2.84-1.56 3.04 0 3.6 2 3.6 4.6v6.89h-3v-6.11c0-1.46-.03-3.33-2.03-3.33-2.03 0-2.34 1.59-2.34 3.23v6.21h-3V8.75z" />
-    </svg>
-  );
-}
-
-function InstagramIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 7.2A4.8 4.8 0 1 0 12 16.8 4.8 4.8 0 0 0 12 7.2zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2zM17.5 6.95a1.12 1.12 0 1 1-2.24 0 1.12 1.12 0 0 1 2.24 0z" />
-      <path d="M12 3.5c-2.4 0-2.7.01-3.65.05a5.57 5.57 0 0 0-3.8 3.8C4.51 8.3 4.5 8.6 4.5 12s.01 3.7.05 4.65a5.57 5.57 0 0 0 3.8 3.8c.95.04 1.25.05 3.65.05s2.7-.01 3.65-.05a5.57 5.57 0 0 0 3.8-3.8c.04-.95.05-1.25.05-3.65s-.01-3.7-.05-4.65a5.57 5.57 0 0 0-3.8-3.8C14.7 3.51 14.4 3.5 12 3.5zm0 1.7c2.36 0 2.64.01 3.57.05 1.9.09 2.79.99 2.88 2.88.04.93.05 1.21.05 3.57s-.01 2.64-.05 3.57c-.09 1.9-.98 2.79-2.88 2.88-.93.04-1.21.05-3.57.05s-2.64-.01-3.57-.05c-1.9-.09-2.79-.98-2.88-2.88-.04-.93-.05-1.21-.05-3.57s.01-2.64.05-3.57c.09-1.89.98-2.79 2.88-2.88.93-.04 1.21-.05 3.57-.05z" />
-    </svg>
-  );
-}
-
-function XIcon({ className }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M17.66 3H20.5l-6.54 7.48L21.5 21h-5.9l-4.62-6.04L5.7 21H2.85l7-8.01L2.5 3h6.05l4.17 5.52L17.66 3zm-1.04 16.2h1.63L7.45 4.7H5.7l10.92 14.5z" />
-    </svg>
-  );
-}
 
 const includes = [
   { label: "Contact details", Icon: IdCard },
@@ -49,23 +16,20 @@ const includes = [
   { label: "Meeting links", Icon: CalendarClock },
 ];
 
-const quickActions = [
-  { label: "Phone", Icon: Phone, bg: "#34C759" },
-  { label: "Email", Icon: Mail, bg: "#0A84FF" },
-  { label: "Website", Icon: Globe, bg: "#0A84FF" },
-  { label: "Brochure", Icon: FileText, bg: "#D32F2F" },
-];
+/** Bump when replacing files in public/Images/Layouts (same filenames). */
+const LAYOUT_VERSION = "2026-08-10-1825";
 
-const socialActions = [
-  { label: "LinkedIn", Icon: LinkedinIcon, bg: "#0A66C2" },
-  {
-    label: "Instagram",
-    Icon: InstagramIcon,
-    bg: "linear-gradient(135deg,#F58529,#DD2A7B,#8134AF)",
-  },
-  { label: "WhatsApp", Icon: MessageCircle, bg: "#25D366" },
-  { label: "X", Icon: XIcon, bg: "#171412" },
-];
+const LAYOUT_IMAGES = [
+  { src: `/Images/Layouts/layout1.png?v=${LAYOUT_VERSION}`, label: "Classic" },
+  { src: `/Images/Layouts/layout2.png?v=${LAYOUT_VERSION}`, label: "Basic" },
+  { src: `/Images/Layouts/layout3.png?v=${LAYOUT_VERSION}`, label: "Modern" },
+  { src: `/Images/Layouts/layout4.png?v=${LAYOUT_VERSION}`, label: "Compact" },
+  { src: `/Images/Layouts/layout5.png?v=${LAYOUT_VERSION}`, label: "Social" },
+  { src: `/Images/Layouts/layout6.png?v=${LAYOUT_VERSION}`, label: "Minimalist" },
+] as const;
+
+const AUTO_MS = 3000;
+const SWIPE_THRESHOLD = 48;
 
 const callouts = [
   { label: "Your Cover Img", top: "14%" },
@@ -94,7 +58,6 @@ function FeatureRightBackground() {
             height="106"
             patternUnits="userSpaceOnUse"
           >
-            {/* Pointy-top hex — different orientation from hero */}
             <path
               d="M46 4 L84 26 L84 70 L46 92 L8 70 L8 26 Z"
               fill="none"
@@ -141,87 +104,217 @@ function FeatureRightBackground() {
   );
 }
 
-function PhoneMockup() {
+function LayoutPhoneCarousel() {
+  const count = LAYOUT_IMAGES.length;
+  // Track: [clone of last, ...layouts, clone of first] for seamless looping
+  const track = [
+    LAYOUT_IMAGES[count - 1],
+    ...LAYOUT_IMAGES,
+    LAYOUT_IMAGES[0],
+  ] as const;
+  const FIRST_REAL = 1;
+  const LAST_REAL = count;
+  const CLONE_FIRST = count + 1;
+
+  const [trackIndex, setTrackIndex] = useState(FIRST_REAL);
+  const [animate, setAnimate] = useState(true);
+  const [paused, setPaused] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const locked = useRef<"x" | "y" | null>(null);
+  const trackIndexRef = useRef(trackIndex);
+  trackIndexRef.current = trackIndex;
+
+  const realIndex = (() => {
+    if (trackIndex <= 0) return count - 1;
+    if (trackIndex >= CLONE_FIRST) return 0;
+    return Math.max(0, Math.min(count - 1, trackIndex - 1));
+  })();
+  const currentLayout = LAYOUT_IMAGES[realIndex] ?? LAYOUT_IMAGES[0];
+
+  const jumpTo = useCallback((nextTrackIndex: number) => {
+    setAnimate(true);
+    setTrackIndex(nextTrackIndex);
+    setDragX(0);
+  }, []);
+
+  const goToReal = useCallback(
+    (real: number) => {
+      const safe = ((real % count) + count) % count;
+      jumpTo(FIRST_REAL + safe);
+    },
+    [count, jumpTo],
+  );
+
+  const goNext = useCallback(() => {
+    setAnimate(true);
+    setTrackIndex((i) => {
+      if (i >= CLONE_FIRST) return FIRST_REAL + 1;
+      return Math.min(i + 1, CLONE_FIRST);
+    });
+    setDragX(0);
+  }, [CLONE_FIRST, FIRST_REAL]);
+
+  const goPrev = useCallback(() => {
+    setAnimate(true);
+    setTrackIndex((i) => {
+      if (i <= 0) return LAST_REAL - 1;
+      return Math.max(i - 1, 0);
+    });
+    setDragX(0);
+  }, [LAST_REAL]);
+
+  useEffect(() => {
+    if (paused || dragging) return;
+    const id = window.setInterval(() => {
+      setAnimate(true);
+      setTrackIndex((i) => {
+        if (i >= CLONE_FIRST) return FIRST_REAL + 1;
+        return Math.min(i + 1, CLONE_FIRST);
+      });
+    }, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [paused, dragging, CLONE_FIRST, FIRST_REAL]);
+
+  function onTransitionEnd(e: React.TransitionEvent<HTMLDivElement>) {
+    if (e.target !== e.currentTarget) return;
+    if (trackIndexRef.current === CLONE_FIRST) {
+      setAnimate(false);
+      setTrackIndex(FIRST_REAL);
+    } else if (trackIndexRef.current === 0) {
+      setAnimate(false);
+      setTrackIndex(LAST_REAL);
+    }
+  }
+
+  // Re-enable animation after silent snap
+  useEffect(() => {
+    if (animate) return;
+    const id = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setAnimate(true));
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [animate, trackIndex]);
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    locked.current = null;
+    setDragging(true);
+    setPaused(true);
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging) return;
+    const dx = e.clientX - startX.current;
+    const dy = e.clientY - startY.current;
+
+    if (!locked.current) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      locked.current = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (locked.current !== "x") return;
+
+    e.preventDefault();
+    setDragX(dx);
+  }
+
+  function onPointerUp() {
+    if (!dragging) return;
+    if (locked.current === "x") {
+      if (dragX <= -SWIPE_THRESHOLD) goNext();
+      else if (dragX >= SWIPE_THRESHOLD) goPrev();
+      else setDragX(0);
+    } else {
+      setDragX(0);
+    }
+    setDragging(false);
+    locked.current = null;
+    setPaused(false);
+  }
+
+  const offsetPct = (dragX / 280) * 100;
+
   return (
-    <div className="relative w-[260px] shrink-0 sm:w-[280px]">
-      <div className="relative overflow-hidden rounded-[2.5rem] border-[10px] border-[#141414] bg-[#141414] shadow-2xl shadow-black/25">
-        <div className="absolute top-0 left-1/2 z-20 h-5 w-28 -translate-x-1/2 rounded-b-2xl bg-[#141414]" />
-
-        <div className="relative overflow-hidden rounded-[1.9rem] bg-[#0f0f12]">
-          <div className="relative z-10 flex items-center justify-between px-5 pt-3 pb-1 text-[11px] font-semibold text-white">
-            <span>9:41</span>
-            <span className="h-2.5 w-3.5 rounded-sm border border-white" />
-          </div>
-
-          <div className="relative h-24 w-full bg-gradient-to-br from-[#7a8fa6] to-[#c7d2dd]">
-            <span className="absolute top-2 left-3 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white">
-              <ChevronLeft className="h-4 w-4" aria-hidden />
-            </span>
-            <span className="absolute top-2 right-3 flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-white">
-              <Share2 className="h-3.5 w-3.5" aria-hidden />
-            </span>
-          </div>
-
-          <div className="relative -mt-8 rounded-t-3xl bg-[#1c1c22] px-4 pt-10 pb-4">
-            <div className="absolute -top-8 left-1/2 h-16 w-16 -translate-x-1/2 overflow-hidden rounded-full border-4 border-[#1c1c22] bg-[#BC7C10]">
-              <div className="flex h-full w-full items-center justify-center text-lg font-bold text-white">
-                HC
-              </div>
+    <div className="relative w-[240px] shrink-0 sm:w-[270px]">
+      <div
+        className="relative touch-pan-y select-none overflow-hidden rounded-[2rem] bg-transparent shadow-[0_20px_50px_rgba(15,23,42,0.18)] ring-1 ring-black/5"
+        style={{ aspectRatio: "330 / 658" }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => {
+          if (!dragging) setPaused(false);
+        }}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Card layout previews"
+      >
+        <div
+          className="flex h-full w-full"
+          onTransitionEnd={onTransitionEnd}
+          style={{
+            transform: `translateX(calc(${-trackIndex * 100}% + ${offsetPct}%))`,
+            transition:
+              dragging || !animate
+                ? "none"
+                : "transform 450ms cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
+        >
+          {track.map((layout, i) => (
+            <div
+              key={`${layout.src}-${i}`}
+              className="relative h-full w-full shrink-0"
+              aria-hidden={i !== trackIndex}
+            >
+              <Image
+                src={layout.src}
+                alt={`${layout.label} card layout`}
+                fill
+                unoptimized
+                draggable={false}
+                className="pointer-events-none object-contain object-center"
+                sizes="270px"
+                priority={i === FIRST_REAL}
+              />
             </div>
-
-            <div className="text-center">
-              <p className="text-base font-bold text-white">Alex Morgan</p>
-              <p className="mt-0.5 text-xs font-medium text-white/50">
-                Graphic Designer
-              </p>
-              <p className="mt-3 text-[11px] leading-relaxed text-white/60">
-                Passionate about clean design and clear communication. Always
-                open to new collaborations and creative challenges.
-              </p>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2">
-              <span className="flex-1 rounded-full border border-white/20 py-2.5 text-center text-xs font-bold text-white">
-                Exchange Contact
-              </span>
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/20 text-white">
-                <UserPlus className="h-4 w-4" aria-hidden />
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-4 gap-1.5 px-3 py-3">
-            {quickActions.map(({ label, Icon, bg }) => (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
-                  style={{ background: bg }}
-                >
-                  <Icon className="h-4 w-4" strokeWidth={2} />
-                </span>
-                <span className="text-[8px] font-medium text-white/60">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-4 gap-1.5 px-3 pb-5">
-            {socialActions.map(({ label, Icon, bg }) => (
-              <div key={label} className="flex flex-col items-center gap-1">
-                <span
-                  className="flex h-10 w-10 items-center justify-center rounded-xl text-white"
-                  style={{ background: bg }}
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-[8px] font-medium text-white/60">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
+      </div>
+
+      <div className="mt-5 flex flex-col items-center gap-2.5">
+        <p className="text-xs font-semibold tracking-wide text-[#5c5346]">
+          <span className="text-[#BC7C10]">{currentLayout.label}</span>
+          <span className="mx-1.5 text-[#c4bbb0]">·</span>
+          Layout {realIndex + 1} of {count}
+        </p>
+        <div
+          className="flex items-center gap-1.5"
+          role="tablist"
+          aria-label="Card layouts"
+        >
+          {LAYOUT_IMAGES.map((layout, i) => (
+            <button
+              key={layout.src}
+              type="button"
+              role="tab"
+              aria-selected={i === realIndex}
+              aria-label={`Show ${layout.label} layout`}
+              onClick={() => goToReal(i)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i === realIndex
+                  ? "w-6 bg-[#BC7C10]"
+                  : "w-1.5 bg-[#d6cfc4] hover:bg-[#BC7C10]/50"
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-[10px] text-[#a0988c]">Swipe to explore layouts</p>
       </div>
     </div>
   );
@@ -237,7 +330,6 @@ export default function Feature() {
 
       <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-10 xl:gap-16">
-          {/* Copy */}
           <div className="max-w-xl">
             <h2 className="text-3xl font-extrabold leading-[1.15] tracking-tight text-[#0f0f12] sm:text-4xl lg:text-5xl">
               Your First Impression, Unique and Smart-Always
@@ -281,14 +373,12 @@ export default function Feature() {
             </a>
           </div>
 
-          {/* Phone + callouts */}
           <div className="flex flex-col items-center gap-6 lg:items-end">
             <div className="relative flex items-start">
-              <PhoneMockup />
+              <LayoutPhoneCarousel />
 
-              {/* Desktop callouts — own column, never compresses the phone */}
               <div
-                className="relative ml-1 hidden h-[520px] w-[160px] shrink-0 xl:ml-2 xl:w-[200px] lg:block"
+                className="relative ml-1 hidden h-[520px] w-[160px] shrink-0 lg:block xl:ml-2 xl:w-[200px]"
                 aria-hidden
               >
                 {callouts.map(({ label, top }) => (
@@ -307,7 +397,6 @@ export default function Feature() {
               </div>
             </div>
 
-            {/* Mobile labels */}
             <ul className="flex flex-wrap justify-center gap-2 lg:hidden">
               {callouts.map(({ label }) => (
                 <li

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
-import Feature from "./Feature";
 
 type Product = {
   title: string;
@@ -250,15 +249,11 @@ function ProductsGrid() {
 
 export default function Products() {
   return (
-    <>
-      <section
-        id="products"
-        className="scroll-mt-20 bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
-      >
-        <ProductsGrid />
-      </section>
-
-      <Feature />
-    </>
+    <section
+      id="products"
+      className="scroll-mt-20 bg-white pt-8 pb-14 sm:pt-10 sm:pb-16"
+    >
+      <ProductsGrid />
+    </section>
   );
 }

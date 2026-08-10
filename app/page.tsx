@@ -3,6 +3,7 @@ import {
   Hero,
   Clients,
   Products,
+  Feature,
   HowItWorks,
   // WhyHexa,
   Industries,
@@ -20,6 +21,7 @@ export default function HomePage() {
         <Hero />
         <Clients />
         <Products />
+        <Feature />
         <HowItWorks />
         {/* <WhyHexa /> */}
         <Industries />

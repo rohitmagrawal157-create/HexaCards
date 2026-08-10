@@ -7,6 +7,7 @@ const navLinks = [
   { label: "Products", href: "/products" },
   { label: "NFC Card", href: "/product/nfc-business-card" },
   { label: "Franchise", href: "/franchise" },
+  { label: "Services", href: "/services" },
   { label: "Reviews", href: "/product/social-media-cards" },
   { label: "Contact Us", href: "/contact" },
 ];

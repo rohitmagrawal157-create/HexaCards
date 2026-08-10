@@ -9,19 +9,6 @@ import {
   Factory,
   Briefcase,
   Users,
-  Check,
-  LayoutDashboard,
-  UserRound,
-  CreditCard,
-  Target,
-  BarChart3,
-  Settings,
-  Receipt,
-  LifeBuoy,
-  Info,
-  MessageSquare,
-  Globe,
-  ShoppingBag,
   ArrowRight,
 } from "lucide-react";
 
@@ -40,8 +27,6 @@ const industries = [
   { name: "Consultants", Icon: Briefcase, bg: "#FFFCF6", fg: "#BC7C10" },
   { name: "Corporate Teams", Icon: Users, bg: "#FFFCF6", fg: "#BC7C10" },
 ];
-
-
 
 /** Left-side nest — dashed hexes + nodes (not hero/feature style) */
 function IndustriesLeftBackground() {
@@ -106,65 +91,60 @@ function IndustriesLeftBackground() {
 
 export default function Industries() {
   return (
-    <>
-      {/* Industry grid */}
-      <section
-        id="industries"
-        className="relative scroll-mt-20 overflow-hidden bg-[#FFFCF6] py-20 sm:py-24"
-      >
-        <IndustriesLeftBackground />
+    <section
+      id="industries"
+      className="relative scroll-mt-20 overflow-hidden bg-[#FFFCF6] py-20 sm:py-24"
+    >
+      <IndustriesLeftBackground />
 
-        <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
-          <div className="text-center">
-            <span className="inline-flex items-center rounded-full border border-[#BC7C10]/20 bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#BC7C10] backdrop-blur-sm">
-              Trusted Across Industries
-            </span>
+      <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="text-center">
+          <span className="inline-flex items-center rounded-full border border-[#BC7C10]/20 bg-white/80 px-4 py-1.5 text-sm font-semibold text-[#BC7C10] backdrop-blur-sm">
+            Trusted Across Industries
+          </span>
 
-            <h2 className="mt-6 text-4xl font-extrabold tracking-tight text-[#0f172a] sm:text-5xl">
-              Perfect for Every Industry
-            </h2>
+          <h2 className="mt-6 text-4xl font-extrabold tracking-tight text-[#0f172a] sm:text-5xl">
+            Perfect for Every Industry
+          </h2>
 
-            <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-[#5b6472]">
-              From clinics to construction sites, teams across every sector
-              use Hexa Cards to make a lasting first impression.
-            </p>
-          </div>
-
-          <ul className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-            {industries.map(({ name, Icon, bg, fg }) => (
-              <li
-                key={name}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-black/[0.06] bg-white/90 px-4 py-6 text-center backdrop-blur-[2px] transition-all duration-200 hover:-translate-y-1 hover:border-[#BC7C10]/20 hover:shadow-lg hover:shadow-[#BC7C10]/[0.08]"
-              >
-                <span
-                  className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110"
-                  style={{ backgroundColor: bg, color: fg }}
-                >
-                  <Icon className="h-5 w-5" strokeWidth={1.75} />
-                </span>
-                <span className="text-sm font-semibold text-[#1a1a1a]">
-                  {name}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-10 text-center">
-            
-             <a href="#"
-              className="group inline-flex items-center gap-1.5 text-sm font-semibold text-[#BC7C10] transition-colors hover:text-[#9a650d]"
-            >
-              <span>View All Industries</span>
-              <ArrowRight
-                className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-                strokeWidth={2.25}
-              />
-            </a>
-          </div>
+          <p className="mx-auto mt-4 max-w-xl text-lg leading-relaxed text-[#5b6472]">
+            From clinics to construction sites, teams across every sector use
+            Hexa Cards to make a lasting first impression.
+          </p>
         </div>
-      </section>
 
-    
-    </>
+        <ul className="mt-14 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+          {industries.map(({ name, Icon, bg, fg }) => (
+            <li
+              key={name}
+              className="group flex flex-col items-center gap-3 rounded-2xl border border-black/[0.06] bg-white/90 px-4 py-6 text-center backdrop-blur-[2px] transition-all duration-200 hover:-translate-y-1 hover:border-[#BC7C10]/20 hover:shadow-lg hover:shadow-[#BC7C10]/[0.08]"
+            >
+              <span
+                className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-110"
+                style={{ backgroundColor: bg, color: fg }}
+              >
+                <Icon className="h-5 w-5" strokeWidth={1.75} />
+              </span>
+              <span className="text-sm font-semibold text-[#1a1a1a]">
+                {name}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-10 text-center">
+          <a
+            href="#"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-[#BC7C10] transition-colors hover:text-[#9a650d]"
+          >
+            <span>View All Industries</span>
+            <ArrowRight
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+              strokeWidth={2.25}
+            />
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }

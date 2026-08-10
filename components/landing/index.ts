@@ -12,3 +12,4 @@ export { default as Footer } from "./Footer";
 export { default as Franchise } from "./Franchise";
 export { default as FranchiseEnquiry } from "./franchise_from";
 export { default as ContactUsForm } from "./ContactUsForm";
+export { default as Services } from "./services";
