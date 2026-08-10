@@ -503,85 +503,102 @@ export default function LayoutPhonePreview({
 
     return (
       <div className="flex h-full flex-col overflow-hidden bg-white">
-        <div
-          className="relative h-[72px] w-full shrink-0 bg-cover bg-center"
-          style={{ backgroundImage: `url("${escUrl(cover)}")` }}
-        >
-          <span className="absolute right-1 bottom-1 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-sm">
-            <Camera className="h-2 w-2" strokeWidth={2.5} />
-          </span>
-        </div>
-        <div className="relative z-10 -mt-6 px-2 pr-6">
+        {/* Banner — camera on cover; share outside below */}
+        <div className="relative shrink-0">
+          <div
+            className="relative h-[78px] w-full bg-cover bg-center"
+            style={{ backgroundImage: `url("${escUrl(cover)}")` }}
+          >
+            <span className="absolute right-1.5 bottom-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-md ring-1 ring-black/5">
+              <Camera className="h-2 w-2" strokeWidth={2.5} />
+            </span>
+          </div>
           <span
-            className="absolute right-1 top-0 z-20 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white shadow-sm"
+            className="absolute right-1.5 top-full z-20 mt-1 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white shadow-md ring-1 ring-black/5"
             style={{ color: accent }}
           >
             <Share2 className="h-2 w-2" strokeWidth={2.5} />
           </span>
-          <div className="h-12 w-12 overflow-hidden rounded-full border-[2.5px] border-white bg-[#f5f5f4] shadow">
+        </div>
+
+        {/* Avatar + name — left aligned */}
+        <div className="relative z-10 -mt-6 px-2.5 pr-7">
+          <div className="h-12 w-12 overflow-hidden rounded-full border-[2.5px] border-white bg-[#f5f5f4] shadow-md">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={avatar} alt="" className="h-full w-full object-cover" />
           </div>
-          <p className="mt-1.5 truncate text-[9px] font-extrabold text-[#0f0f12]">
+        </div>
+        <div className="px-2.5 pt-1.5 text-left">
+          <p className="truncate text-[9px] font-extrabold text-[#0f0f12]">
             {name}
           </p>
           <p className="mt-0.5 line-clamp-1 text-[6px] text-[#8a8a92]">
             {titleLine}
           </p>
         </div>
+
+        {/* Quick-action circles — same elevated look as Share */}
         <div className="mt-2 flex justify-center gap-1 px-2">
           {miniIcons.map((Icon, i) => (
             <span
               key={i}
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm"
+              className="flex h-5 w-5 items-center justify-center rounded-full border border-[#CED0D4] bg-white shadow-md ring-1 ring-black/5"
               style={{ color: accent }}
             >
               <Icon className="h-[10px] w-[10px]" strokeWidth={2.5} />
             </span>
           ))}
         </div>
+
+        {/* Save Contact · Brochure */}
         <div className="mt-2 flex items-center gap-1 px-2">
           <span
-            className="min-w-0 flex-1 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase"
+            className="min-w-0 flex-1 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase shadow-sm"
             style={{ backgroundColor: accent }}
           >
             Save Contact
           </span>
           <span
-            className="flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase"
+            className="flex min-w-0 flex-1 items-center justify-center gap-0.5 rounded-full py-1 text-center text-[5px] font-bold tracking-wide text-white uppercase shadow-sm"
             style={{ backgroundColor: accent }}
           >
             <FileText className="h-2 w-2 shrink-0" />
             Brochure
           </span>
         </div>
+
+        {/* Social row */}
         <div className="mt-1.5 flex justify-center gap-1 px-2">
           {[FaFacebookF, FaLinkedinIn, FaInstagram, FaGoogle].map((Icon, i) => (
             <span
               key={i}
-              className="flex h-4 w-4 items-center justify-center rounded-full text-white"
+              className="flex h-4 w-4 items-center justify-center rounded-full text-white shadow-sm"
               style={{ backgroundColor: accent }}
             >
               <Icon className="h-2 w-2" />
             </span>
           ))}
         </div>
+
+        {/* CTA bars — Business Information + Contact Form only */}
         <div className="mt-2 space-y-1 px-2">
-          {["Business Information", "Contact Form", "Learn More"].map(
-            (label) => (
-              <div
-                key={label}
-                className="flex items-center justify-between rounded-md px-1.5 py-1 text-white"
-                style={{ backgroundColor: accent }}
-              >
-                <span className="text-[6px] font-semibold">{label}</span>
-                <span className="h-2.5 w-2.5 rounded-full bg-white/25" />
-              </div>
-            ),
-          )}
+          {["Business Information", "Contact Form"].map((label) => (
+            <div
+              key={label}
+              className="flex items-center justify-between rounded-md px-1.5 py-1 text-white"
+              style={{ backgroundColor: accent }}
+            >
+              <span className="text-[6px] font-semibold">{label}</span>
+              <span className="h-2.5 w-2.5 rounded-full bg-white/25" />
+            </div>
+          ))}
         </div>
+
         <div className="mt-auto shrink-0 bg-[#f7f7f5] px-2 py-1.5">
-          <p className="text-center text-[5px] font-semibold" style={{ color: accent }}>
+          <p
+            className="text-center text-[5px] font-semibold"
+            style={{ color: accent }}
+          >
             Hexa Cards
           </p>
         </div>

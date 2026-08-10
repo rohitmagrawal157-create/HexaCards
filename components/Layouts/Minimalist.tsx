@@ -65,11 +65,12 @@ function CircleIcon({
   bg?: string;
   iconClassName?: string;
 }) {
-  const className =
-    "flex h-11 w-11 items-center justify-center rounded-full shadow-md transition-transform hover:scale-105";
+  const className = bg
+    ? "flex h-11 w-11 items-center justify-center rounded-full shadow-md ring-1 ring-black/5 transition-transform hover:scale-105"
+    : "flex h-11 w-11 items-center justify-center rounded-full border border-[#CED0D4] bg-white shadow-md ring-1 ring-black/5 transition-transform hover:scale-105";
   const style = bg
     ? { backgroundColor: bg, color: "#fff" }
-    : { backgroundColor: "#fff", color: accent };
+    : { color: accent };
 
   if (onClick) {
     return (
@@ -335,15 +336,14 @@ export default function Minimalist({
             >
               <Camera className="h-[15px] w-[15px]" strokeWidth={2.25} />
             </button>
-          ) : (
-            <span
+          ) : null}
+            {/* <span
               className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-white shadow-sm"
               style={{ color: accent }}
               aria-hidden
             >
               <BadgeCheck className="h-4 w-4" />
-            </span>
-          )}
+            </span> */}
         </div>
       </div>
 
@@ -351,7 +351,7 @@ export default function Minimalist({
       <div className="px-6 pt-4 text-left">
         <div className="flex items-center gap-1.5">
           <h1 className="text-xl font-extrabold text-[#0f0f12]">{name}</h1>
-          <BadgeCheck className="h-5 w-5 shrink-0" style={{ color: accent }} />
+          {/* <BadgeCheck className="h-5 w-5 shrink-0" style={{ color: accent }} /> */}
         </div>
         {titleLine ? (
           <p className="mt-1 text-sm text-[#4a4a52]">{titleLine}</p>
