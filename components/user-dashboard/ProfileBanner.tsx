@@ -478,7 +478,7 @@ export default function ProfileBanner({
       {/* Banner + overlapping profile */}
       <div className="relative">
         <div
-          className={`relative h-44 w-full overflow-hidden bg-[#d8dde3] sm:h-48 ${
+          className={`relative h-52 w-full overflow-hidden bg-[#d8dde3] sm:h-60 ${
             onUploadBackground ? "cursor-pointer" : ""
           }`}
           style={{

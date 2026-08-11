@@ -17,7 +17,7 @@ export const navLinks: NavLink[] = [
       { label: "NFC Business Card", href: "/product/nfc-business-card" },
       { label: "Metal Card", href: "/product/metal-card" },
       { label: "PVC Card", href: "/product/pvc-card" },
-      { label: "Wooden Card", href: "/product/wooden-card" },
+      // { label: "Wooden Card", href: "/product/wooden-card" },
     ],
   },
   {

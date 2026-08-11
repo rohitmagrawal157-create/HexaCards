@@ -260,7 +260,7 @@ export default function Modern({
       <div className="bg-white pb-5">
         {/* Banner with profile logo centered inside (Modern style) */}
         <div
-          className={`relative flex h-44 w-full items-center justify-center overflow-hidden bg-[#e8eaee] sm:h-48 ${
+          className={`relative flex h-52 w-full items-center justify-center overflow-hidden bg-[#e8eaee] sm:h-60 ${
             onChangeBackground ? "cursor-pointer" : ""
           }`}
           style={{

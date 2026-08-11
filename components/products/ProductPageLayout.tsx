@@ -1,4 +1,4 @@
-import { HowItWorks, FAQ, Clients, Products, Testimonials } from "@/components/landing";
+import { HowItWorks, FAQ, Clients, Products, Feature } from "@/components/landing";
 import ProductDetails from "./ProductDetails";
 
 type ProductPageLayoutProps = {
@@ -23,7 +23,7 @@ export default function ProductPageLayout({
       <Clients />
       <Products />
       <HowItWorks />
-      <Testimonials />
+      <Feature />
       <FAQ />
     </>
   );

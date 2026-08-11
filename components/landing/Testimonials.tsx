@@ -55,12 +55,13 @@ export default function Testimonials() {
             </a>
           </div>
 
-          {/* Right: dashboard image — full-bleed cover */}
-          <div className="relative min-h-[300px] overflow-hidden bg-[#F7F5F1] sm:min-h-[360px] lg:min-h-full lg:w-[60%]">
+          {/* Right: dashboard image — full-bleed, no edge gap */}
+          <div className="relative isolate min-h-[300px] overflow-hidden bg-white sm:min-h-[360px] lg:min-h-full lg:w-[60%]">
             <Image
-              src="/Images/Dashboard.png"
+              src={`/Images/Dashboard.png?v=2026-08-11-1633`}
               alt="HexaCards dashboard overview"
               fill
+              unoptimized
               className="object-cover object-left-top"
               sizes="(max-width: 1024px) 100vw, 60vw"
               priority={false}

@@ -33,7 +33,7 @@ export default function BasicLayout({
 }: BasicHeaderProps) {
   const cover = coverUrl || DEFAULT_CARD_BANNER;
   const avatar = avatarUrl || DEFAULT_CARD_AVATAR;
-  const coverH = preview ? "h-24" : "h-44 sm:h-48";
+  const coverH = preview ? "h-24" : "h-52 sm:h-60";
   const avatarSize = preview ? "h-14 w-14" : "h-[112px] w-[112px]";
   const overlap = preview ? "-mt-7" : "-mt-14";
 

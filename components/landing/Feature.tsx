@@ -16,16 +16,19 @@ const includes = [
   { label: "Meeting links", Icon: CalendarClock },
 ];
 
-/** Bump when replacing files in public/Images/Layouts (same filenames). */
-const LAYOUT_VERSION = "2026-08-10-1825";
+/** Bump when replacing files in public/Images/Layouts. */
+const LAYOUT_VERSION = "2026-08-11-1553";
 
 const LAYOUT_IMAGES = [
-  { src: `/Images/Layouts/layout1.png?v=${LAYOUT_VERSION}`, label: "Classic" },
-  { src: `/Images/Layouts/layout2.png?v=${LAYOUT_VERSION}`, label: "Basic" },
-  { src: `/Images/Layouts/layout3.png?v=${LAYOUT_VERSION}`, label: "Modern" },
-  { src: `/Images/Layouts/layout4.png?v=${LAYOUT_VERSION}`, label: "Compact" },
-  { src: `/Images/Layouts/layout5.png?v=${LAYOUT_VERSION}`, label: "Social" },
-  { src: `/Images/Layouts/layout6.png?v=${LAYOUT_VERSION}`, label: "Minimalist" },
+  { src: `/Images/Layouts/IMG_Untitled-3.png?v=${LAYOUT_VERSION}`, label: "Classic" },
+  { src: `/Images/Layouts/IMG_Untitled-4.png?v=${LAYOUT_VERSION}`, label: "Basic" },
+  { src: `/Images/Layouts/IMG_Untitled-1.png?v=${LAYOUT_VERSION}`, label: "Modern" },
+  // { src: `/Images/Layouts/IMG_Untitled-2.png?v=${LAYOUT_VERSION}`, label: "Compact" },
+  // { src: `/Images/Layouts/IMG_Untitled-3.png?v=${LAYOUT_VERSION}`, label: "Modern" },
+  { src: `/Images/Layouts/IMG_Untitled-7.png?v=${LAYOUT_VERSION}`, label: "Social" },
+  { src: `/Images/Layouts/IMG_Untitled-5.png?v=${LAYOUT_VERSION}`, label: "Compact" },
+  { src: `/Images/Layouts/IMG_Untitled-6.png?v=${LAYOUT_VERSION}`, label: "Minimalist" },
+ 
 ] as const;
 
 const AUTO_MS = 3000;
@@ -236,13 +239,13 @@ function LayoutPhoneCarousel() {
     setPaused(false);
   }
 
-  const offsetPct = (dragX / 280) * 100;
+  const offsetPct = (dragX / 320) * 100;
 
   return (
-    <div className="relative w-[240px] shrink-0 sm:w-[270px]">
+    <div className="relative w-[290px] shrink-0 sm:w-[320px] lg:w-[340px]">
       <div
-        className="relative touch-pan-y select-none overflow-hidden rounded-[2rem] bg-transparent shadow-[0_20px_50px_rgba(15,23,42,0.18)] ring-1 ring-black/5"
-        style={{ aspectRatio: "330 / 658" }}
+        className="relative touch-pan-y select-none overflow-hidden bg-transparent"
+        style={{ aspectRatio: "9 / 16" }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -279,7 +282,7 @@ function LayoutPhoneCarousel() {
                 unoptimized
                 draggable={false}
                 className="pointer-events-none object-contain object-center"
-                sizes="270px"
+                sizes="(max-width: 640px) 290px, (max-width: 1024px) 320px, 340px"
                 priority={i === FIRST_REAL}
               />
             </div>
@@ -378,7 +381,7 @@ export default function Feature() {
               <LayoutPhoneCarousel />
 
               <div
-                className="relative ml-1 hidden h-[520px] w-[160px] shrink-0 lg:block xl:ml-2 xl:w-[200px]"
+                className="relative ml-1 hidden h-[600px] w-[160px] shrink-0 lg:block xl:ml-2 xl:w-[200px]"
                 aria-hidden
               >
                 {callouts.map(({ label, top }) => (

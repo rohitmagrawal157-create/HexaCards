@@ -175,53 +175,53 @@ export const productCatalog: Record<string, CatalogProduct> = {
     ctaHref: "/design-your-card#card-studio",
     designable: true,
   },
-  "wooden-card": {
-    id: "wooden-card",
-    category: "Digital Business Card",
-    title: "Wooden NFC Business Card",
-    shortTitle: "Wooden Card",
-    description:
-      "Eco-friendly wooden NFC card with natural grain — a warm, memorable way to share your digital profile.",
-    price: 1899,
-    compareAtPrice: 2499,
-    media: [
-      {
-        type: "image",
-        src: "/Images/Products/productd3.jpg",
-        alt: "Hexa wooden NFC business card",
-      },
-      {
-        type: "image",
-        src: "/Images/Products/digitalCard.jpg",
-        alt: "Hexa digital card",
-      },
-      {
-        type: "image",
-        src: "/Images/Products/productd2.jpg",
-        alt: "Card detail",
-      },
-    ],
-    highlights: [
-      "Natural wood finish — eco-friendly feel",
-      "NFC + QR programmed for your profile",
-      "Lifetime digital profile included",
-      "Free design mockup before you pay",
-    ],
-    finishes: [
-      { name: "Natural Wood", hint: "Visible grain, laser engrave" },
-      { name: "Dark Wood", hint: "Deep tone with contrast mark" },
-      { name: "Custom Engrave", hint: "Logo & name engraved" },
-    ],
-    included: [
-      "Physical wooden NFC + QR card",
-      "Lifetime digital profile",
-      "Free design assistance on WhatsApp",
-      "Eco-friendly packaging",
-    ],
-    ctaLabel: "Design Your Card",
-    ctaHref: "/design-your-card#card-studio",
-    designable: true,
-  },
+  // "wooden-card": {
+  //   id: "wooden-card",
+  //   category: "Digital Business Card",
+  //   title: "Wooden NFC Business Card",
+  //   shortTitle: "Wooden Card",
+  //   description:
+  //     "Eco-friendly wooden NFC card with natural grain — a warm, memorable way to share your digital profile.",
+  //   price: 1899,
+  //   compareAtPrice: 2499,
+  //   media: [
+  //     {
+  //       type: "image",
+  //       src: "/Images/Products/productd3.jpg",
+  //       alt: "Hexa wooden NFC business card",
+  //     },
+  //     {
+  //       type: "image",
+  //       src: "/Images/Products/digitalCard.jpg",
+  //       alt: "Hexa digital card",
+  //     },
+  //     {
+  //       type: "image",
+  //       src: "/Images/Products/productd2.jpg",
+  //       alt: "Card detail",
+  //     },
+  //   ],
+  //   highlights: [
+  //     "Natural wood finish — eco-friendly feel",
+  //     "NFC + QR programmed for your profile",
+  //     "Lifetime digital profile included",
+  //     "Free design mockup before you pay",
+  //   ],
+  //   finishes: [
+  //     { name: "Natural Wood", hint: "Visible grain, laser engrave" },
+  //     { name: "Dark Wood", hint: "Deep tone with contrast mark" },
+  //     { name: "Custom Engrave", hint: "Logo & name engraved" },
+  //   ],
+  //   included: [
+  //     "Physical wooden NFC + QR card",
+  //     "Lifetime digital profile",
+  //     "Free design assistance on WhatsApp",
+  //     "Eco-friendly packaging",
+  //   ],
+  //   ctaLabel: "Design Your Card",
+  //   ctaHref: "/design-your-card#card-studio",
+  //   designable: true,
+  // },
   "digital-profile-qr": {
     id: "digital-profile-qr",
     category: "Digital Business Card",

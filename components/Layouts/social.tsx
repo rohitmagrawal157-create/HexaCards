@@ -358,7 +358,7 @@ export default function Social({
 
       {/* Branded cover — a bit taller so more image shows */}
       <div
-        className="relative min-h-[210px] bg-cover bg-center sm:min-h-[240px]"
+        className="relative min-h-52 bg-cover bg-center sm:min-h-60"
         style={{
           backgroundImage: `url("${coverUrl.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}")`,
         }}

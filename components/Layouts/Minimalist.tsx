@@ -253,7 +253,7 @@ export default function Minimalist({
       {/* Banner — camera on cover; share outside below cover */}
       <div className="relative">
         <div
-          className={`relative h-44 w-full overflow-hidden bg-gradient-to-br from-[#1e5fa8] via-[#2f74c2] to-[#5aa0e0] sm:h-48 ${
+          className={`relative h-52 w-full overflow-hidden bg-gradient-to-br from-[#1e5fa8] via-[#2f74c2] to-[#5aa0e0] sm:h-60 ${
             onChangeBackground ? "cursor-pointer" : ""
           }`}
           style={{

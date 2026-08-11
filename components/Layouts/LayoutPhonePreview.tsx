@@ -109,112 +109,130 @@ export default function LayoutPhonePreview({
   );
 
   if (layoutId === "social") {
+    const contactIcons = [
+      { label: "Call", src: "/icons/Hexacards_Icons-15.png" },
+      { label: "WhatsApp", src: "/icons/Hexacards_Icons-06.png" },
+      { label: "Email", src: "/icons/Hexacards_Icons-11.png" },
+      { label: "Website", src: "/icons/Hexacards_Icons-08.png" },
+      { label: "Location", src: "/icons/Hexacards_Icons-13.png" },
+      { label: "Brochure", src: "/icons/Hexacards_Icons-16.png" },
+    ];
+    const socialIcons = [
+      { label: "Facebook", src: "/icons/Hexacards_Icons-01.png" },
+      { label: "Instagram", src: "/icons/Hexacards_Icons-02.png" },
+      { label: "LinkedIn", src: "/icons/Hexacards_Icons-03.png" },
+      { label: "YouTube", src: "/icons/Hexacards_Icons-04.png" },
+      { label: "Google", src: "/icons/Hexacards_Icons-09.png" },
+      { label: "X", src: "/icons/Hexacards_Icons-12.png" },
+    ];
+
     return (
-      <div className="flex h-full flex-col bg-[#FAFAF8]">
-        <div className="flex items-center gap-1 border-b border-black/[0.06] bg-white px-1.5 py-1">
+      <div className="flex h-full flex-col overflow-hidden bg-[#FAFAF8]">
+        {/* WhatsApp share bar — matches live Social */}
+        <div className="relative z-40 flex shrink-0 items-center gap-1 border-b border-black/[0.06] bg-white px-1.5 py-1">
           <span className="min-w-0 flex-1 truncate text-[7px] text-[#a0a0a8]">
             Enter WhatsApp Number
           </span>
           <span
-            className="rounded px-1.5 py-0.5 text-[7px] font-bold text-white"
+            className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[7px] font-bold text-white"
             style={{ backgroundColor: accent }}
           >
+            <FaWhatsapp className="h-2 w-2" />
             Share
           </span>
         </div>
-        <div
-          className="relative bg-cover bg-center"
-          style={{ backgroundImage: `url("${escUrl(cover)}")` }}
-        >
-          <div className="relative flex justify-end px-2 pt-2">
-            <span
-              className="flex h-4 w-4 items-center justify-center rounded-full border border-white/70 bg-white/90"
-              style={{ color: accent }}
-            >
-              <Share2 className="h-2 w-2" strokeWidth={2.5} />
+
+        {/* Cover banner */}
+        <div className="relative shrink-0">
+          <div
+            className="h-[96px] w-full bg-cover bg-center"
+            style={{ backgroundImage: `url("${escUrl(cover)}")` }}
+          >
+            <span className="absolute top-1.5 right-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-white/70 bg-white/90 text-[#141414] shadow-sm">
+              <Camera className="h-2 w-2" strokeWidth={2.5} />
             </span>
           </div>
-          <div className="relative z-10 mt-3 flex justify-center">
-            <div
-              className="h-12 w-12 overflow-hidden rounded-full border-[2.5px] bg-white shadow"
-              style={{ borderColor: accent }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={avatar} alt="" className="h-full w-full object-cover" />
+
+          {/* Avatar on cover/card seam + profile camera */}
+          <div className="absolute bottom-0 left-1/2 z-30 -translate-x-1/2 translate-y-[42%]">
+            <div className="relative">
+              <div
+                className="h-[52px] w-[52px] overflow-hidden rounded-full border-[2.5px] bg-white shadow-[0_4px_14px_rgba(0,0,0,0.25)]"
+                style={{ borderColor: accent }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={avatar}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="absolute right-0 bottom-0 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white/80 bg-white text-[#141414] shadow-sm">
+                <Camera className="h-1.5 w-1.5" strokeWidth={2.5} />
+              </span>
             </div>
           </div>
         </div>
+
+        {/* Identity card */}
         <div
-          className="relative mx-2 -mt-5 rounded-2xl border bg-white px-2 pt-7 pb-2 shadow-sm"
+          className="relative z-20 mx-2 mt-7 rounded-2xl border bg-white px-2.5 pt-2.5 pb-2.5 shadow-sm"
           style={{ borderColor: `${accent}33` }}
         >
           <p className="truncate text-center text-[9px] font-extrabold text-[#141414]">
             {name}
           </p>
-          <p className="mt-0.5 line-clamp-1 text-center text-[6px] text-[#8a8a92]">
-            {titleLine}
+          <p className="mt-0.5 line-clamp-1 text-center text-[6px] font-medium text-[#6b6560]">
+            {titleLine || "Hexa NFC Business Card"}
           </p>
-          <p className="mt-1 text-center text-[5.5px] font-bold" style={{ color: accent }}>
+          <p className="mt-1 line-clamp-2 text-center text-[5.5px] leading-snug text-[#8a8a92]">
+            Create your digital profile and share contacts, links, and leads in
+            one tap.
+          </p>
+          <p
+            className="mt-1 flex items-center justify-center gap-0.5 text-center text-[5.5px] font-bold"
+            style={{ color: accent }}
+          >
             View more
+            <ChevronDown className="h-2 w-2" strokeWidth={2.5} />
           </p>
           <div className="mt-2 flex items-center gap-1">
             <span
-              className="flex-1 rounded-full py-1 text-center text-[6px] font-bold text-white"
+              className="flex-1 rounded-full py-1.5 text-center text-[6px] font-bold text-white"
               style={{ backgroundColor: accent }}
             >
               Save Contact
             </span>
             <span
               className="flex h-5 w-5 items-center justify-center rounded-full border bg-white"
-              style={{ borderColor: `${accent}33`, color: accent }}
+              style={{ borderColor: `${accent}55`, color: accent }}
             >
               <Share2 className="h-2.5 w-2.5" strokeWidth={2.5} />
             </span>
           </div>
         </div>
-        <div className="mx-2 mt-2 rounded-lg border border-black/[0.06] bg-white p-1.5">
-          <p className="text-[7px] font-bold text-[#141414]">
+
+        {/* Contact Information */}
+        <div
+          className="mx-2 mt-2 rounded-xl border bg-[#FAFAF8] p-1.5"
+          style={{ borderColor: `${accent}33` }}
+        >
+          <p className="text-center text-[7px] font-extrabold text-[#141414]">
             Contact Information
           </p>
-          <div className="mt-1 grid grid-cols-3 gap-1">
-            {[
-              { bg: "#34A853", Icon: Phone },
-              { bg: "#25D366", Icon: MessageCircle },
-              { bg: "#EA4335", Icon: Mail },
-              { bg: "#0A84FF", Icon: Globe },
-              { bg: "#4285F4", Icon: MapPin },
-              { bg: "#BC7C10", Icon: FileText },
-            ].map(({ bg, Icon }, i) => (
-                <span
-                  key={i}
-                  className="mx-auto flex h-5 w-5 items-center justify-center rounded-md text-white shadow-sm"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="h-2.5 w-2.5" strokeWidth={2.4} />
-                </span>
-              ))}
-          </div>
-        </div>
-        <div className="mx-2 mt-1.5 rounded-lg border border-black/[0.06] bg-white p-1.5">
-          <p className="text-[7px] font-bold text-[#141414]">Social Media</p>
-          <div className="mt-1 grid grid-cols-3 gap-1">
-            {[
-              { label: "Instagram", bg: "#C13584", Icon: FaInstagram },
-              { label: "Facebook", bg: "#1877F2", Icon: FaFacebookF },
-              { label: "LinkedIn", bg: "#0A66C2", Icon: FaLinkedinIn },
-              { label: "Twitter", bg: "#1DA1F2", Icon: FaTwitter },
-              { label: "YouTube", bg: "#FF0000", Icon: FaYoutube },
-              { label: "Google", bg: "#4285F4", Icon: FaGoogle },
-            ].map(({ label, bg, Icon }, i) => (
+          <div className="mt-1.5 grid grid-cols-3 gap-1">
+            {contactIcons.map(({ label, src }) => (
               <span
-                key={i}
+                key={label}
                 className="flex min-w-0 flex-col items-center gap-0.5"
               >
-                <span
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] text-white shadow-sm"
-                  style={{ backgroundColor: bg }}
-                >
-                  <Icon className="h-2.5 w-2.5" />
+                <span className="relative h-7 w-7 overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 h-full w-full scale-[1.28] object-cover"
+                  />
                 </span>
                 <span className="w-full truncate text-center text-[4.5px] font-medium text-[#6a6a72]">
                   {label}
@@ -223,8 +241,40 @@ export default function LayoutPhonePreview({
             ))}
           </div>
         </div>
+
+        {/* Social Media */}
         <div
-          className="mx-2 mt-1.5 rounded-lg border bg-white px-1.5 py-1.5"
+          className="mx-2 mt-1.5 rounded-xl border bg-[#FAFAF8] p-1.5"
+          style={{ borderColor: `${accent}33` }}
+        >
+          <p className="text-center text-[7px] font-extrabold text-[#141414]">
+            Social Media
+          </p>
+          <div className="mt-1.5 grid grid-cols-3 gap-1">
+            {socialIcons.map(({ label, src }) => (
+              <span
+                key={label}
+                className="flex min-w-0 flex-col items-center gap-0.5"
+              >
+                <span className="relative h-7 w-7 overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 h-full w-full scale-[1.28] object-cover"
+                  />
+                </span>
+                <span className="w-full truncate text-center text-[4.5px] font-medium text-[#6a6a72]">
+                  {label}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Contact form */}
+        <div
+          className="mx-2 mt-1.5 rounded-xl border bg-white px-1.5 py-1.5"
           style={{ borderColor: `${accent}33` }}
         >
           <p className="text-[7px] font-semibold text-[#141414]">Contact Form</p>
@@ -237,11 +287,15 @@ export default function LayoutPhonePreview({
             />
           </div>
         </div>
+
         <div
-          className="mt-auto border-t bg-[#f7f7f5] px-2 py-2 text-center"
+          className="mt-auto border-t bg-[#f7f7f5] px-2 py-1.5 text-center"
           style={{ borderColor: `${accent}55` }}
         >
-          <p className="text-[7px] font-extrabold tracking-wide" style={{ color: accent }}>
+          <p
+            className="text-[7px] font-extrabold tracking-wide"
+            style={{ color: accent }}
+          >
             HEXA CARDS
           </p>
           <p className="mt-0.5 text-[5px] font-semibold text-[#8a8a92]">
@@ -274,7 +328,7 @@ export default function LayoutPhonePreview({
 
         <div className="flex min-h-0 flex-1 flex-col bg-white">
           <div
-            className="relative flex h-[78px] w-full shrink-0 items-center justify-center bg-cover bg-center"
+            className="relative flex h-[90px] w-full shrink-0 items-center justify-center bg-cover bg-center"
             style={{ backgroundImage: `url("${escUrl(cover)}")` }}
           >
             <div className="h-11 w-11 overflow-hidden rounded-full border-[3px] border-white bg-[#f5f5f4] shadow-md">
@@ -376,7 +430,7 @@ export default function LayoutPhonePreview({
         <div className="bg-white pb-1.5">
           {/* Banner with profile centered inside */}
           <div
-            className="relative flex h-[88px] w-full items-center justify-center bg-cover bg-center"
+            className="relative flex h-[90px] w-full items-center justify-center bg-cover bg-center"
             style={{ backgroundImage: `url("${escUrl(cover)}")` }}
           >
             <div className="h-12 w-12 overflow-hidden rounded-full border-[3px] border-white bg-[#f5f5f4] shadow-md">
@@ -458,7 +512,7 @@ export default function LayoutPhonePreview({
         </div>
 
         <div
-          className="h-[72px] w-full shrink-0 bg-cover bg-center"
+          className="h-[90px] w-full shrink-0 bg-cover bg-center"
           style={{ backgroundImage: `url("${escUrl(cover)}")` }}
         />
         <div className="relative z-10 -mt-6 flex flex-col items-center px-1.5 text-center">
@@ -506,7 +560,7 @@ export default function LayoutPhonePreview({
         {/* Banner — camera on cover; share outside below */}
         <div className="relative shrink-0">
           <div
-            className="relative h-[78px] w-full bg-cover bg-center"
+            className="relative h-[90px] w-full bg-cover bg-center"
             style={{ backgroundImage: `url("${escUrl(cover)}")` }}
           >
             <span className="absolute right-1.5 bottom-1.5 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-[#CED0D4] bg-white text-[#050505] shadow-md ring-1 ring-black/5">
@@ -610,7 +664,7 @@ export default function LayoutPhonePreview({
   return (
     <div className="flex h-full flex-col bg-white">
       <div
-        className="h-[78px] w-full shrink-0 bg-cover bg-center"
+        className="h-[90px] w-full shrink-0 bg-cover bg-center"
         style={{ backgroundImage: `url("${escUrl(cover)}")` }}
       />
       <div className="relative z-10 -mt-7 flex flex-col items-center px-1.5 text-center">
