@@ -744,18 +744,18 @@ export const productCatalog: Record<string, CatalogProduct> = {
     media: [
       {
         type: "image",
-        src: "/Images/Products/kitchen.webp",
+        src: "/Images/Products/keychain-front.jpg",
+        alt: "Hexa Review Keychain QR — front",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/keychain-back.jpg",
+        alt: "Hexa Review Keychain QR — back",
+      },
+      {
+        type: "image",
+        src: "/Images/Products/keychain-front-back.jpg",
         alt: "Hexa Review Keychain QR — front and back",
-      },
-      {
-        type: "image",
-        src: "/Images/Products/googleReview.jpg",
-        alt: "Hexa Google review card",
-      },
-      {
-        type: "image",
-        src: "/Images/Products/QR.png",
-        alt: "Hexa QR detail",
       },
     ],
     highlights: [

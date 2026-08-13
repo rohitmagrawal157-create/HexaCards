@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Rocket, GraduationCap, Megaphone, MapPin } from "lucide-react";
 
 export default function Franchise() {
@@ -14,10 +15,19 @@ export default function Franchise() {
           </div>
 
           <div className="relative grid items-center gap-8 lg:grid-cols-[auto_1fr_auto] lg:gap-10">
-            <div className="hidden h-40 w-56 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 lg:flex">
-              <span className="text-xs text-white/40">
-                Storefront illustration
-              </span>
+            <div className="relative mx-auto hidden h-40 w-56 shrink-0 overflow-hidden rounded-2xl border border-[#BC7C10]/25 bg-[#141210] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)] lg:block">
+              <Image
+                src="/Images/franchise-storefront.png"
+                alt="HexaCards franchise storefront shop"
+                fill
+                className="object-cover object-center"
+                sizes="224px"
+                priority={false}
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0f0e0c]/50 via-transparent to-transparent"
+              />
             </div>
 
             <div>

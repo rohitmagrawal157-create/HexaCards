@@ -24,12 +24,11 @@ export const navLinks: NavLink[] = [
     label: "For Reviews",
     href: "/product/social-media-cards",
     children: [
-      { label: "Social Media Cards", href: "/product/social-media-cards" },
+      // { label: "Social Media Cards", href: "/product/social-media-cards" },
       { label: "Google Review Cards", href: "/product/google-review-card" },
       { label: "Instagram Card", href: "/product/instagram-card" },
       { label: "YouTube Card", href: "/product/youtube-card" },
       { label: "Review Standee", href: "/product/google-review-standee" },
-      { label: "Google Standee", href: "/product/google-standee" },
       { label: "Instagram Standee", href: "/product/instagram-standee" },
       { label: "YouTube Standee", href: "/product/youtube-standee" },
       { label: "Review Keychain QR", href: "/product/review-keychain-qr" },

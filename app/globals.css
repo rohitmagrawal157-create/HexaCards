@@ -465,3 +465,162 @@ body {
   color: #8a8174 !important;
 }
 
+/* Super admin login */
+@keyframes admin-login-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes admin-login-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes admin-login-blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(12px, -10px) scale(1.05);
+  }
+}
+
+.admin-login-rise {
+  animation: admin-login-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.admin-login-rise-delay {
+  animation: admin-login-rise 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
+.admin-login-fade {
+  animation: admin-login-fade 0.7s ease both;
+}
+
+.admin-login-blob {
+  animation: admin-login-blob 10s ease-in-out infinite;
+}
+
+.admin-login-blob-slow {
+  animation: admin-login-blob 14s ease-in-out infinite reverse;
+}
+
+.admin-login-hex-mesh {
+  animation: admin-login-hex-pan 90s linear infinite;
+  will-change: transform;
+}
+
+@keyframes admin-login-hex-pan {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-28px, -32px, 0);
+  }
+}
+
+.admin-login-hex-drift {
+  animation: admin-login-hex-drift 22s ease-in-out infinite;
+}
+
+.admin-login-hex-drift-slow {
+  animation: admin-login-hex-drift 30s ease-in-out infinite reverse;
+}
+
+@keyframes admin-login-hex-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(6px, -8px);
+  }
+}
+
+.admin-login-honeycomb-pan {
+  animation: admin-login-honeycomb-pan 80s linear infinite;
+  will-change: transform;
+}
+
+@keyframes admin-login-honeycomb-pan {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-54px, -62px, 0);
+  }
+}
+
+.admin-login-honeycomb-glow {
+  animation: admin-login-glow-pulse 7s ease-in-out infinite;
+}
+
+@keyframes admin-login-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.admin-login-sparkle {
+  animation: admin-login-sparkle 3.2s ease-in-out infinite;
+}
+
+.admin-login-sparkle:nth-child(3n) {
+  animation-delay: 0.6s;
+}
+
+.admin-login-sparkle:nth-child(4n) {
+  animation-delay: 1.2s;
+}
+
+@keyframes admin-login-sparkle {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-login-hex-mesh,
+  .admin-login-hex-drift,
+  .admin-login-hex-drift-slow,
+  .admin-login-blob,
+  .admin-login-blob-slow,
+  .admin-login-honeycomb-pan,
+  .admin-login-honeycomb-glow,
+  .admin-login-sparkle {
+    animation: none !important;
+  }
+}
+
+/* Super admin: hide main panel scrollbar, keep scroll working */
+.admin-main-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.admin-main-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+

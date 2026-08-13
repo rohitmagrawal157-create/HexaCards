@@ -45,7 +45,7 @@ const products: Product[] = [
     title: "Review Keychain QR",
     description:
       "Tap or scan keychain that opens your Google review page — always with you on your keys.",
-    image: "/Images/Products/kitchen.webp",
+    image: "/Images/Products/keychain-front-back.jpg",
     href: "/product/review-keychain-qr",
   },
 ];
@@ -120,13 +120,13 @@ function ProductCard({ item }: { item: Product }) {
       href={item.href}
       className="group relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#BC7C10] focus-visible:ring-offset-2"
     >
-      <div className="relative aspect-[4/5] w-full overflow-hidden sm:aspect-square">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F3F4F6] sm:aspect-square">
         <Image
           src={item.image}
           alt={item.title}
           fill
           sizes="(max-width: 640px) 62vw, (max-width: 1024px) 42vw, 23vw"
-          className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+          className="object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-105 sm:p-5"
         />
         {/* <span className="absolute top-3 left-3 inline-flex items-center rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold tracking-wide text-[#BC7C10] uppercase shadow-sm ring-1 ring-[#BC7C10]/20 sm:text-[11px]">
           View Product
