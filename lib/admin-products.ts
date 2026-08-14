@@ -50,8 +50,14 @@ const DEFAULT_SECTIONS: AdminProductSection[] = [
   {
     id: "business-card",
     title: "Business Card",
-    subtitle: "NFC, digital profile, PVC, and metal card products.",
+    subtitle: "NFC, PVC, and metal card products.",
     imageSrc: "/Images/Products/digitalCard.jpg",
+  },
+  {
+    id: "digital-profile-qr",
+    title: "Digital Profile + QR",
+    subtitle: "Print-ready QR cards that open your digital profile instantly.",
+    imageSrc: "/Images/Products/digitalQR.jpg",
   },
   {
     id: "social-media-card",
@@ -70,6 +76,7 @@ const DEFAULT_SECTIONS: AdminProductSection[] = [
 /** Preferred display order for default catalog sections */
 const SECTION_DISPLAY_ORDER = [
   "business-card",
+  "digital-profile-qr",
   "social-media-card",
   "standee",
 ] as const;
@@ -99,12 +106,8 @@ function normalizeSectionOrder(
 }
 
 const DEFAULT_ORDERS: Record<string, string[]> = {
-  "business-card": [
-    "nfc-business-card",
-    "digital-profile-qr",
-    "pvc-card",
-    "metal-card",
-  ],
+  "business-card": ["nfc-business-card", "pvc-card", "metal-card"],
+  "digital-profile-qr": ["digital-profile-qr"],
   standee: ["google-standee", "instagram-standee", "youtube-standee"],
   "social-media-card": [
     "google-review-card",
@@ -113,6 +116,48 @@ const DEFAULT_ORDERS: Record<string, string[]> = {
     "review-keychain-qr",
   ],
 };
+
+const DIGITAL_PROFILE_QR_SECTION: AdminProductSection = {
+  id: "digital-profile-qr",
+  title: "Digital Profile + QR",
+  subtitle: "Print-ready QR cards that open your digital profile instantly.",
+  imageSrc: "/Images/Products/digitalQR.jpg",
+};
+
+/** Move Digital Profile + QR into its own section for existing admin stores. */
+function migrateDigitalProfileSection(store: AdminStore): AdminStore {
+  if (store.sections.some((s) => s.id === "digital-profile-qr")) {
+    return store;
+  }
+
+  const next: AdminStore = structuredClone(store);
+  const businessIndex = next.sections.findIndex((s) => s.id === "business-card");
+
+  if (businessIndex >= 0) {
+    next.sections.splice(businessIndex + 1, 0, structuredClone(DIGITAL_PROFILE_QR_SECTION));
+    next.sections[businessIndex] = {
+      ...next.sections[businessIndex],
+      subtitle: "NFC, PVC, and metal card products.",
+    };
+  } else {
+    next.sections.unshift(structuredClone(DIGITAL_PROFILE_QR_SECTION));
+  }
+
+  const businessProducts = next.orders["business-card"] ?? [];
+  const hasDigitalProduct = businessProducts.includes("digital-profile-qr");
+
+  next.orders["digital-profile-qr"] = hasDigitalProduct
+    ? ["digital-profile-qr"]
+    : (next.orders["digital-profile-qr"] ?? ["digital-profile-qr"]);
+
+  if (hasDigitalProduct) {
+    next.orders["business-card"] = businessProducts.filter(
+      (id) => id !== "digital-profile-qr",
+    );
+  }
+
+  return next;
+}
 
 function cloneBaseCatalog(): Record<string, CatalogProduct> {
   return structuredClone(productCatalog);
@@ -221,11 +266,16 @@ function readStore(): AdminStore {
         parsed.orders &&
         typeof parsed.orders === "object"
       ) {
-        const store: AdminStore = {
+        const store = migrateDigitalProfileSection({
           catalog: parsed.catalog,
           sections: normalizeSectionOrder(parsed.sections),
           orders: parsed.orders,
-        };
+        });
+        if (
+          !parsed.sections.some((s) => s.id === "digital-profile-qr")
+        ) {
+          writeStore(store);
+        }
         return store;
       }
     }

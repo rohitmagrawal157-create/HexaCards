@@ -2,10 +2,16 @@ import { getAuthUser, normalizeIndianPhone } from "@/lib/auth";
 
 export type HexaOrderStatus = "placed" | "shipped" | "delivered";
 
+export type HexaPaymentStatus = "paid" | "pending" | "failed" | "refunded";
+
+import type { OrderCardDesignData } from "@/lib/order-card";
+import { findOrderByPublicSlug, resolveOrderLiveUrl } from "@/lib/order-card";
+
 export type HexaOrder = {
   id: string;
   createdAt: string;
   status: HexaOrderStatus;
+  paymentStatus?: HexaPaymentStatus;
   /** Logged-in account phone (10 digits) — used for dashboard ownership */
   ownerPhone: string;
   customerName: string;
@@ -23,6 +29,14 @@ export type HexaOrder = {
   total: number;
   coupon?: string | null;
   productTitle: string;
+  /** Digital card slug — used for QR / live URL */
+  cardSlug?: string;
+  /** Full live card URL */
+  cardUrl?: string;
+  companyName?: string;
+  jobTitle?: string;
+  /** Card customizer data saved at checkout */
+  cardDesign?: OrderCardDesignData;
 };
 
 const ORDERS_KEY = "hexaOrders";
@@ -47,6 +61,7 @@ function readOrders(): HexaOrder[] {
       ...o,
       ownerPhone: phoneKey(o.ownerPhone) || phoneKey(o.phone),
       phone: phoneKey(o.phone) || phoneKey(o.ownerPhone),
+      paymentStatus: o.paymentStatus ?? "paid",
     }));
   } catch {
     return [];
@@ -78,6 +93,31 @@ export function getLatestOrderForPhone(phone: string): HexaOrder | null {
   return getOrdersForPhone(phone)[0] ?? null;
 }
 
+export function getOrderById(id: string): HexaOrder | null {
+  return getOrders().find((o) => o.id === id) ?? null;
+}
+
+export function findOrderByCardSlug(slug: string): HexaOrder | null {
+  const orders = getOrders();
+  const found = findOrderByPublicSlug(slug, orders);
+  if (!found) return null;
+
+  if (!found.cardSlug?.trim()) {
+    const { slug: computed, liveUrl } = resolveOrderLiveUrl(found);
+    return (
+      updateOrder(found.id, {
+        cardSlug: computed,
+        cardUrl: liveUrl,
+        cardDesign: found.cardDesign
+          ? { ...found.cardDesign, liveUrl }
+          : undefined,
+      }) ?? found
+    );
+  }
+
+  return found;
+}
+
 export function saveOrder(
   order: Omit<HexaOrder, "id" | "createdAt" | "status" | "ownerPhone"> & {
     status?: HexaOrderStatus;
@@ -100,6 +140,7 @@ export function saveOrder(
     id,
     createdAt: new Date().toISOString(),
     status: order.status ?? "placed",
+    paymentStatus: order.paymentStatus ?? "paid",
     ownerPhone,
     phone: phoneKey(order.phone) || ownerPhone,
   };
@@ -108,6 +149,19 @@ export function saveOrder(
   localStorage.setItem(ORDERS_KEY, JSON.stringify(all.slice(0, 50)));
   window.dispatchEvent(new Event("hexa-orders-change"));
   return next;
+}
+
+export function updateOrder(
+  id: string,
+  patch: Partial<HexaOrder>,
+): HexaOrder | null {
+  const all = readOrders();
+  const idx = all.findIndex((o) => o.id === id);
+  if (idx < 0) return null;
+  all[idx] = { ...all[idx], ...patch };
+  localStorage.setItem(ORDERS_KEY, JSON.stringify(all.slice(0, 50)));
+  window.dispatchEvent(new Event("hexa-orders-change"));
+  return all[idx];
 }
 
 export function formatOrderDate(iso: string) {
@@ -133,4 +187,26 @@ export function statusLabel(status: HexaOrderStatus) {
     case "delivered":
       return "Delivered";
   }
+}
+
+export function paymentStatusLabel(status: HexaPaymentStatus) {
+  switch (status) {
+    case "paid":
+      return "Paid";
+    case "pending":
+      return "Pending";
+    case "failed":
+      return "Failed";
+    case "refunded":
+      return "Refunded";
+  }
+}
+
+export function formatOrderAddress(order: Pick<
+  HexaOrder,
+  "address" | "city" | "postalCode" | "country"
+>) {
+  return [order.address, order.city, order.postalCode, order.country]
+    .filter(Boolean)
+    .join(", ");
 }

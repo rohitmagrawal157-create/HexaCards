@@ -224,7 +224,7 @@ export const productCatalog: Record<string, CatalogProduct> = {
   // },
   "digital-profile-qr": {
     id: "digital-profile-qr",
-    category: "Digital Business Card",
+    category: "Digital Profile + QR",
     title: "Digital Profile + QR",
     shortTitle: "Digital Profile + QR",
     description:

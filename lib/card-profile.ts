@@ -2,6 +2,7 @@ import {
   parsePhoneNumberFromString,
   type CountryCode,
 } from "libphonenumber-js";
+import { buildCardSlugFromName } from "@/lib/order-card";
 
 export type CardLayoutId =
   | "classic"
@@ -426,41 +427,14 @@ export function compressImageFile(
   });
 }
 
-function formatSlugSegment(value: string) {
-  const cleaned = value.replace(/[^a-zA-Z0-9]/g, "");
-  if (!cleaned) return "";
-  // Keep camel/Pascal compounds (PathologyLaboratory)
-  if (/[a-z][A-Z]/.test(cleaned)) {
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-  }
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
-}
-
-/** Match live HexaCards style: Ashirvad-PathologyLaboratory45 */
+/** Public slug from card name + phone — e.g. faizan-shaikh77 */
 export function cardPublicSlug(profile: HexaCardProfile) {
-  const raw = (
-    profile.contact.businessName.trim() ||
-    profile.contact.cardName.trim() ||
-    "HexaCard"
-  )
-    .replace(/[_/\\]+/g, " ")
-    .trim();
-
-  const words = raw
-    .split(/\s+/)
-    .flatMap((token) => token.split("-"))
-    .map(formatSlugSegment)
-    .filter(Boolean);
-
-  const base =
-    words.length === 0
-      ? "HexaCard"
-      : words.length === 1
-        ? words[0]
-        : `${words[0]}-${words.slice(1).join("")}`;
-
-  const phoneTail = profile.contact.mobile.replace(/\D/g, "").slice(-2);
-  return `${base}${phoneTail}`;
+  const name = profile.contact.cardName.trim() || "HexaCard";
+  const phone =
+    profile.contact.mobile.trim() ||
+    profile.contact.whatsapp.trim() ||
+    "";
+  return buildCardSlugFromName(name, phone);
 }
 
 /** Public share URL shown to users — same style as hexacards.com/CardName45 */

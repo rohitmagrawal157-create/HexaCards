@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   Trash2,
   Users,
+  CreditCard,
   X,
 } from "lucide-react";
 import {
@@ -44,13 +45,18 @@ import {
   type AdminProductSection,
 } from "@/lib/admin-products";
 import type { CatalogProduct } from "@/lib/product-catalog";
+import UsersPanel from "@/components/super-admin/User";
+import CardsPanel from "@/components/super-admin/Cards";
+import OrdersPanel from "@/components/super-admin/Orders";
 
-type NavKey = "overview" | "orders" | "products";
+type NavKey = "overview" | "orders" | "products" ;
 
 const MENU_ITEMS: { key: NavKey; label: string; icon: typeof LayoutGrid }[] = [
   { key: "overview", label: "Overview", icon: LayoutGrid },
   { key: "orders", label: "Orders", icon: ShoppingBag },
   { key: "products", label: "Products", icon: Package },
+  // { key: "users", label: "Users", icon: Users },
+  // { key: "cards", label: "Cards", icon: CreditCard },
 ];
 
 function initials(name: string) {
@@ -77,6 +83,16 @@ function sectionMeta(key: NavKey) {
         title: "Products",
         subtitle: "Manage categories and catalog products — add, edit, or delete.",
       };
+    // case "users":
+    //   return {
+    //     title: "Users",
+    //     subtitle: "View, search, and manage registered customers.",
+    //   };
+    // case "cards":
+    //   return {
+    //     title: "Cards",
+    //     subtitle: "View, search, and manage all digital business cards.",
+    //   };
   }
 }
 
@@ -263,10 +279,16 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "overview" || tab === "orders" || tab === "products") {
-      setActive(tab);
-    } else if (tab === "messages") {
-      setActive("overview");
+    if (
+      tab === "overview" ||
+      tab === "orders" ||
+      tab === "products" 
+      // tab === "users" ||
+      // tab === "cards"
+    ) {
+    //   setActive(tab);
+    // } else if (tab === "messages") {
+      // setActive("overview");
       router.replace("/super-admin");
     }
   }, [searchParams, router]);
@@ -1126,55 +1148,9 @@ export default function SuperAdminDashboard() {
           ) : null}
 
           {active === "orders" ? (
-            <div className="rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-              {orders.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-[#8a8174]">No orders yet.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-black/[0.06] text-[11px] font-bold tracking-wide text-[#8a8174] uppercase">
-                        <th className="px-5 py-3">Order</th>
-                        <th className="px-5 py-3">Customer</th>
-                        <th className="px-5 py-3">Product</th>
-                        <th className="px-5 py-3">Qty</th>
-                        <th className="px-5 py-3">Total</th>
-                        <th className="px-5 py-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order) => (
-                        <tr
-                          key={order.id}
-                          className="border-b border-black/[0.04] last:border-0"
-                        >
-                          <td className="px-5 py-3">
-                            <p className="font-medium text-[#141414]">{order.id}</p>
-                            <p className="text-xs text-[#8a8174]">
-                              {formatOrderDate(order.createdAt)}
-                            </p>
-                          </td>
-                          <td className="px-5 py-3">
-                            <p className="font-medium">{order.customerName}</p>
-                            <p className="text-xs text-[#8a8174]">{order.email}</p>
-                          </td>
-                          <td className="px-5 py-3">{order.productTitle}</td>
-                          <td className="px-5 py-3">{order.qty}</td>
-                          <td className="px-5 py-3 font-medium">
-                            {formatCurrency(order.total)}
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="rounded-md bg-[#FFF8ED] px-2 py-1 text-xs font-semibold text-[#9a650d]">
-                              {statusLabel(order.status)}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <OrdersPanel
+              orders={orders.length > 0 ? orders : undefined}
+            />
           ) : null}
 
           {active === "products" ? (
@@ -1288,6 +1264,10 @@ export default function SuperAdminDashboard() {
               })}
             </div>
           ) : null}
+
+          {/* {active === "users" ? <UsersPanel /> : null}
+
+          {active === "cards" ? <CardsPanel /> : null} */}
         </main>
       </div>
 

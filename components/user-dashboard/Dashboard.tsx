@@ -41,10 +41,12 @@ import {
   type HexaOrderStatus,
 } from "@/lib/orders";
 import {
-  getCardProfile,
-  cardPublicUrl,
-  cardPublicPath,
-} from "@/lib/card-profile";
+  getUserDashboardCardsFromOrders,
+  isCardProductOrder,
+  type UserDashboardCard,
+} from "@/lib/user-cards";
+import { ensureOrderCardProfile } from "@/lib/order-card-profile";
+import { buildCardQrImageUrl } from "@/lib/order-card";
 import {
   deleteCardMessage,
   formatMessageDateShort,
@@ -240,13 +242,23 @@ export default function Dashboard() {
     }
 
     function onStorage(e: StorageEvent) {
-      if (e.key === "hexaOrders" || e.key === "hexaAuthUser") {
+      if (
+        e.key === "hexaOrders" ||
+        e.key === "hexaAuthUser" ||
+        e.key === "hexaOrderCardProfiles"
+      ) {
         syncWorkspace();
       }
     }
 
+    function onProfilesChange() {
+      const current = getAuthUser();
+      setOrders(current ? getOrdersForPhone(current.phone) : []);
+    }
+
     window.addEventListener("hexa-auth-change", onAuthChange);
     window.addEventListener("hexa-orders-change", onOrdersChange);
+    window.addEventListener("hexa-order-profiles-change", onProfilesChange);
     window.addEventListener("hexa-card-messages-change", onMessagesChange);
     window.addEventListener("focus", syncWorkspace);
     document.addEventListener("visibilitychange", onVisibility);
@@ -254,6 +266,7 @@ export default function Dashboard() {
     return () => {
       window.removeEventListener("hexa-auth-change", onAuthChange);
       window.removeEventListener("hexa-orders-change", onOrdersChange);
+      window.removeEventListener("hexa-order-profiles-change", onProfilesChange);
       window.removeEventListener("hexa-card-messages-change", onMessagesChange);
       window.removeEventListener("focus", syncWorkspace);
       document.removeEventListener("visibilitychange", onVisibility);
@@ -527,20 +540,36 @@ function CardsPanel({
   user: HexaAuthUser;
   orders: HexaOrder[];
 }) {
-  const [qrOpen, setQrOpen] = useState(false);
+  const [qrCard, setQrCard] = useState<UserDashboardCard | null>(null);
   const [copied, setCopied] = useState(false);
-  const hasCard = orders.length > 0;
-  const totalSpend = orders.reduce((sum, o) => sum + o.total, 0);
-  const profile = getCardProfile(user.name, user.phone);
-  const cardName = profile.contact.cardName.trim() || user.name;
-  const cardTitle =
-    profile.contact.title.trim() || "Hexa NFC Business Card";
-  const shareUrl = cardPublicUrl(profile);
-  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=12&data=${encodeURIComponent(shareUrl)}`;
+  const [profileTick, setProfileTick] = useState(0);
 
-  async function copyShareUrl() {
+  useEffect(() => {
+    orders.filter(isCardProductOrder).forEach((order) => {
+      ensureOrderCardProfile(order);
+    });
+  }, [orders]);
+
+  useEffect(() => {
+    function onProfilesChange() {
+      setProfileTick((n) => n + 1);
+    }
+    window.addEventListener("hexa-order-profiles-change", onProfilesChange);
+    return () => {
+      window.removeEventListener("hexa-order-profiles-change", onProfilesChange);
+    };
+  }, []);
+
+  const userCards = useMemo(
+    () => getUserDashboardCardsFromOrders(orders),
+    [orders, profileTick],
+  );
+  const hasCard = userCards.length > 0;
+  const totalSpend = orders.reduce((sum, o) => sum + o.total, 0);
+
+  async function copyShareUrl(url: string) {
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(url);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -554,8 +583,8 @@ function CardsPanel({
         {[
           {
             label: "Active cards",
-            value: hasCard ? "1" : "0",
-            hint: hasCard ? "Digital profile live" : "Unlocks after first order",
+            value: String(userCards.length),
+            hint: hasCard ? "Live on your dashboard" : "Unlocks after first order",
             icon: CreditCard,
           },
           {
@@ -600,11 +629,16 @@ function CardsPanel({
 
       <div
         className={
-          hasCard ? "grid gap-5 lg:grid-cols-2" : "grid gap-5"
+          hasCard
+            ? "grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
+            : "grid gap-5"
         }
       >
-        {hasCard ? (
-          <article className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+        {userCards.map((card) => (
+          <article
+            key={card.orderId}
+            className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+          >
             <div className="relative aspect-[16/10] bg-[#111]">
               <Image
                 src="/Images/Products/digitalCard.jpg"
@@ -614,41 +648,31 @@ function CardsPanel({
                 sizes="(max-width: 1024px) 100vw, 480px"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-              <div className="absolute top-3 left-3">
+              <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                {card.isLatest ? (
+                  <span className="rounded-md bg-white/15 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase backdrop-blur-sm">
+                    Latest
+                  </span>
+                ) : null}
                 <span className="rounded-md bg-white/15 px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase backdrop-blur-sm">
-                  Primary card
+                  {statusLabel(card.status)}
                 </span>
               </div>
               <div className="absolute right-4 bottom-4 left-4 text-white">
                 <p className="font-dashboard text-xl font-extrabold tracking-[-0.02em] text-white">
-                  {cardName}
+                  {card.name}
                 </p>
-                <p className="mt-0.5 text-sm text-white/80">{cardTitle}</p>
+                <p className="mt-0.5 text-sm text-white/80">{card.subtitle}</p>
                 <p className="mt-1 truncate font-mono text-[11px] text-white/60">
-                  {shareUrl.replace(/^https:\/\//, "")}
+                  {card.publicUrl.replace(/^https:\/\//, "")}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-black/[0.06] border-b border-black/[0.06]">
-              {[
-                { label: "Visits", value: "0" },
-                { label: "Saves", value: "0" },
-                { label: "Shares", value: "0" },
-              ].map((m) => (
-                <div key={m.label} className="px-3 py-3 text-center">
-                  <p className="text-base font-bold tabular-nums">{m.value}</p>
-                  <p className="text-[10px] font-semibold tracking-wide text-[#8a8174] uppercase">
-                    {m.label}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2 border-t border-black/[0.06] px-3 py-2.5">
               <button
                 type="button"
-                onClick={() => setQrOpen(true)}
+                onClick={() => setQrCard(card)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
               >
                 <QrCode className="h-4 w-4" />
@@ -656,7 +680,7 @@ function CardsPanel({
               </button>
               <div className="flex items-center gap-2">
                 <Link
-                  href={cardPublicPath(profile)}
+                  href={card.publicPath}
                   target="_blank"
                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
                 >
@@ -664,7 +688,7 @@ function CardsPanel({
                   View
                 </Link>
                 <Link
-                  href="/dashboard/edit-card"
+                  href={`/dashboard/edit-card?order=${encodeURIComponent(card.orderId)}`}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#BC7C10] px-3 py-2 text-xs font-semibold text-white hover:bg-[#9a650d]"
                 >
                   <Pencil className="h-4 w-4" strokeWidth={2} />
@@ -673,39 +697,39 @@ function CardsPanel({
               </div>
             </div>
           </article>
-        ) : null}
+        ))}
 
         <Link
-          href="/products"
+          href="/design-your-card"
           className={`group flex flex-col items-center justify-center rounded-xl border border-dashed border-black/15 bg-white px-6 text-center transition-all hover:border-[#BC7C10]/50 hover:bg-[#FFFCF7] ${
-            hasCard ? "min-h-[300px]" : "min-h-[280px] max-w-xl mx-auto w-full"
+            hasCard ? "min-h-[260px]" : "min-h-[280px] max-w-xl mx-auto w-full sm:col-span-2 xl:col-span-1"
           }`}
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FAFAF8] text-[#BC7C10] ring-1 ring-black/[0.05] transition-colors group-hover:bg-[#FFF8ED]">
             <Plus className="h-6 w-6" strokeWidth={1.75} />
           </span>
           <p className="mt-4 font-dashboard text-lg font-extrabold tracking-[-0.02em] text-[#141414]">
-            {hasCard ? "Get a new card" : "Order your first card"}
+            {hasCard ? "Order another card" : "Order your first card"}
           </p>
           <p className="mt-1 max-w-[260px] text-sm text-[#6b6560]">
             {hasCard
-              ? "Order NFC cards, standees, or review products for your brand."
-              : "Your digital card appears here after a successful payment and order."}
+              ? "Design a new NFC card — it will appear here after checkout."
+              : "Design your card, checkout, and it will show up here instantly."}
           </p>
           <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold text-[#BC7C10]">
-            Browse catalog
+            Design your card
             <ArrowUpRight className="h-3.5 w-3.5" />
           </span>
         </Link>
       </div>
 
-      {qrOpen ? (
+      {qrCard ? (
         <div
           className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="qr-modal-title"
-          onClick={() => setQrOpen(false)}
+          onClick={() => setQrCard(null)}
         >
           <div
             className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
@@ -720,12 +744,12 @@ function CardsPanel({
                   Card QR code
                 </p>
                 <p className="mt-0.5 text-xs text-[#6b6560]">
-                  Scan to open your HexaCards profile
+                  {qrCard.name}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setQrOpen(false)}
+                onClick={() => setQrCard(null)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
                 aria-label="Close"
               >
@@ -735,8 +759,8 @@ function CardsPanel({
 
             <div className="mt-4 flex justify-center rounded-xl border border-black/[0.06] bg-[#FAFAF8] p-4">
               <img
-                src={qrImageSrc}
-                alt={`QR code for ${shareUrl}`}
+                src={buildCardQrImageUrl(qrCard.publicUrl)}
+                alt={`QR code for ${qrCard.publicUrl}`}
                 width={220}
                 height={220}
                 className="h-[220px] w-[220px] rounded-lg bg-white"
@@ -744,19 +768,19 @@ function CardsPanel({
             </div>
 
             <p className="mt-3 break-all text-center font-mono text-[11px] text-[#5c5346]">
-              {shareUrl}
+              {qrCard.publicUrl}
             </p>
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={copyShareUrl}
+                onClick={() => copyShareUrl(qrCard.publicUrl)}
                 className="rounded-lg border border-black/[0.08] px-3 py-2.5 text-[13px] font-semibold text-[#141414] hover:bg-[#FAFAF8]"
               >
                 {copied ? "Copied" : "Copy link"}
               </button>
               <a
-                href={shareUrl}
+                href={qrCard.publicUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center justify-center rounded-lg bg-[#BC7C10] px-3 py-2.5 text-[13px] font-bold text-white hover:bg-[#9a650d]"

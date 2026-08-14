@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,7 +29,12 @@ import {
   loginPathWithNext,
   type HexaAuthUser,
 } from "@/lib/auth";
-import { hasPlacedOrder } from "@/lib/orders";
+import { hasPlacedOrder, getOrdersForPhone, type HexaOrder } from "@/lib/orders";
+import {
+  loadOrderCardProfile,
+  saveOrderCardProfile,
+} from "@/lib/order-card-profile";
+import { resolveOrderLiveUrl } from "@/lib/order-card";
 import {
   cardPublicSlug,
   cardPublicUrl,
@@ -81,6 +86,8 @@ function labelClass() {
 
 export default function EditCard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("order");
   const [authReady, setAuthReady] = useState(false);
   const [user, setUser] = useState<HexaAuthUser | null>(null);
   const [profile, setProfile] = useState<HexaCardProfile | null>(null);
@@ -100,6 +107,7 @@ export default function EditCard() {
   const [layoutConfirm, setLayoutConfirm] = useState<CardLayoutId | null>(
     null,
   );
+  const [editingOrder, setEditingOrder] = useState<HexaOrder | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -112,9 +120,28 @@ export default function EditCard() {
       return;
     }
     setUser(auth);
-    setProfile(getCardProfile(auth.name, auth.phone));
+    if (orderId) {
+      const order = getOrdersForPhone(auth.phone).find((o) => o.id === orderId);
+      if (order) {
+        setEditingOrder(order);
+        setProfile(loadOrderCardProfile(order, auth.name, auth.phone));
+      } else {
+        setEditingOrder(null);
+        setProfile(getCardProfile(auth.name, auth.phone));
+      }
+    } else {
+      setEditingOrder(null);
+      setProfile(getCardProfile(auth.name, auth.phone));
+    }
     setAuthReady(true);
-  }, [router]);
+  }, [router, orderId]);
+
+  function persistProfile(next: HexaCardProfile): HexaCardProfile {
+    if (editingOrder) {
+      return saveOrderCardProfile(editingOrder.id, next);
+    }
+    return saveCardProfile(next);
+  }
 
   function updateContact<K extends keyof HexaCardProfile["contact"]>(
     key: K,
@@ -184,7 +211,7 @@ export default function EditCard() {
     };
     setLayoutConfirm(null);
     try {
-      const saved = saveCardProfile(next);
+      const saved = persistProfile(next);
       setProfile(saved);
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1800);
@@ -323,7 +350,7 @@ export default function EditCard() {
   function handleSave() {
     if (!profile) return;
     try {
-      const next = saveCardProfile(profile);
+      const next = persistProfile(profile);
       setProfile(next);
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1800);
@@ -338,7 +365,7 @@ export default function EditCard() {
           shareImage: null,
         },
       };
-      const next = saveCardProfile(stripped);
+      const next = persistProfile(stripped);
       setProfile(next);
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1800);
@@ -368,7 +395,15 @@ export default function EditCard() {
     );
   }
 
-  const slug = cardPublicSlug(profile);
+  const cardShareUrl = editingOrder
+    ? resolveOrderLiveUrl(editingOrder).liveUrl
+    : cardPublicUrl(profile);
+  const cardSharePath = editingOrder
+    ? `/${resolveOrderLiveUrl(editingOrder).slug}`
+    : cardPublicPath(profile);
+  const slug = editingOrder
+    ? resolveOrderLiveUrl(editingOrder).slug
+    : cardPublicSlug(profile);
 
   return (
     <div className="min-h-screen bg-[#FAFAF8] text-[#141414]">
@@ -1079,10 +1114,10 @@ export default function EditCard() {
                   Your card URL
                 </p>
                 <p className="mt-2 break-all font-mono text-xs text-[#141414]">
-                  {cardPublicUrl(profile)}
+                  {cardShareUrl}
                 </p>
                 <Link
-                  href={cardPublicPath(profile)}
+                  href={cardSharePath}
                   target="_blank"
                   className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#BC7C10] px-3 py-2.5 text-[13px] font-bold text-white hover:bg-[#9a650d]"
                 >

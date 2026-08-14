@@ -23,8 +23,16 @@ import {
 import {
   formatOrderDate,
   saveOrder,
+  updateOrder,
   type HexaOrder,
 } from "@/lib/orders";
+import { initOrderCardProfile } from "@/lib/order-card-profile";
+import { buildOrderCardSlug } from "@/lib/order-card";
+import {
+  resolveLogoForOrder,
+  savedDesignToCardDesign,
+  type SavedCardDesign,
+} from "@/lib/user-cards";
 
 type CartItem = {
   id: string;
@@ -43,15 +51,7 @@ type PackOption = {
   badge?: string;
 };
 
-type SavedDesign = {
-  title?: string;
-  subTitle?: string;
-  moreDetails?: string;
-  cardBody?: string;
-  cardMode?: string;
-  accentColor?: string;
-  hasLogo?: boolean;
-};
+type SavedDesign = SavedCardDesign;
 
 const PACK_OPTIONS: PackOption[] = [
   {
@@ -218,7 +218,7 @@ export default function Checkout() {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!agreedToTerms || isSubmitting) return;
 
@@ -234,9 +234,19 @@ export default function Checkout() {
       const productTitle = cartItems[0]?.title ?? "Hexa NFC Business Card";
       const contactPhone =
         normalizeIndianPhone(form.phone) || auth.phone;
+      const customerName = `${form.firstName} ${form.lastName}`.trim();
+      const logoSrc = await resolveLogoForOrder(design);
+      const cardDesign = savedDesignToCardDesign(
+        design,
+        customerName,
+        contactPhone,
+        logoSrc,
+      );
+      const cardName = cardDesign?.name || customerName;
+
       const order = saveOrder({
         ownerPhone: auth.phone,
-        customerName: `${form.firstName} ${form.lastName}`.trim(),
+        customerName,
         phone: contactPhone,
         email: form.email,
         address: form.address,
@@ -251,7 +261,22 @@ export default function Checkout() {
         coupon: appliedCoupon?.label ?? null,
         productTitle,
         status: "placed",
+        cardDesign,
+        jobTitle: design?.subTitle?.trim() || undefined,
       });
+
+      const finalSlug = buildOrderCardSlug(cardName, contactPhone, order.id);
+      const liveUrl = `https://hexacards.com/${finalSlug}`;
+      const finalized =
+        updateOrder(order.id, {
+          cardSlug: finalSlug,
+          cardUrl: liveUrl,
+          cardDesign: cardDesign
+            ? { ...cardDesign, liveUrl }
+            : undefined,
+        }) ?? order;
+
+      initOrderCardProfile(finalized);
 
       try {
         sessionStorage.removeItem("hexaCardDesign");
@@ -260,7 +285,7 @@ export default function Checkout() {
         // ignore
       }
 
-      setPlacedOrder(order);
+      setPlacedOrder(finalized);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error("Failed to place order", err);
@@ -300,8 +325,8 @@ export default function Checkout() {
             Thank you!
           </h1>
           <p className="mt-2 text-sm text-[#5c5346]">
-            Your HexaCards order is placed. Track shipping and updates from your
-            dashboard.
+            Your HexaCards order is placed. Your new card is now in My Cards on
+            your dashboard.
           </p>
 
           <div className="mt-6 rounded-xl border border-black/[0.06] bg-[#FFFCF7] p-4 text-left">
@@ -332,7 +357,7 @@ export default function Checkout() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <Link
-              href="/dashboard?tab=orders"
+              href="/dashboard?tab=cards"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#BC7C10] px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-[#BC7C10]/25 transition-all hover:bg-[#9a650d]"
             >
               <LayoutDashboard className="h-4 w-4" />
@@ -347,7 +372,7 @@ export default function Checkout() {
           </div>
 
           <p className="mt-5 text-xs text-[#8a8174]">
-            Use Dashboard → Order History to track your order.
+            Use Dashboard → My Cards to view your card, or Order History to track shipping.
           </p>
         </div>
       </div>

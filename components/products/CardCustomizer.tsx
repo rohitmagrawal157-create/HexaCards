@@ -528,17 +528,28 @@ export default function CardCustomizer() {
 
     setLogoError(null);
     if (logoObjectUrl.current) URL.revokeObjectURL(logoObjectUrl.current);
-    const url = URL.createObjectURL(file);
-    logoObjectUrl.current = url;
-    setLogoUrl(url);
-    setFrontLogo(FRONT_LOGO_DEFAULT);
-    setBackLogo(BACK_LOGO_DEFAULT);
-    setSide("back");
-    setLogoEditing(true);
-    setLogoConfirmed(false);
-    // Draw attention to side switch so front is easy to find after auto-flip
-    setFlipPulse(true);
-    window.setTimeout(() => setFlipPulse(false), 4500);
+    logoObjectUrl.current = null;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === "string" ? reader.result : "";
+      if (!dataUrl.startsWith("data:image/")) {
+        setLogoError("Could not read that PNG. Please try another file.");
+        return;
+      }
+      setLogoUrl(dataUrl);
+      setFrontLogo(FRONT_LOGO_DEFAULT);
+      setBackLogo(BACK_LOGO_DEFAULT);
+      setSide("back");
+      setLogoEditing(true);
+      setLogoConfirmed(false);
+      setFlipPulse(true);
+      window.setTimeout(() => setFlipPulse(false), 4500);
+    };
+    reader.onerror = () => {
+      setLogoError("Could not read that PNG. Please try another file.");
+    };
+    reader.readAsDataURL(file);
   }
 
   function flipTo(next: Side) {
@@ -598,7 +609,7 @@ export default function CardCustomizer() {
       subTitle: subTitle.trim(),
       moreDetails: moreDetails.trim(),
       hasLogo: Boolean(logoUrl),
-      frontLogo,
+      logoUrl,
       backLogo,
       savedAt: Date.now(),
     };
