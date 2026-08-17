@@ -1,4 +1,6 @@
 import {
+  DEFAULT_CARD_AVATAR,
+  DEFAULT_CARD_BANNER,
   defaultCardProfile,
   normalizeLogoImage,
   type HexaCardProfile,
@@ -34,9 +36,12 @@ function profileFromOrder(
     },
     appearance: {
       ...base.appearance,
-      logoImage: design?.logoSrc
-        ? normalizeLogoImage(design.logoSrc)
-        : base.appearance.logoImage,
+      logoImage:
+        design?.logoSrc &&
+        !design.logoSrc.startsWith("data:") &&
+        !design.logoSrc.startsWith("idb:")
+          ? normalizeLogoImage(design.logoSrc)
+          : base.appearance.logoImage,
     },
   };
 }
@@ -53,8 +58,56 @@ function readAll(): Record<string, HexaCardProfile> {
   }
 }
 
+function isOversizedDataUrl(src?: string | null, maxChars = 80_000) {
+  return Boolean(src?.startsWith("data:image/") && src.length > maxChars);
+}
+
+function compactProfile(profile: HexaCardProfile): HexaCardProfile {
+  const appearance = profile.appearance;
+  if (
+    !isOversizedDataUrl(appearance?.logoImage) &&
+    !isOversizedDataUrl(appearance?.coverImage) &&
+    !isOversizedDataUrl(appearance?.shareImage)
+  ) {
+    return profile;
+  }
+
+  return {
+    ...profile,
+    appearance: {
+      ...appearance,
+      logoImage: isOversizedDataUrl(appearance.logoImage)
+        ? DEFAULT_CARD_AVATAR
+        : appearance.logoImage,
+      coverImage: isOversizedDataUrl(appearance.coverImage)
+        ? DEFAULT_CARD_BANNER
+        : appearance.coverImage,
+      shareImage: isOversizedDataUrl(appearance.shareImage)
+        ? null
+        : appearance.shareImage,
+    },
+  };
+}
+
 function writeAll(profiles: Record<string, HexaCardProfile>) {
-  localStorage.setItem(ORDER_PROFILES_KEY, JSON.stringify(profiles));
+  const compact: Record<string, HexaCardProfile> = {};
+  for (const [id, profile] of Object.entries(profiles)) {
+    compact[id] = compactProfile(profile);
+  }
+
+  try {
+    localStorage.setItem(ORDER_PROFILES_KEY, JSON.stringify(compact));
+  } catch {
+    try {
+      localStorage.removeItem(ORDER_PROFILES_KEY);
+      const ids = Object.keys(compact).slice(-15);
+      const trimmed: Record<string, HexaCardProfile> = {};
+      for (const id of ids) trimmed[id] = compact[id];
+      localStorage.setItem(ORDER_PROFILES_KEY, JSON.stringify(trimmed));
+    } catch {
+      // Order placement should still succeed even if profiles cannot persist.
+    }
+  }
   window.dispatchEvent(new Event("hexa-order-profiles-change"));
 }
 

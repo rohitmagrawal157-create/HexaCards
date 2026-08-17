@@ -6,6 +6,7 @@ export type HexaPaymentStatus = "paid" | "pending" | "failed" | "refunded";
 
 import type { OrderCardDesignData } from "@/lib/order-card";
 import { findOrderByPublicSlug, resolveOrderLiveUrl } from "@/lib/order-card";
+import { persistOrderLogo, orderLogoRef, stripLogoForLocalStorage } from "@/lib/order-logo-store";
 
 export type HexaOrder = {
   id: string;
@@ -49,6 +50,61 @@ function orderOwnerKey(order: HexaOrder): string {
   return phoneKey(order.ownerPhone) || phoneKey(order.phone);
 }
 
+function isQuotaError(error: unknown) {
+  return (
+    error instanceof DOMException &&
+    (error.name === "QuotaExceededError" ||
+      error.name === "NS_ERROR_DOM_QUOTA_REACHED")
+  );
+}
+
+function compactOrderForStorage(order: HexaOrder): HexaOrder {
+  if (!order.cardDesign?.logoSrc) return order;
+  return {
+    ...order,
+    cardDesign: {
+      ...order.cardDesign,
+      logoSrc: stripLogoForLocalStorage(order.id, order.cardDesign.logoSrc),
+    },
+  };
+}
+
+function writeOrders(orders: HexaOrder[]) {
+  if (typeof window === "undefined") return;
+
+  const compact = orders.slice(0, 50).map(compactOrderForStorage);
+  const attempts = [compact, compact.slice(0, 20), compact.slice(0, 10), compact.slice(0, 5), compact.slice(0, 1)];
+
+  for (const next of attempts) {
+    try {
+      localStorage.setItem(ORDERS_KEY, JSON.stringify(next));
+      return;
+    } catch (error) {
+      if (!isQuotaError(error)) throw error;
+      try {
+        localStorage.removeItem("hexaOrderCardProfiles");
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  try {
+    localStorage.removeItem(ORDERS_KEY);
+    try {
+      localStorage.removeItem("hexaOrderCardProfiles");
+    } catch {
+      // ignore
+    }
+    localStorage.setItem(ORDERS_KEY, JSON.stringify(compact.slice(0, 1)));
+  } catch (error) {
+    if (!isQuotaError(error)) throw error;
+    throw new Error(
+      "Browser storage is full. Clear some site data and try placing the order again.",
+    );
+  }
+}
+
 function readOrders(): HexaOrder[] {
   if (typeof window === "undefined") return [];
   try {
@@ -57,12 +113,27 @@ function readOrders(): HexaOrder[] {
     const parsed = JSON.parse(raw) as HexaOrder[];
     if (!Array.isArray(parsed)) return [];
     // Normalize legacy rows that predate ownerPhone
-    return parsed.map((o) => ({
+    const orders = parsed.map((o) => ({
       ...o,
       ownerPhone: phoneKey(o.ownerPhone) || phoneKey(o.phone),
       phone: phoneKey(o.phone) || phoneKey(o.ownerPhone),
       paymentStatus: o.paymentStatus ?? "paid",
     }));
+
+    // Move oversized logos out of localStorage so later saves do not hit quota.
+    if (
+      orders.some(
+        (o) => o.cardDesign?.logoSrc?.startsWith("data:image/") && o.cardDesign.logoSrc.length > 4000,
+      )
+    ) {
+      try {
+        writeOrders(orders);
+      } catch {
+        // Keep in-memory orders even if compact write fails.
+      }
+    }
+
+    return orders.map(compactOrderForStorage);
   } catch {
     return [];
   }
@@ -118,12 +189,12 @@ export function findOrderByCardSlug(slug: string): HexaOrder | null {
   return found;
 }
 
-export function saveOrder(
+export async function saveOrder(
   order: Omit<HexaOrder, "id" | "createdAt" | "status" | "ownerPhone"> & {
     status?: HexaOrderStatus;
     ownerPhone?: string;
   },
-): HexaOrder {
+): Promise<HexaOrder> {
   const auth = getAuthUser();
   const ownerPhone =
     phoneKey(order.ownerPhone) ||
@@ -144,11 +215,20 @@ export function saveOrder(
     ownerPhone,
     phone: phoneKey(order.phone) || ownerPhone,
   };
+
+  if (next.cardDesign?.logoSrc?.startsWith("data:image/")) {
+    await persistOrderLogo(next.id, next.cardDesign.logoSrc);
+    next.cardDesign = {
+      ...next.cardDesign,
+      logoSrc: orderLogoRef(next.id),
+    };
+  }
+
   const all = readOrders();
   all.unshift(next);
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(all.slice(0, 50)));
+  writeOrders(all);
   window.dispatchEvent(new Event("hexa-orders-change"));
-  return next;
+  return compactOrderForStorage(next);
 }
 
 export function updateOrder(
@@ -158,8 +238,8 @@ export function updateOrder(
   const all = readOrders();
   const idx = all.findIndex((o) => o.id === id);
   if (idx < 0) return null;
-  all[idx] = { ...all[idx], ...patch };
-  localStorage.setItem(ORDERS_KEY, JSON.stringify(all.slice(0, 50)));
+  all[idx] = compactOrderForStorage({ ...all[idx], ...patch });
+  writeOrders(all);
   window.dispatchEvent(new Event("hexa-orders-change"));
   return all[idx];
 }

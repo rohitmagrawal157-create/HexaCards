@@ -244,7 +244,7 @@ export default function Checkout() {
       );
       const cardName = cardDesign?.name || customerName;
 
-      const order = saveOrder({
+      const order = await saveOrder({
         ownerPhone: auth.phone,
         customerName,
         phone: contactPhone,
@@ -289,7 +289,11 @@ export default function Checkout() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       console.error("Failed to place order", err);
-      window.alert("Could not place your order. Please sign in again and retry.");
+      const message =
+        err instanceof Error && /storage|quota/i.test(err.message)
+          ? err.message
+          : "Could not place your order. Please sign in again and retry.";
+      window.alert(message);
     } finally {
       setIsSubmitting(false);
     }

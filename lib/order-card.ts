@@ -1,6 +1,8 @@
 import { getOrderById, updateOrder, type HexaOrder } from "@/lib/orders";
 import { isDefaultLogoImage } from "@/lib/card-profile";
 import { blobUrlToDataUrl } from "@/lib/user-cards";
+import { getCachedOrderLogo, isOrderLogoRef, loadOrderLogo } from "@/lib/order-logo-store";
+import { styledQrDataUri } from "@/lib/styled-qr";
 
 export type CardBodyType = "black" | "white";
 export type CardMetalFinish = "gold" | "silver";
@@ -49,6 +51,7 @@ export const CARD_PRINT_SIZE_LABEL = `${CARD_PRINT_WIDTH_IN} × ${CARD_PRINT_HEI
 function isUsableLogoSrc(src?: string | null): src is string {
   if (!src?.trim()) return false;
   if (src.startsWith("blob:")) return false;
+  if (isOrderLogoRef(src)) return false;
   if (isDefaultLogoImage(src)) return false;
   if (src.startsWith("data:image/")) return src.length > 80;
   return (
@@ -72,7 +75,11 @@ function pickStaticLogoSrc(
 export async function resolveOrderLogoSrc(
   order: HexaOrder,
 ): Promise<string | undefined> {
-  const staticSrc = pickStaticLogoSrc(order.cardDesign?.logoSrc);
+  const stored = order.cardDesign?.logoSrc;
+  const fromStore = await loadOrderLogo(order.id, stored);
+  if (fromStore) return fromStore;
+
+  const staticSrc = pickStaticLogoSrc(stored);
   if (staticSrc) return staticSrc;
 
   const blobCandidates = [order.cardDesign?.logoSrc].filter(
@@ -94,6 +101,220 @@ export async function resolveOrderLogoSrc(
   }
 
   return undefined;
+}
+
+type LogoPixel = { r: number; g: number; b: number; a: number };
+
+function readLogoPixel(data: Uint8ClampedArray, i: number): LogoPixel {
+  return {
+    r: data[i],
+    g: data[i + 1],
+    b: data[i + 2],
+    a: data[i + 3],
+  };
+}
+
+function logoPixelLuminance({ r, g, b }: LogoPixel) {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+function logoPixelSaturation({ r, g, b }: LogoPixel) {
+  const maxC = Math.max(r, g, b);
+  const minC = Math.min(r, g, b);
+  return maxC === 0 ? 0 : (maxC - minC) / maxC;
+}
+
+function pixelIndex(x: number, y: number, width: number) {
+  return (y * width + x) * 4;
+}
+
+function isWhitePaper(pixel: LogoPixel) {
+  if (pixel.a < 8) return true;
+  const lum = logoPixelLuminance(pixel);
+  const sat = logoPixelSaturation(pixel);
+  return lum > 236 && sat < 0.12;
+}
+
+function isBlackBox(pixel: LogoPixel) {
+  if (pixel.a < 8) return true;
+  const lum = logoPixelLuminance(pixel);
+  const sat = logoPixelSaturation(pixel);
+  return lum < 28 && sat < 0.18;
+}
+
+function sampleCornerBackdrop(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+): "white" | "black" | null {
+  const corners = [
+    readLogoPixel(data, pixelIndex(0, 0, width)),
+    readLogoPixel(data, pixelIndex(width - 1, 0, width)),
+    readLogoPixel(data, pixelIndex(0, height - 1, width)),
+    readLogoPixel(data, pixelIndex(width - 1, height - 1, width)),
+  ];
+  const whiteHits = corners.filter(isWhitePaper).length;
+  const blackHits = corners.filter(isBlackBox).length;
+  if (whiteHits >= 3) return "white";
+  if (blackHits >= 3) return "black";
+  return null;
+}
+
+/**
+ * Knock out only the outer paper / JPEG box connected to the edges.
+ * Never erase interior artwork — including black taglines and fine type.
+ */
+function punchEdgeBackdrop(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const mode = sampleCornerBackdrop(data, width, height);
+  if (!mode) {
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 8) data[i + 3] = 0;
+    }
+    return;
+  }
+
+  const matches = mode === "white" ? isWhitePaper : isBlackBox;
+  const seen = new Uint8Array(width * height);
+  const stack: number[] = [];
+
+  const enqueue = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const idx = y * width + x;
+    if (seen[idx]) return;
+    const pixel = readLogoPixel(data, pixelIndex(x, y, width));
+    if (!matches(pixel)) return;
+    seen[idx] = 1;
+    stack.push(idx);
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    enqueue(x, 0);
+    enqueue(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 1) {
+    enqueue(0, y);
+    enqueue(width - 1, y);
+  }
+
+  while (stack.length) {
+    const idx = stack.pop()!;
+    const x = idx % width;
+    const y = (idx / width) | 0;
+    data[idx * 4 + 3] = 0;
+    enqueue(x + 1, y);
+    enqueue(x - 1, y);
+    enqueue(x, y + 1);
+    enqueue(x, y - 1);
+  }
+}
+
+/** Keep every logo mark; only the outer backdrop becomes transparent. */
+export async function prepareCardLogoDataUrl(
+  src: string,
+): Promise<string | undefined> {
+  if (typeof window === "undefined") return src;
+  if (!src.startsWith("data:image/") && !src.startsWith("blob:") && !src.startsWith("http")) {
+    return src;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      if (!width || !height) {
+        resolve(src);
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(src);
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      const image = ctx.getImageData(0, 0, width, height);
+      punchEdgeBackdrop(image.data, width, height);
+      ctx.putImageData(image, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(undefined);
+    img.src = src;
+  });
+}
+
+export type LogoFoilFinish = "gold" | "silver";
+
+const LOGO_FOIL_STOPS: Record<LogoFoilFinish, readonly { offset: number; color: string }[]> = {
+  gold: [
+    { offset: 0, color: "#C9982C" },
+    { offset: 0.18, color: "#E8C56A" },
+    { offset: 0.38, color: "#FFF3D7" },
+    { offset: 0.55, color: "#D8A83A" },
+    { offset: 0.78, color: "#C9982C" },
+    { offset: 1, color: "#E4B84A" },
+  ],
+  silver: [
+    { offset: 0, color: "#C5C9CD" },
+    { offset: 0.18, color: "#E8EAEC" },
+    { offset: 0.38, color: "#FFFFFF" },
+    { offset: 0.55, color: "#D0D4D8" },
+    { offset: 0.78, color: "#B8BCC0" },
+    { offset: 1, color: "#DEE1E4" },
+  ],
+};
+
+/** Prepare backdrop then tint the logo to the selected gold or silver foil — full size kept. */
+export async function logoForCardFinish(
+  src: string,
+  finish?: LogoFoilFinish | null,
+): Promise<string | undefined> {
+  const cleaned = await prepareCardLogoDataUrl(src);
+  if (!cleaned) return undefined;
+  if (!finish) return cleaned;
+  if (typeof window === "undefined") return cleaned;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      if (!width || !height) {
+        resolve(cleaned);
+        return;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(cleaned);
+        return;
+      }
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      ctx.globalCompositeOperation = "source-in";
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      for (const stop of LOGO_FOIL_STOPS[finish]) {
+        gradient.addColorStop(stop.offset, stop.color);
+      }
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(cleaned);
+    img.src = cleaned;
+  });
 }
 
 /** Flatten uploaded logo to a sharp black mark on a transparent background */
@@ -271,14 +492,17 @@ export function resolveOrderLiveUrl(order: HexaOrder): {
   return { slug, liveUrl };
 }
 
-/** High-contrast QR — white background, optional module color (hex without #) */
+/** Styled dotted QR — used by dashboard and any image-based QR preview */
 export function buildCardQrImageUrl(
   liveUrl: string,
-  size = 400,
+  _size = 400,
   moduleColor = "141414",
 ) {
-  const color = moduleColor.replace("#", "").replace(/^0x/i, "") || "141414";
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=8&color=${color}&bgcolor=FFFFFF&ecc=M&data=${encodeURIComponent(liveUrl)}`;
+  const hex = moduleColor.replace("#", "").replace(/^0x/i, "") || "141414";
+  return styledQrDataUri(liveUrl, {
+    color: `#${hex}`,
+    includeFrame: true,
+  });
 }
 
 function hexLuminance(hex: string) {
@@ -378,7 +602,9 @@ export function buildOrderCardDesign(order: HexaOrder): ResolvedOrderCardDesign 
       order.cardDesign?.extraLine?.trim() ||
       order.phone ||
       undefined,
-    logoSrc: pickStaticLogoSrc(order.cardDesign?.logoSrc),
+    logoSrc:
+      getCachedOrderLogo(order.id) ||
+      pickStaticLogoSrc(order.cardDesign?.logoSrc),
     logoLayout: order.cardDesign?.logoLayout ?? { size: 120, x: 0, y: 0 },
     slug,
     liveUrl,

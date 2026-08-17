@@ -49,14 +49,14 @@ import UsersPanel from "@/components/super-admin/User";
 import CardsPanel from "@/components/super-admin/Cards";
 import OrdersPanel from "@/components/super-admin/Orders";
 
-type NavKey = "overview" | "orders" | "products" ;
+type NavKey = "overview" | "orders" | "products" | "users" | "cards";
 
 const MENU_ITEMS: { key: NavKey; label: string; icon: typeof LayoutGrid }[] = [
   { key: "overview", label: "Overview", icon: LayoutGrid },
   { key: "orders", label: "Orders", icon: ShoppingBag },
   { key: "products", label: "Products", icon: Package },
-  // { key: "users", label: "Users", icon: Users },
-  // { key: "cards", label: "Cards", icon: CreditCard },
+  { key: "users", label: "Users", icon: Users },
+  { key: "cards", label: "Cards", icon: CreditCard },
 ];
 
 function initials(name: string) {
@@ -83,16 +83,16 @@ function sectionMeta(key: NavKey) {
         title: "Products",
         subtitle: "Manage categories and catalog products — add, edit, or delete.",
       };
-    // case "users":
-    //   return {
-    //     title: "Users",
-    //     subtitle: "View, search, and manage registered customers.",
-    //   };
-    // case "cards":
-    //   return {
-    //     title: "Cards",
-    //     subtitle: "View, search, and manage all digital business cards.",
-    //   };
+    case "users":
+      return {
+        title: "Users",
+        subtitle: "View, search, and manage registered customers.",
+      };
+    case "cards":
+      return {
+        title: "Cards",
+        subtitle: "View, search, and manage all digital business cards.",
+      };
   }
 }
 
@@ -282,13 +282,13 @@ export default function SuperAdminDashboard() {
     if (
       tab === "overview" ||
       tab === "orders" ||
-      tab === "products" 
-      // tab === "users" ||
-      // tab === "cards"
+      tab === "products" ||
+      tab === "users" ||
+      tab === "cards"
     ) {
-    //   setActive(tab);
-    // } else if (tab === "messages") {
-      // setActive("overview");
+      setActive(tab);
+    } else if (tab === "messages") {
+      setActive("overview");
       router.replace("/super-admin");
     }
   }, [searchParams, router]);
@@ -1265,9 +1265,9 @@ export default function SuperAdminDashboard() {
             </div>
           ) : null}
 
-          {/* {active === "users" ? <UsersPanel /> : null}
+          {active === "users" ? <UsersPanel /> : null}
 
-          {active === "cards" ? <CardsPanel /> : null} */}
+          {active === "cards" ? <CardsPanel /> : null}
         </main>
       </div>
 

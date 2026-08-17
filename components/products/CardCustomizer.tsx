@@ -29,6 +29,8 @@ import {
 import { GOLD_GRADIENT, GOLD_SOLID, GOLD_STOPS } from "./goldCard";
 import { SILVER_GRADIENT } from "./silverCard";
 import { goToCheckout } from "@/lib/auth";
+import { logoForCardFinish } from "@/lib/order-card";
+import { buildStyledQrSvg } from "@/lib/styled-qr";
 
 type Side = "front" | "back";
 
@@ -66,10 +68,10 @@ const CARD_H = 154;
 const PREVIEW_MAX_W = 488; // 2× for comfortable editing
 
 const FRONT_LOGO_DEFAULT: LogoLayout = { size: 40, x: 6, y: 8 };
-const BACK_LOGO_DEFAULT: LogoLayout = { size: 86, x: 50, y: 48 };
+const BACK_LOGO_DEFAULT: LogoLayout = { size: 200, x: 50, y: 50 };
 
-const SIZE_MIN = 16;
-const SIZE_MAX = 120;
+const SIZE_MIN = 48;
+const SIZE_MAX = 220;
 const SIZE_STEP = 4;
 const MOVE_STEP = 2;
 
@@ -230,7 +232,6 @@ function PlacedLogo({
   placeholder,
   onPlaceholderClick,
   placeholderColor,
-  tint,
 }: {
   src: string | null;
   layout: LogoLayout;
@@ -240,10 +241,17 @@ function PlacedLogo({
   placeholder?: boolean;
   onPlaceholderClick?: () => void;
   placeholderColor?: string;
-  /** Gold / Silver: solid or gradient fill. Customize: omit for original colors */
-  tint?: { fill: string; isGradient?: boolean } | null;
 }) {
   const isEmpty = !src;
+  const [aspect, setAspect] = useState(1);
+  const maxW = CARD_W - 16;
+  const maxH = CARD_H - 16;
+  let width = Math.min(layout.size, maxW);
+  let height = width / aspect;
+  if (height > maxH) {
+    height = maxH;
+    width = height * aspect;
+  }
 
   return (
     <button
@@ -258,8 +266,8 @@ function PlacedLogo({
       }}
       className="absolute z-20 touch-manipulation transition-[box-shadow] duration-150"
       style={{
-        width: layout.size,
-        height: layout.size,
+        width,
+        height,
         left: `${layout.x}%`,
         top: `${layout.y}%`,
         transform: centered ? "translate(-50%, -50%)" : "translate(0, 0)",
@@ -268,33 +276,19 @@ function PlacedLogo({
       aria-label={isEmpty ? "Upload logo" : "Select logo to adjust"}
     >
       {src ? (
-        tint ? (
-          <span
-            className="block h-full w-full"
-            style={{
-              backgroundImage: tint.isGradient ? tint.fill : undefined,
-              backgroundColor: tint.isGradient ? undefined : tint.fill,
-              WebkitMaskImage: `url(${src})`,
-              maskImage: `url(${src})`,
-              WebkitMaskSize: "contain",
-              maskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-              maskPosition: "center",
-            }}
-            role="img"
-            aria-label="Card logo"
-          />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt="Card logo"
-            className="h-full w-full object-contain select-none"
-            draggable={false}
-          />
-        )
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt="Card logo"
+          className="h-full w-full object-contain object-center select-none"
+          style={{ imageRendering: "auto" }}
+          draggable={false}
+          onLoad={(e) => {
+            const w = e.currentTarget.naturalWidth;
+            const h = e.currentTarget.naturalHeight;
+            if (w > 0 && h > 0) setAspect(w / h);
+          }}
+        />
       ) : placeholder ? (
         <span
           className="flex h-full w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed opacity-55"
@@ -392,6 +386,7 @@ export default function CardCustomizer() {
   const [subTitle, setSubTitle] = useState("");
   const [moreDetails, setMoreDetails] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [displayLogo, setDisplayLogo] = useState<string | null>(null);
   const [frontLogo, setFrontLogo] = useState<LogoLayout>(FRONT_LOGO_DEFAULT);
   const [backLogo, setBackLogo] = useState<LogoLayout>(BACK_LOGO_DEFAULT);
   const [logoEditing, setLogoEditing] = useState(false);
@@ -434,30 +429,26 @@ export default function CardCustomizer() {
   const displayAccentColor = isCustomize
     ? accentColor
     : (metalPreset?.accentColor ?? accentColor);
-  const logoTint = metalGradient
-    ? { fill: metalGradient, isGradient: true as const }
-    : null; // white card → original logo colors
+  const logoFinish =
+    metalPreset && (cardMode === "gold" || cardMode === "silver")
+      ? cardMode
+      : isWhiteGold
+        ? "gold"
+        : null;
 
-  const isBlackBody = displayCardColor === CARD_BODY.black;
-  const qrPlateBg = isBlackBody
-    ? CARD_BODY.black
-    : cardMode === "silver" && metalPreset
-      ? (metalPreset.gradient ?? "#9CA0A4")
-      : displayCardColor;
-  const qrModuleTint =
-    metalPreset && cardMode === "gold"
-      ? { fill: metalGradient!, isGradient: true as const }
-      : metalPreset && cardMode === "silver"
-        ? isBlackBody
-          ? { fill: metalGradient!, isGradient: true as const }
-          : { fill: "#141414", isGradient: false as const }
-        : isWhiteGold
-          ? { fill: GOLD_GRADIENT, isGradient: true as const }
-          : isCustomize
-            ? { fill: accentColor, isGradient: false as const }
-            : isBlackBody
-              ? { fill: "#FFFFFF", isGradient: false as const }
-              : null;
+  const previewQrSvg = buildStyledQrSvg("https://hexacards.com", {
+    color:
+      metalPreset && cardMode === "silver"
+        ? "#A8ACB0"
+        : isCustomize
+          ? accentColor
+          : displayAccentColor,
+    gold: Boolean((metalPreset && cardMode === "gold") || isWhiteGold),
+    silver: Boolean(metalPreset && cardMode === "silver"),
+    includeFrame: true,
+    background: isBlackCard ? CARD_BODY.black : CARD_BODY.white,
+    gradientId: "qr-studio-foil",
+  });
 
   const hasExtraLine = moreDetails.trim().length > 0;
 
@@ -473,6 +464,26 @@ export default function CardCustomizer() {
       if (logoObjectUrl.current) URL.revokeObjectURL(logoObjectUrl.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!logoUrl) {
+      setDisplayLogo(null);
+      return;
+    }
+    let cancelled = false;
+    // No foil — show the uploaded file exactly as-is (full canvas, no processing).
+    if (!logoFinish) {
+      setDisplayLogo(logoUrl);
+      return;
+    }
+    setDisplayLogo(logoUrl);
+    void logoForCardFinish(logoUrl, logoFinish).then((next) => {
+      if (!cancelled && next) setDisplayLogo(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [logoUrl, logoFinish]);
 
   useEffect(() => {
     const el = stageRef.current;
@@ -922,61 +933,20 @@ export default function CardCustomizer() {
                               ) : null}
                             </div>
 
-                            {/* QR — ~30% larger; clearer foil/accent border */}
+                            {/* QR — dotted rounded pattern, same as print PDFs */}
                             <div
-                              className="absolute right-2.5 bottom-2.5 z-10 h-[62px] w-[62px] rounded-[6px]"
-                              style={{
-                                padding: "1.5px",
-                                background: metalGradient ?? displayAccentColor,
-                              }}
-                            >
-                              <div
-                                className="flex h-full w-full items-center justify-center overflow-hidden rounded-[4.5px]"
-                                style={{ background: qrPlateBg }}
-                              >
-                                {qrModuleTint ? (
-                                  <span
-                                    className="block h-[90%] w-[90%]"
-                                    style={{
-                                      backgroundImage: qrModuleTint.isGradient
-                                        ? qrModuleTint.fill
-                                        : undefined,
-                                      backgroundColor: qrModuleTint.isGradient
-                                        ? undefined
-                                        : qrModuleTint.fill,
-                                      WebkitMaskImage:
-                                        "url(/Images/HexaQR.png)",
-                                      maskImage: "url(/Images/HexaQR.png)",
-                                      WebkitMaskSize: "contain",
-                                      maskSize: "contain",
-                                      WebkitMaskRepeat: "no-repeat",
-                                      maskRepeat: "no-repeat",
-                                      WebkitMaskPosition: "center",
-                                      maskPosition: "center",
-                                    }}
-                                    role="img"
-                                    aria-label="Hexa QR"
-                                  />
-                                ) : (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    src="/Images/HexaQR.png"
-                                    alt="Hexa QR"
-                                    className="h-[90%] w-[90%] object-contain"
-                                    draggable={false}
-                                  />
-                                )}
-                              </div>
-                            </div>
+                              className="absolute right-2.5 bottom-2.5 z-10 h-[62px] w-[62px]"
+                              aria-label="Hexa QR"
+                              dangerouslySetInnerHTML={{ __html: previewQrSvg }}
+                            />
                           </>
                         ) : logoUrl ? (
                           <PlacedLogo
-                            src={logoUrl}
+                            src={displayLogo ?? logoUrl}
                             layout={backLogo}
                             selected={logoEditing}
                             onSelect={() => setLogoEditing(true)}
                             centered
-                            tint={logoTint}
                           />
                         ) : (
                           <BackLogoPlaceholder

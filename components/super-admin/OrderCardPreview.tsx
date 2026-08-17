@@ -4,21 +4,27 @@ import { useEffect, useState, type CSSProperties } from "react";
 import {
   buildOrderCardDesign,
   buildOrderCardDesignAsync,
-  buildCardQrImageUrl,
+  logoForCardFinish,
+  prepareCardLogoDataUrl,
   printFinishLabel,
-  qrModuleColor,
   CARD_CORNER_RADIUS_IN,
   CARD_PRINT_HEIGHT_IN,
   CARD_PRINT_SIZE_LABEL,
   CARD_PRINT_WIDTH_IN,
   type ResolvedOrderCardDesign,
 } from "@/lib/order-card";
+import { buildStyledQrSvg } from "@/lib/styled-qr";
 import type { HexaOrder } from "@/lib/orders";
 import {
   GOLD_GRADIENT,
   GOLD_SOLID,
   GOLD_STOPS,
 } from "@/components/products/goldCard";
+import {
+  SILVER_GRADIENT,
+  SILVER_SOLID,
+  SILVER_STOPS,
+} from "@/components/products/silverCard";
 
 const PRINT_CARD_BG = "#FFFFFF";
 const PRINT_CARD_INK = "#141414";
@@ -32,23 +38,38 @@ function colorInk(design: ResolvedOrderCardDesign) {
   return design.accentColor?.trim() || GOLD_SOLID;
 }
 
-function foilFill(design: ResolvedOrderCardDesign) {
-  return isGoldAccent(design.accentColor) ? GOLD_GRADIENT : colorInk(design);
+function isSilverFinish(design: ResolvedOrderCardDesign) {
+  return design.cardBody === "black" && design.finish === "silver";
+}
+
+function isGoldFinish(design: ResolvedOrderCardDesign) {
+  if (isSilverFinish(design)) return false;
+  if (design.cardBody === "black") return true;
+  return isGoldAccent(colorInk(design));
+}
+
+function cardFaceBg(design: ResolvedOrderCardDesign) {
+  if (design.cardBody === "black") {
+    return design.cardColor?.trim() || "#141414";
+  }
+  return "#FFFFFF";
 }
 
 /** Contactless / NFC waves — matches PVC card (Wifi rotated 90°) */
 function nfcIconSvg(
   color: string,
   size = 22,
-  opts?: { gold?: boolean; id?: string },
+  opts?: { gold?: boolean; silver?: boolean; id?: string },
 ) {
+  const foil = Boolean(opts?.gold || opts?.silver);
   const gradId = opts?.id ?? `nfcGrad-${size}`;
-  const defs = opts?.gold
-    ? `<defs><linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">${GOLD_STOPS.map(
+  const stops = opts?.silver ? SILVER_STOPS : GOLD_STOPS;
+  const defs = foil
+    ? `<defs><linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%">${stops.map(
         (stop) => `<stop offset="${stop.offset}" stop-color="${stop.color}"/>`,
       ).join("")}</linearGradient></defs>`
     : "";
-  const stroke = opts?.gold ? `url(#${gradId})` : color;
+  const stroke = foil ? `url(#${gradId})` : color;
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="transform:rotate(90deg)">${defs}
     <path d="M12 20h.01" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M8.5 16.43a5 5 0 0 1 7 0" stroke="${stroke}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -72,13 +93,17 @@ function escapeAttr(value: string) {
 function NfcIcon({
   accent,
   gold,
+  silver,
   gradId,
 }: {
   accent: string;
   gold?: boolean;
+  silver?: boolean;
   gradId: string;
 }) {
-  const stroke = gold ? `url(#${gradId})` : accent;
+  const foil = Boolean(gold || silver);
+  const stops = silver ? SILVER_STOPS : GOLD_STOPS;
+  const stroke = foil ? `url(#${gradId})` : accent;
   return (
     <svg
       viewBox="0 0 24 24"
@@ -86,10 +111,10 @@ function NfcIcon({
       aria-hidden
       className="h-full w-full rotate-90"
     >
-      {gold ? (
+      {foil ? (
         <defs>
           <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
-            {GOLD_STOPS.map((stop) => (
+            {stops.map((stop) => (
               <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
             ))}
           </linearGradient>
@@ -127,48 +152,50 @@ function NfcIcon({
   );
 }
 
-function foilTextStyle(gold: boolean, ink: string): CSSProperties {
-  if (!gold) return { color: ink };
+function foilTextStyle(
+  foil: "gold" | "silver" | null,
+  ink: string,
+): CSSProperties {
+  if (!foil) return { color: ink };
   return {
-    backgroundImage: GOLD_GRADIENT,
+    backgroundImage: foil === "silver" ? SILVER_GRADIENT : GOLD_GRADIENT,
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     WebkitTextFillColor: "transparent",
-    color: GOLD_SOLID,
+    color: foil === "silver" ? SILVER_SOLID : GOLD_SOLID,
   };
 }
 
 function FramedQr({
-  qrUrl,
+  data,
   ink,
   gold,
+  silver,
+  gradientId,
+  background,
 }: {
-  qrUrl: string;
+  data: string;
   ink: string;
   gold?: boolean;
+  silver?: boolean;
+  gradientId: string;
+  background: string;
 }) {
+  const svg = buildStyledQrSvg(data, {
+    color: ink,
+    gold,
+    silver,
+    gradientId,
+    includeFrame: true,
+    background,
+  });
+
   return (
     <div
-      className="box-border h-full w-full overflow-hidden rounded-[12%]"
-      style={
-        gold
-          ? { padding: "4%", background: GOLD_GRADIENT }
-          : {
-              padding: "4%",
-              border: `2px solid ${ink}`,
-              background: "#ffffff",
-            }
-      }
-    >
-      <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[8%] bg-white p-[4%]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={qrUrl}
-          alt="QR code"
-          className="h-full w-full object-contain"
-        />
-      </div>
-    </div>
+      className="h-full w-full overflow-hidden"
+      aria-label="QR code"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
   );
 }
 
@@ -177,51 +204,47 @@ const BLACK_LOGO_FILTER =
 
 function BackLogo({
   src,
-  gold,
-  fill,
+  foil,
 }: {
   src?: string;
-  gold?: boolean;
-  fill: string;
+  foil?: "gold" | "silver" | null;
 }) {
   const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(src) && !failed;
+  const [cleanSrc, setCleanSrc] = useState<string | undefined>(src);
 
+  useEffect(() => {
+    let cancelled = false;
+    setFailed(false);
+    if (!src) {
+      setCleanSrc(undefined);
+      return;
+    }
+    // No foil — render the uploaded logo unchanged.
+    if (!foil) {
+      setCleanSrc(src);
+      return;
+    }
+    setCleanSrc(src);
+    void logoForCardFinish(src, foil).then((next) => {
+      if (!cancelled && next) setCleanSrc(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [src, foil]);
+
+  const showLogo = Boolean(cleanSrc) && !failed;
   if (!showLogo) return null;
 
-  if (gold) {
-    return (
-      <div className="flex h-full w-full items-center justify-center px-[8%]">
-        <span
-          className="block h-[70%] w-[70%]"
-          style={{
-            background: fill,
-            WebkitMaskImage: `url(${src})`,
-            maskImage: `url(${src})`,
-            WebkitMaskSize: "contain",
-            maskSize: "contain",
-            WebkitMaskRepeat: "no-repeat",
-            maskRepeat: "no-repeat",
-            WebkitMaskPosition: "center",
-            maskPosition: "center",
-          }}
-          role="img"
-          aria-label="Card logo"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" onError={() => setFailed(true)} className="hidden" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-full w-full items-center justify-center px-[8%]">
+    <div className="flex h-full w-full items-center justify-center p-[6%]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={cleanSrc}
         alt=""
         onError={() => setFailed(true)}
-        className="max-h-[70%] max-w-[70%] object-contain"
+        className="max-h-full max-w-full object-contain object-center"
+        style={{ imageRendering: "auto" }}
       />
     </div>
   );
@@ -237,21 +260,18 @@ function CardFace({
   className?: string;
 }) {
   const ink = colorInk(design);
-  const gold = isGoldAccent(ink);
-  const fill = foilFill(design);
-  const textStyle = foilTextStyle(gold, ink);
+  const gold = isGoldFinish(design);
+  const silver = isSilverFinish(design);
+  const foil = gold ? "gold" : silver ? "silver" : null;
+  const textStyle = foilTextStyle(foil, ink);
   const nfcId = `nfc-preview-${side}-${design.slug || "card"}`;
-  const previewQrUrl = buildCardQrImageUrl(
-    design.liveUrl,
-    400,
-    qrModuleColor(ink, gold),
-  );
+  const bg = cardFaceBg(design);
 
   return (
     <div
       className={`relative w-full overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.18)] ${className}`}
       style={{
-        backgroundColor: PRINT_CARD_BG,
+        backgroundColor: bg,
         containerType: "inline-size",
         aspectRatio: `${CARD_PRINT_WIDTH_IN} / ${CARD_PRINT_HEIGHT_IN}`,
         borderRadius: `${CARD_CORNER_RADIUS_IN}in`,
@@ -259,7 +279,7 @@ function CardFace({
       }}
     >
       <div className="absolute top-[7%] right-[4.5%] z-20 h-[14%] w-[8%]">
-        <NfcIcon accent={ink} gold={gold} gradId={nfcId} />
+        <NfcIcon accent={ink} gold={gold} silver={silver} gradId={nfcId} />
       </div>
 
       {side === "front" ? (
@@ -279,23 +299,30 @@ function CardFace({
             </p>
           </div>
           <div className="absolute right-[4.5%] bottom-[8%] z-10 w-[26%] aspect-square">
-            <FramedQr qrUrl={previewQrUrl} ink={ink} gold={gold} />
+            <FramedQr
+              data={design.liveUrl}
+              ink={ink}
+              gold={gold}
+              silver={silver}
+              gradientId={`qr-preview-${design.slug || "card"}`}
+              background={bg}
+            />
           </div>
         </>
       ) : (
-        <BackLogo src={design.logoSrc} gold={gold} fill={fill} />
+        <BackLogo src={design.logoSrc} foil={foil} />
       )}
     </div>
   );
 }
 
-function pdfCardShell(nfcHtml: string, inner: string) {
+function pdfCardShell(nfcHtml: string, inner: string, background = PRINT_CARD_BG) {
   return `
     <div class="card-page">
       <div style="
         width:${CARD_PRINT_WIDTH_IN}in;
         height:${CARD_PRINT_HEIGHT_IN}in;
-        background:${PRINT_CARD_BG};
+        background:${background};
         border-radius:${CARD_CORNER_RADIUS_IN}in;
         position:relative;
         overflow:hidden;
@@ -309,34 +336,44 @@ function pdfCardShell(nfcHtml: string, inner: string) {
     </div>`;
 }
 
-function pdfFoilTextStyle(extra: string, ink: string, gold: boolean) {
-  if (!gold) return `${extra}color:${ink};`;
-  return `${extra}background:${GOLD_GRADIENT};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:${GOLD_SOLID};`;
+function pdfFoilTextStyle(
+  extra: string,
+  ink: string,
+  foil: "gold" | "silver" | null,
+) {
+  if (!foil) return `${extra}color:${ink};`;
+  const gradient = foil === "silver" ? SILVER_GRADIENT : GOLD_GRADIENT;
+  const solid = foil === "silver" ? SILVER_SOLID : GOLD_SOLID;
+  return `${extra}background:${gradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:${solid};`;
 }
 
 function pdfFrontPageHtml(
   design: ResolvedOrderCardDesign,
   ink: string,
-  gold: boolean,
+  foil: "gold" | "silver" | null,
   nfcHtml: string,
+  background = PRINT_CARD_BG,
 ) {
   const name = escapeHtml(design.name);
   const subtitle = escapeHtml(design.subtitle);
   const qrSize = "0.96in";
-  const qrSrc = buildCardQrImageUrl(
-    design.liveUrl,
-    480,
-    qrModuleColor(ink, gold),
-  );
+  const qrSvg = buildStyledQrSvg(design.liveUrl, {
+    color: ink,
+    gold: foil === "gold",
+    silver: foil === "silver",
+    includeFrame: true,
+    background,
+    gradientId: foil === "silver" ? "qr-pdf-silver" : foil === "gold" ? "qr-pdf-foil" : "qr-pdf-ink",
+  });
   const nameStyle = pdfFoilTextStyle(
     "font-size:16pt;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;",
     ink,
-    gold,
+    foil,
   );
   const subStyle = pdfFoilTextStyle(
     "margin-top:0.06in;font-size:10pt;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;",
     ink,
-    gold,
+    foil,
   );
 
   return pdfCardShell(
@@ -360,17 +397,12 @@ function pdfFrontPageHtml(
           flex-shrink:0;
           width:${qrSize};
           height:${qrSize};
-          padding:0.045in;
-          ${gold ? `background:${GOLD_GRADIENT};` : `border:2px solid ${ink};background:#ffffff;`}
-          border-radius:0.05in;
-          box-sizing:border-box;
         ">
-          <div style="width:100%;height:100%;background:#ffffff;border-radius:0.03in;overflow:hidden;box-sizing:border-box;padding:0.04in;">
-            <img src="${qrSrc}" alt="QR" style="width:100%;height:100%;display:block;object-fit:contain;" />
-          </div>
+          ${qrSvg}
         </div>
       </div>
     `,
+    background,
   );
 }
 
@@ -378,27 +410,35 @@ function pdf2FrontPageHtml(design: ResolvedOrderCardDesign) {
   return pdfFrontPageHtml(
     design,
     PRINT_CARD_INK,
-    false,
+    null,
     nfcIconSvg(PRINT_CARD_INK, 28, { id: "nfc-pdf2" }),
+    PRINT_CARD_BG,
   );
 }
 
 function pdf3FrontPageHtml(design: ResolvedOrderCardDesign) {
   const ink = colorInk(design);
-  const gold = isGoldAccent(ink);
+  const gold = isGoldFinish(design);
+  const silver = isSilverFinish(design);
+  const foil = gold ? "gold" : silver ? "silver" : null;
   return pdfFrontPageHtml(
     design,
     ink,
-    gold,
-    nfcIconSvg(ink, 28, { gold, id: "nfc-pdf3" }),
+    foil,
+    nfcIconSvg(ink, 28, { gold, silver, id: "nfc-pdf3" }),
+    cardFaceBg(design),
   );
 }
 
-function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
-  const logo = design.logoSrc
-    ? `<img src='${escapeAttr(design.logoSrc)}' alt="" style="max-width:2.35in;max-height:1.55in;object-fit:contain;display:block;filter:${BLACK_LOGO_FILTER};-webkit-filter:${BLACK_LOGO_FILTER};" />`
+function pdfLogoImg(src?: string, black = false) {
+  if (!src) return "";
+  const filter = black
+    ? `filter:${BLACK_LOGO_FILTER};-webkit-filter:${BLACK_LOGO_FILTER};`
     : "";
+  return `<img src='${escapeAttr(src)}' alt="" style="max-width:2.55in;max-height:1.48in;object-fit:contain;object-position:center;display:block;${filter}" />`;
+}
 
+function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
   return pdfCardShell(
     nfcIconSvg(PRINT_CARD_INK, 28, { id: "nfc-pdf2-back" }),
     `
@@ -411,7 +451,7 @@ function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
         padding:0.28in;
         box-sizing:border-box;
       ">
-        ${logo}
+        ${pdfLogoImg(design.logoSrc, true)}
       </div>
     `,
   );
@@ -419,16 +459,11 @@ function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
 
 function pdf3BackPageHtml(design: ResolvedOrderCardDesign) {
   const ink = colorInk(design);
-  const gold = isGoldAccent(ink);
-  const fill = foilFill(design);
-  const logo = design.logoSrc
-    ? gold
-      ? `<div style="width:2.35in;height:1.55in;background:${fill};-webkit-mask-image:url('${escapeAttr(design.logoSrc)}');mask-image:url('${escapeAttr(design.logoSrc)}');-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;"></div>`
-      : `<img src='${escapeAttr(design.logoSrc)}' alt="" style="max-width:2.35in;max-height:1.55in;object-fit:contain;display:block;" />`
-    : "";
+  const gold = isGoldFinish(design);
+  const silver = isSilverFinish(design);
 
   return pdfCardShell(
-    nfcIconSvg(ink, 28, { gold, id: "nfc-pdf3-back" }),
+    nfcIconSvg(ink, 28, { gold, silver, id: "nfc-pdf3-back" }),
     `
       <div style="
         width:100%;
@@ -439,9 +474,10 @@ function pdf3BackPageHtml(design: ResolvedOrderCardDesign) {
         padding:0.28in;
         box-sizing:border-box;
       ">
-        ${logo}
+        ${pdfLogoImg(design.logoSrc)}
       </div>
     `,
+    cardFaceBg(design),
   );
 }
 
@@ -664,8 +700,11 @@ export function printOrderLogoPdf(order: HexaOrder) {
 export function printOrderCompleteCardPdf(order: HexaOrder) {
   void (async () => {
     const design = await buildOrderCardDesignAsync(order);
+    const logoSrc = design.logoSrc
+      ? (await prepareCardLogoDataUrl(design.logoSrc)) || design.logoSrc
+      : undefined;
     printHtmlDocument(
-      orderCompleteCardPrintHtml(design),
+      orderCompleteCardPrintHtml({ ...design, logoSrc }),
       `Complete Card — ${design.name}`,
     );
   })();
@@ -674,8 +713,16 @@ export function printOrderCompleteCardPdf(order: HexaOrder) {
 export function printOrderColorCardPdf(order: HexaOrder) {
   void (async () => {
     const design = await buildOrderCardDesignAsync(order);
+    const foil = isGoldFinish(design)
+      ? "gold"
+      : isSilverFinish(design)
+        ? "silver"
+        : null;
+    const logoSrc = design.logoSrc
+      ? (await logoForCardFinish(design.logoSrc, foil)) || design.logoSrc
+      : undefined;
     printHtmlDocument(
-      orderColorCardPrintHtml(design),
+      orderColorCardPrintHtml({ ...design, logoSrc }),
       `Color Card — ${design.name}`,
     );
   })();

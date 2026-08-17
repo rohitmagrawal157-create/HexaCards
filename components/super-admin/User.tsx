@@ -12,6 +12,7 @@ import {
   Printer,
   Plus,
   X,
+  CalendarDays,
 } from "lucide-react";
 
 export type AdminUserRow = {
@@ -49,6 +50,45 @@ function formatRegDate(date = new Date()) {
     month: "short",
     year: "numeric",
   }).replace(/ /g, "-");
+}
+
+function parseRegDate(value: string): Date | null {
+  const parsed = new Date(value.replace(/-/g, " "));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isWithinRegDateRange(
+  regDate: string,
+  from: string,
+  to: string,
+): boolean {
+  const date = parseRegDate(regDate);
+  if (!date) return !from && !to;
+
+  if (from) {
+    const fromDate = new Date(from);
+    fromDate.setHours(0, 0, 0, 0);
+    if (date < fromDate) return false;
+  }
+
+  if (to) {
+    const toDate = new Date(to);
+    toDate.setHours(23, 59, 59, 999);
+    if (date > toDate) return false;
+  }
+
+  return true;
+}
+
+function formatInputDateLabel(value: string) {
+  if (!value) return "";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function splitName(name: string): { firstName: string; lastName: string } {
@@ -224,14 +264,6 @@ function printTable(rows: AdminUserRow[]) {
   win.print();
 }
 
-function userInitials(user: Pick<AdminUserRow, "firstName" | "lastName">) {
-  const first = user.firstName.trim();
-  const last = user.lastName.trim();
-  if (first && last) return `${first[0]}${last[0]}`.toUpperCase();
-  if (first) return first.slice(0, 2).toUpperCase();
-  return "U";
-}
-
 function validateDraft(draft: UserDraft): string | null {
   if (!draft.firstName.trim()) return "First name is required.";
   if (!draft.lastName.trim()) return "Last name is required.";
@@ -263,6 +295,8 @@ export default function UsersPanel({
 }) {
   const [rows, setRows] = useState(users);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null);
@@ -282,12 +316,19 @@ export default function UsersPanel({
       );
     }
 
+    if (dateFrom || dateTo) {
+      list = list.filter((u) => isWithinRegDateRange(u.regDate, dateFrom, dateTo));
+    }
+
     list = [...list].sort((a, b) =>
       sortAsc ? a.srNo - b.srNo : b.srNo - a.srNo,
     );
 
     return list;
-  }, [rows, search, sortAsc]);
+  }, [rows, search, dateFrom, dateTo, sortAsc]);
+
+  const hasDateFilter = Boolean(dateFrom || dateTo);
+  const filteredActiveCount = filtered.filter((u) => u.active).length;
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -295,7 +336,6 @@ export default function UsersPanel({
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE,
   );
-  const activeCount = rows.filter((u) => u.active).length;
   const editingUser = editingId
     ? rows.find((u) => u.id === editingId) ?? null
     : null;
@@ -390,6 +430,12 @@ export default function UsersPanel({
     onToggleStatus?.(id, next);
   }
 
+  function clearDateFilter() {
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-end gap-2">
@@ -406,18 +452,23 @@ export default function UsersPanel({
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-black/[0.06] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <p className="text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
-            Total users
+            {hasDateFilter || search.trim() ? "Matching users" : "Total users"}
           </p>
           <p className="font-dashboard mt-1 text-2xl font-bold text-[#141414]">
-            {rows.length}
+            {filtered.length}
           </p>
+          {hasDateFilter || search.trim() ? (
+            <p className="mt-1 text-xs text-[#8a8174]">
+              of {rows.length} total
+            </p>
+          ) : null}
         </div>
         <div className="rounded-xl border border-black/[0.06] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
           <p className="text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
             Active
           </p>
           <p className="font-dashboard mt-1 text-2xl font-bold text-[#141414]">
-            {activeCount}
+            {filteredActiveCount}
           </p>
         </div>
         <div className="rounded-xl border border-black/[0.06] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
@@ -425,7 +476,7 @@ export default function UsersPanel({
             Inactive
           </p>
           <p className="font-dashboard mt-1 text-2xl font-bold text-[#141414]">
-            {rows.length - activeCount}
+            {filtered.length - filteredActiveCount}
           </p>
         </div>
       </div>
@@ -475,20 +526,80 @@ export default function UsersPanel({
             </button>
           </div>
 
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#8a8174]" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              placeholder="Search name, email, mobile…"
-              className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] py-2.5 pr-3 pl-9 text-sm text-[#141414] placeholder:text-[#8a8174]/70 focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
-            />
+          <div className="flex w-full flex-wrap items-end justify-end gap-3 lg:w-auto">
+            <div className="flex w-full flex-wrap items-end gap-2 sm:w-auto">
+              <label className="block min-w-[140px] flex-1 sm:flex-none">
+                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[#5c5346]">
+                  <CalendarDays className="h-3.5 w-3.5 text-[#BC7C10]" />
+                  From
+                </span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  max={dateTo || undefined}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3 py-2.5 text-sm text-[#141414] focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
+                />
+              </label>
+              <label className="block min-w-[140px] flex-1 sm:flex-none">
+                <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[#5c5346]">
+                  <CalendarDays className="h-3.5 w-3.5 text-[#BC7C10]" />
+                  To
+                </span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  min={dateFrom || undefined}
+                  onChange={(e) => {
+                    setDateTo(e.target.value);
+                    setPage(1);
+                  }}
+                  className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3 py-2.5 text-sm text-[#141414] focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
+                />
+              </label>
+              {hasDateFilter ? (
+                <button
+                  type="button"
+                  onClick={clearDateFilter}
+                  className="rounded-xl border border-black/[0.08] px-3 py-2.5 text-xs font-semibold text-[#5c5346] transition-colors hover:bg-black/[0.03]"
+                >
+                  Clear dates
+                </button>
+              ) : null}
+            </div>
+
+            <div className="relative w-full sm:w-64">
+              <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#8a8174]" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search name, email, mobile…"
+                className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] py-2.5 pr-3 pl-9 text-sm text-[#141414] placeholder:text-[#8a8174]/70 focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
+              />
+            </div>
           </div>
         </div>
+
+        {hasDateFilter ? (
+          <div className="border-b border-black/[0.06] bg-[#FFFCF7]/70 px-5 py-2.5 text-xs text-[#5c5346]">
+            Showing users registered
+            {dateFrom && dateTo
+              ? ` from ${formatInputDateLabel(dateFrom)} to ${formatInputDateLabel(dateTo)}`
+              : dateFrom
+                ? ` from ${formatInputDateLabel(dateFrom)} onwards`
+                : ` up to ${formatInputDateLabel(dateTo)}`}
+            {" · "}
+            <span className="font-semibold text-[#141414]">{filtered.length}</span>{" "}
+            {filtered.length === 1 ? "user" : "users"} found
+          </div>
+        ) : null}
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-collapse text-left text-sm">
@@ -527,14 +638,9 @@ export default function UsersPanel({
                     {user.srNo}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex items-start gap-2.5">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#141414] text-[10px] font-bold text-white">
-                        {userInitials(user)}
-                      </span>
-                      <span className="break-words leading-snug font-medium text-[#141414]">
-                        {fullName(user)}
-                      </span>
-                    </div>
+                    <span className="break-words leading-snug font-medium text-[#141414]">
+                      {fullName(user)}
+                    </span>
                   </td>
                   <td className="px-4 py-4">
                     <span className="block break-all leading-snug text-[#5c5346]">
@@ -609,7 +715,9 @@ export default function UsersPanel({
                     colSpan={8}
                     className="px-5 py-10 text-center text-sm text-[#8a8174]"
                   >
-                    No users found.
+                    {hasDateFilter || search.trim()
+                      ? "No users found for the selected filters."
+                      : "No users found."}
                   </td>
                 </tr>
               ) : null}

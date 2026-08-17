@@ -1,5 +1,6 @@
 import type { OrderCardDesignData } from "@/lib/order-card";
 import { resolveOrderLiveUrl } from "@/lib/order-card";
+import { compressCardLogoDataUrl } from "@/lib/order-logo-store";
 import { getOrderCardProfile } from "@/lib/order-card-profile";
 import { getOrdersForPhone, type HexaOrder } from "@/lib/orders";
 
@@ -141,12 +142,15 @@ export async function resolveLogoForOrder(
 ): Promise<string | undefined> {
   const logo = design?.logoUrl;
   if (!logo) return undefined;
+
+  let raw = logo;
   if (logo.startsWith("blob:")) {
     try {
-      return await blobUrlToDataUrl(logo);
+      raw = await blobUrlToDataUrl(logo);
     } catch {
       return undefined;
     }
   }
-  return logo;
+
+  return compressCardLogoDataUrl(raw);
 }
