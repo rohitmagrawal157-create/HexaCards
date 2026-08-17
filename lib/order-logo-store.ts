@@ -9,7 +9,7 @@ export function orderLogoRef(orderId: string) {
   return `${ORDER_LOGO_REF_PREFIX}${orderId}`;
 }
 
-export function isOrderLogoRef(src?: string | null): src is string {
+export function isOrderLogoRef(src?: string | null): boolean {
   return Boolean(src?.startsWith(ORDER_LOGO_REF_PREFIX));
 }
 
