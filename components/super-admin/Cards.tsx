@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   ChevronDown,
@@ -16,8 +16,19 @@ import {
   ScrollText,
   Eye,
   X,
+  Save,
+  User,
+  Link as LinkIcon,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import CardLogsPanel, { sampleCardLogs } from "@/components/super-admin/Cardslogs";
+import {
+  deleteAdminCard,
+  getAdminCards,
+  toggleAdminCard,
+  updateAdminCard,
+} from "@/lib/admin-directory";
 
 export type AdminCardRow = {
   id: string;
@@ -70,139 +81,6 @@ const CARD_VIEWS: {
 const PAGE_SIZE = 10;
 const EXPIRY_SOON_DAYS = 30;
 
-const sampleCards: AdminCardRow[] = [
-  {
-    id: "10650",
-    srNo: 5164,
-    name: "syed-huzaf",
-    liveUrl: "https://hexacards.com/syed-huzaf",
-    email: "syedsonselectricals@gmail.com",
-    mobile: "7981861944",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2046",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10650",
-    active: true,
-  },
-  {
-    id: "10649",
-    srNo: 5163,
-    name: "Dinesh-kothari60",
-    liveUrl: "https://hexacards.com/Dinesh-kothari60",
-    email: "dineshkothari280@gmail.com",
-    mobile: "9773970666",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2056",
-    pageViews: 1,
-    editHref: "https://hexacards.com/admin/card/edit/10649",
-    active: true,
-  },
-  {
-    id: "10648",
-    srNo: 5162,
-    name: "Prasad-RajuFulari78",
-    liveUrl: "https://hexacards.com/Prasad-RajuFulari78",
-    email: "fulari.prasad87@gmail.com",
-    mobile: "9422460780",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2056",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10648",
-    active: true,
-  },
-  {
-    id: "10647",
-    srNo: 5161,
-    name: "Pawan-ShyamsunderBangad15",
-    liveUrl: "https://hexacards.com/Pawan-ShyamsunderBangad15",
-    email: "pawanbangad@rocketmail.com",
-    mobile: "9423242586",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2056",
-    pageViews: 3,
-    editHref: "https://hexacards.com/admin/card/edit/10647",
-    active: true,
-  },
-  {
-    id: "10646",
-    srNo: 5160,
-    name: "SUVANKAR-PURKAIT71",
-    liveUrl: "https://hexacards.com/SUVANKAR-PURKAIT71",
-    email: "Suvankarpurkait@gmail.com",
-    mobile: "6291248682",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2056",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10646",
-    active: false,
-  },
-  {
-    id: "10645",
-    srNo: 5159,
-    name: "Anup-Panwar4",
-    liveUrl: "https://hexacards.com/Anup-Panwar4",
-    email: "anuppanwar11@gmail.com",
-    mobile: "8273366113",
-    startDate: "14-Aug-2026",
-    expiryDate: "20-Aug-2026",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10645",
-    active: true,
-  },
-  {
-    id: "10644",
-    srNo: 5158,
-    name: "Gurpreet-SinghUppal25",
-    liveUrl: "https://hexacards.com/Gurpreet-SinghUppal25",
-    email: "uppalgs@7parallels.com",
-    mobile: "9867763550",
-    startDate: "14-Aug-2026",
-    expiryDate: "10-Aug-2026",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10644",
-    active: true,
-  },
-  {
-    id: "10643",
-    srNo: 5157,
-    name: "AMIT-MOONDAL35",
-    liveUrl: "https://hexacards.com/AMIT-MOONDAL35",
-    email: "amitmondal091@gmail.com",
-    mobile: "9088049091",
-    startDate: "14-Aug-2026",
-    expiryDate: "14-Aug-2056",
-    pageViews: 4,
-    editHref: "https://hexacards.com/admin/card/edit/10643",
-    active: true,
-  },
-  {
-    id: "10642",
-    srNo: 5156,
-    name: "Neeraj-kumar22",
-    liveUrl: "https://hexacards.com/Neeraj-kumar22",
-    email: "aceinterior.ranchi.design@gmail.com",
-    mobile: "8770381857",
-    startDate: "13-Aug-2026",
-    expiryDate: "13-Aug-2056",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10642",
-    active: true,
-  },
-  {
-    id: "10641",
-    srNo: 5155,
-    name: "Niikhil-Bhatia14",
-    liveUrl: "https://hexacards.com/Niikhil-Bhatia14",
-    email: "nikhilbhatiadhar@gmail.com",
-    mobile: "9009563470",
-    startDate: "13-Aug-2026",
-    expiryDate: "01-Aug-2026",
-    pageViews: 0,
-    editHref: "https://hexacards.com/admin/card/edit/10641",
-    active: false,
-  },
-];
-
 function parseCardDate(value: string): Date | null {
   const parsed = new Date(value.replace(/-/g, " "));
   return Number.isNaN(parsed.getTime()) ? null : parsed;
@@ -241,7 +119,6 @@ function toCsv(rows: AdminCardRow[]): string {
     "Sr. No.",
     "Name",
     "Live URL",
-    "Email",
     "Mobile",
     "Start",
     "Expiry",
@@ -253,7 +130,6 @@ function toCsv(rows: AdminCardRow[]): string {
       r.srNo,
       `"${r.name.replace(/"/g, '""')}"`,
       r.liveUrl,
-      r.email,
       r.mobile,
       r.startDate,
       r.expiryDate,
@@ -280,7 +156,7 @@ function printTable(rows: AdminCardRow[], title: string) {
   const rowsHtml = rows
     .map(
       (r) =>
-        `<tr><td>${r.srNo}</td><td>${r.name}</td><td>${r.email}</td><td>${r.mobile}</td><td>${r.startDate}</td><td>${r.expiryDate}</td><td>${r.pageViews}</td><td>${isCardActive(r) ? "Active" : "Inactive"}</td></tr>`,
+        `<tr><td>${r.srNo}</td><td>${r.name}</td><td>${r.mobile}</td><td>${r.startDate}</td><td>${r.expiryDate}</td><td>${r.pageViews}</td><td>${isCardActive(r) ? "Active" : "Inactive"}</td></tr>`,
     )
     .join("");
   win.document.write(`
@@ -289,7 +165,7 @@ function printTable(rows: AdminCardRow[], title: string) {
       <body>
         <h2>${title}</h2>
         <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%">
-          <thead><tr><th>Sr. No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>Start</th><th>Expiry</th><th>Views</th><th>Status</th></tr></thead>
+          <thead><tr><th>Sr. No.</th><th>Name</th><th>Mobile</th><th>Start</th><th>Expiry</th><th>Views</th><th>Status</th></tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       </body>
@@ -299,8 +175,236 @@ function printTable(rows: AdminCardRow[], title: string) {
   win.print();
 }
 
+/** Convert "14-Aug-2026" → "2026-08-14" (HTML date input format) */
+function cardDateToInputValue(d: string): string {
+  const months: Record<string, string> = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06",
+    Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+  };
+  const parts = d.split("-");
+  if (parts.length !== 3) return "";
+  const [day, mon, year] = parts;
+  const mm = months[mon] ?? mon;
+  return `${year}-${mm}-${day.padStart(2, "0")}`;
+}
+
+/** Convert "2026-08-14" → "14-Aug-2026" */
+function inputValueToCardDate(v: string): string {
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const parts = v.split("-");
+  if (parts.length !== 3) return v;
+  const [year, mm, dd] = parts;
+  const mon = months[parseInt(mm, 10) - 1] ?? mm;
+  return `${dd}-${mon}-${year}`;
+}
+
+type CardDetailEdit = {
+  startDate: string;   // input value "yyyy-mm-dd"
+  expiryDate: string;  // input value "yyyy-mm-dd"
+};
+
+function CardDetailModal({
+  card,
+  onClose,
+  onSave,
+}: {
+  card: AdminCardRow;
+  onClose: () => void;
+  onSave: (id: string, patch: Partial<AdminCardRow>) => void;
+}) {
+  const [edit, setEdit] = useState<CardDetailEdit>({
+    startDate: cardDateToInputValue(card.startDate),
+    expiryDate: cardDateToInputValue(card.expiryDate),
+  });
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    onSave(card.id, {
+      startDate: inputValueToCardDate(edit.startDate) || card.startDate,
+      expiryDate: inputValueToCardDate(edit.expiryDate) || card.expiryDate,
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  const status = expiryStatus(card);
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4">
+      <div
+        className="absolute inset-0"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="card-detail-title"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-black/[0.06] px-5 py-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
+              Card Details · #{card.id}
+            </p>
+            <h3
+              id="card-detail-title"
+              className="font-dashboard mt-1 text-lg font-bold text-[#141414] truncate"
+            >
+              {card.name}
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#8a8174] hover:bg-black/[0.05] transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="space-y-4 px-5 py-5">
+          {/* Card Name */}
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase">
+              <User className="h-3 w-3" />
+              Card Name
+            </label>
+            <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-[#FAFAF8] px-3.5 py-2.5">
+              <span className="text-sm font-medium text-[#141414] break-all">
+                {card.name}
+              </span>
+            </div>
+          </div>
+
+          {/* Card URL */}
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase">
+              <LinkIcon className="h-3 w-3" />
+              Card URL
+            </label>
+            <a
+              href={card.liveUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 rounded-xl border border-black/10 bg-[#FAFAF8] px-3.5 py-2.5 transition-colors hover:border-[#BC7C10]/40 hover:bg-[#FFFCF7] group"
+            >
+              <span className="flex-1 text-sm text-[#1565C0] group-hover:text-[#BC7C10] break-all truncate">
+                {card.liveUrl}
+              </span>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[#8a8174] group-hover:text-[#BC7C10]" />
+            </a>
+          </div>
+
+          {/* Verified mobile */}
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase">
+              <Phone className="h-3 w-3" />
+              Verified mobile
+            </label>
+            <div className="flex items-center rounded-xl border border-black/10 bg-[#FAFAF8] px-3.5 py-2.5">
+              <span className="text-sm font-medium text-[#141414] tabular-nums">
+                {card.mobile || "—"}
+              </span>
+            </div>
+          </div>
+
+          {/* Dates — editable */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label
+                htmlFor="card-start-date"
+                className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase"
+              >
+                <Calendar className="h-3 w-3" />
+                Start Date
+              </label>
+              <input
+                id="card-start-date"
+                type="date"
+                value={edit.startDate}
+                onChange={(e) =>
+                  setEdit((prev) => ({ ...prev, startDate: e.target.value }))
+                }
+                className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3 py-2.5 text-sm text-[#141414] focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="card-expiry-date"
+                className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase"
+              >
+                <Calendar className="h-3 w-3" />
+                Expiry Date
+              </label>
+              <input
+                id="card-expiry-date"
+                type="date"
+                value={edit.expiryDate}
+                onChange={(e) =>
+                  setEdit((prev) => ({ ...prev, expiryDate: e.target.value }))
+                }
+                className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] px-3 py-2.5 text-sm text-[#141414] focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Status badge */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold tracking-[0.12em] text-[#8a8174] uppercase">
+              Status
+            </span>
+            {status === "expired" ? (
+              <span className="inline-flex rounded-full bg-[#fef2f2] px-2.5 py-1 text-[11px] font-bold text-[#dc2626]">
+                Expired
+              </span>
+            ) : status === "expiring" ? (
+              <span className="inline-flex rounded-full bg-[#fff7ed] px-2.5 py-1 text-[11px] font-bold text-[#ea580c]">
+                Expiring soon
+              </span>
+            ) : (
+              <span className="inline-flex rounded-full bg-[#f0fdf4] px-2.5 py-1 text-[11px] font-bold text-[#16a34a]">
+                Active
+              </span>
+            )}
+            <span className="ml-auto text-xs text-[#8a8174] tabular-nums">
+              {card.pageViews} views
+            </span>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-black/[0.06] px-5 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-black/[0.08] px-4 py-2.5 text-sm font-semibold text-[#141414] transition-colors hover:bg-black/[0.03]"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-colors ${
+              saved
+                ? "bg-[#16a34a] hover:bg-[#15803d]"
+                : "bg-[#BC7C10] hover:bg-[#a36b0d]"
+            }`}
+          >
+            <Save className="h-3.5 w-3.5" />
+            {saved ? "Saved!" : "Save changes"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CardsPanel({
-  cards = sampleCards,
+  cards,
   onDeleteCard,
   onToggleStatus,
 }: {
@@ -308,12 +412,28 @@ export default function CardsPanel({
   onDeleteCard?: (id: string) => void;
   onToggleStatus?: (id: string, active: boolean) => void;
 }) {
-  const [rows, setRows] = useState(cards);
+  const [rows, setRows] = useState<AdminCardRow[]>(() => cards ?? getAdminCards());
   const [view, setView] = useState<CardsView>("all");
   const [search, setSearch] = useState("");
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<AdminCardRow | null>(null);
+  const [detailCard, setDetailCard] = useState<AdminCardRow | null>(null);
+
+  useEffect(() => {
+    function sync() {
+      setRows(getAdminCards());
+    }
+    sync();
+    window.addEventListener("hexa-orders-change", sync);
+    window.addEventListener("hexa-admin-directory-change", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("hexa-orders-change", sync);
+      window.removeEventListener("hexa-admin-directory-change", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
 
   const counts = useMemo(() => {
     const active = rows.filter(isCardActive).length;
@@ -342,7 +462,7 @@ export default function CardsPanel({
 
     if (q) {
       list = list.filter((c) =>
-        [c.name, c.email, c.mobile].join(" ").toLowerCase().includes(q),
+        [c.name, c.mobile].join(" ").toLowerCase().includes(q),
       );
     }
 
@@ -373,6 +493,7 @@ export default function CardsPanel({
   function handleDelete(id: string) {
     setRows((prev) => prev.filter((c) => c.id !== id));
     setDeleteTarget(null);
+    deleteAdminCard(id);
     onDeleteCard?.(id);
   }
 
@@ -380,7 +501,14 @@ export default function CardsPanel({
     setRows((prev) =>
       prev.map((c) => (c.id === id ? { ...c, active: next } : c)),
     );
+    toggleAdminCard(id, next);
     onToggleStatus?.(id, next);
+  }
+
+  function handleCardSave(id: string, patch: Partial<AdminCardRow>) {
+    setRows((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    setDetailCard((prev) => (prev?.id === id ? { ...prev, ...patch } : prev));
+    updateAdminCard(id, patch);
   }
 
   function handleExportCsv() {
@@ -534,7 +662,7 @@ export default function CardsPanel({
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder="Search name, email, mobile…"
+              placeholder="Search name, mobile…"
               className="w-full rounded-xl border border-black/10 bg-[#FFFCF7] py-2.5 pr-3 pl-9 text-sm text-[#141414] placeholder:text-[#8a8174]/70 focus:border-[#BC7C10] focus:ring-2 focus:ring-[#BC7C10]/20 focus:outline-none"
             />
           </div>
@@ -559,8 +687,7 @@ export default function CardsPanel({
                     </button>
                   </th>
                   <th className="min-w-[160px] px-4 py-3">Name</th>
-                  <th className="min-w-[200px] px-4 py-3">Email</th>
-                  <th className="min-w-[110px] px-4 py-3">Mobile</th>
+                  <th className="min-w-[130px] px-4 py-3">Mobile</th>
                   <th className="min-w-[100px] px-4 py-3">Start</th>
                   <th className="min-w-[120px] px-4 py-3">Expiry</th>
                   <th className="w-[80px] px-4 py-3">Views</th>
@@ -575,7 +702,8 @@ export default function CardsPanel({
                   return (
                     <tr
                       key={card.id}
-                      className="border-b border-black/[0.04] align-top last:border-0"
+                      onClick={() => setDetailCard(card)}
+                      className="cursor-pointer border-b border-black/[0.04] align-top last:border-0 hover:bg-[#FFFCF7] transition-colors"
                     >
                       <td className="px-4 py-4 font-semibold tabular-nums text-[#8a8174]">
                         {card.srNo}
@@ -593,13 +721,8 @@ export default function CardsPanel({
                           <ExternalLink className="mt-0.5 h-3 w-3 shrink-0 text-[#8a8174] group-hover:text-[#BC7C10]" />
                         </a>
                       </td>
-                      <td className="px-4 py-4">
-                        <span className="block break-all leading-snug text-[#5c5346]">
-                          {card.email}
-                        </span>
-                      </td>
                       <td className="px-4 py-4 whitespace-nowrap tabular-nums text-[#5c5346]">
-                        {card.mobile}
+                        {card.mobile || "—"}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-[#5c5346]">
                         {card.startDate}
@@ -626,18 +749,17 @@ export default function CardsPanel({
                           {card.pageViews}
                         </span>
                       </td>
-                      <td className="px-4 py-4">
-                        <a
-                          href={card.editHref}
-                          target="_blank"
-                          rel="noreferrer"
+                      <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => setDetailCard(card)}
                           className="inline-flex items-center gap-1 rounded-lg bg-[#141414] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[#BC7C10]"
                         >
                           <Pencil className="h-3 w-3" />
                           Edit
-                        </a>
+                        </button>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
                         <label className="relative inline-flex h-6 w-11 cursor-pointer items-center">
                           <input
                             type="checkbox"
@@ -658,7 +780,7 @@ export default function CardsPanel({
                           />
                         </label>
                       </td>
-                      <td className="px-4 py-4 text-right">
+                      <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(card)}
@@ -675,7 +797,7 @@ export default function CardsPanel({
                 {pageRows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={9}
                       className="px-4 py-10 text-center text-sm text-[#8a8174]"
                     >
                       {view === "active"
@@ -736,6 +858,14 @@ export default function CardsPanel({
           </>
         )}
       </div>
+
+      {detailCard ? (
+        <CardDetailModal
+          card={detailCard}
+          onClose={() => setDetailCard(null)}
+          onSave={handleCardSave}
+        />
+      ) : null}
 
       {deleteTarget ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">

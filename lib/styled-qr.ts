@@ -49,13 +49,13 @@ function roundedRect(
 
 function finderEye(x: number, y: number, fill: string, cutout: string) {
   return [
-    roundedRect(x, y, 7, 7, 1.85, fill),
-    roundedRect(x + 1, y + 1, 5, 5, 1.35, cutout),
-    roundedRect(x + 2, y + 2, 3, 3, 1.2, fill),
+    roundedRect(x, y, 7, 7, 0, fill),
+    roundedRect(x + 1, y + 1, 5, 5, 0, cutout),
+    roundedRect(x + 2, y + 2, 3, 3, 0, fill),
   ].join("");
 }
 
-/** Dotted QR with rounded eyes + rounded frame — used on cards and PDFs. */
+/** Classic square QR modules + rounded outer frame — used on cards and PDFs. */
 export function buildStyledQrSvg(
   data: string,
   options: StyledQrOptions = {},
@@ -82,13 +82,13 @@ export function buildStyledQrSvg(
   const frameRx = total * 0.1;
   const strokeW = includeFrame ? 0.7 : 0;
 
-  const dots: string[] = [];
+  const modules: string[] = [];
   for (let row = 0; row < n; row += 1) {
     for (let col = 0; col < n; col += 1) {
       if (!qr.modules.get(row, col)) continue;
       if (inFinder(row, col, n)) continue;
-      dots.push(
-        `<circle cx="${origin + col + 0.5}" cy="${origin + row + 0.5}" r="0.38" fill="${fill}"/>`,
+      modules.push(
+        `<rect x="${origin + col}" y="${origin + row}" width="1" height="1" fill="${fill}"/>`,
       );
     }
   }
@@ -113,7 +113,7 @@ export function buildStyledQrSvg(
     ? `<rect x="${strokeW / 2}" y="${strokeW / 2}" width="${total - strokeW}" height="${total - strokeW}" rx="${frameRx}" ry="${frameRx}" fill="${background}" stroke="${fill}" stroke-width="${strokeW}"/>`
     : `<rect x="0" y="0" width="${total}" height="${total}" rx="${total * 0.08}" ry="${total * 0.08}" fill="${background}"/>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="100%" height="100%" shape-rendering="geometricPrecision">${defs}${frameShape}${dots.join("")}${finders}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${total} ${total}" width="100%" height="100%" shape-rendering="geometricPrecision">${defs}${frameShape}${modules.join("")}${finders}</svg>`;
 }
 
 export function styledQrDataUri(data: string, options: StyledQrOptions = {}) {

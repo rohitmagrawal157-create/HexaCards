@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   ChevronDown,
@@ -13,6 +13,7 @@ import {
 import {
   formatOrderAddress,
   formatOrderDate,
+  getOrders,
   paymentStatusLabel,
   statusLabel,
   type HexaOrder,
@@ -20,10 +21,7 @@ import {
 } from "@/lib/orders";
 import {
   buildOrderCardDesign,
-  buildOrderCardSlug,
   printFinishLabel,
-  SAMPLE_LOGO_SVG,
-  type OrderCardDesignData,
 } from "@/lib/order-card";
 import {
   OrderCardPreview,
@@ -33,199 +31,6 @@ import {
 } from "@/components/super-admin/OrderCardPreview";
 
 const PAGE_SIZE = 10;
-
-function sampleCardDesign(
-  name: string,
-  subtitle: string,
-  extraLine: string,
-  orderId: string,
-  phone: string,
-  cardBody: "black" | "white" = "black",
-  finish: "gold" | "silver" = "gold",
-): OrderCardDesignData {
-  const slug = buildOrderCardSlug(name, phone, orderId);
-  const liveUrl = `https://hexacards.com/${slug}`;
-  return {
-    cardBody,
-    finish,
-    cardColor: cardBody === "black" ? "#141414" : "#FFFFFF",
-    accentColor: finish === "gold" ? "#BC7C10" : "#C0C0C0",
-    name,
-    subtitle,
-    extraLine,
-    logoSrc: SAMPLE_LOGO_SVG,
-    logoLayout: { size: 120, x: 0, y: 0 },
-    liveUrl,
-  };
-}
-
-const sampleOrders: HexaOrder[] = [
-  {
-    id: "HC-48291037",
-    createdAt: "2026-08-14T10:30:00.000Z",
-    status: "placed",
-    paymentStatus: "paid",
-    ownerPhone: "9773970666",
-    customerName: "Dinesh Kothari",
-    phone: "9773970666",
-    email: "dineshkothari280@gmail.com",
-    address: "12 MG Road",
-    city: "Indore",
-    postalCode: "452001",
-    country: "India",
-    packTitle: "Standard",
-    qty: 1,
-    subtotal: 999,
-    discount: 0,
-    total: 999,
-    productTitle: "Google Review Card",
-    cardSlug: "dinesh-kothari60",
-    companyName: "Dinesh Electricals",
-    jobTitle: "Business Owner",
-    cardDesign: sampleCardDesign(
-      "Dinesh Kothari",
-      "Founder · CEO · Director",
-      "9773970666",
-      "HC-48291037",
-      "9773970666",
-      "black",
-      "gold",
-    ),
-    cardUrl: "https://hexacards.com/dinesh-kothari6637",
-  },
-  {
-    id: "HC-48290521",
-    createdAt: "2026-08-14T08:15:00.000Z",
-    status: "shipped",
-    paymentStatus: "paid",
-    ownerPhone: "9422460780",
-    customerName: "Prasad Raju Fulari",
-    phone: "9422460780",
-    email: "fulari.prasad87@gmail.com",
-    address: "Shop 4, Market Yard",
-    city: "Nashik",
-    postalCode: "422005",
-    country: "India",
-    packTitle: "Premium",
-    qty: 2,
-    subtotal: 1998,
-    discount: 100,
-    total: 1898,
-    productTitle: "NFC Business Card",
-    cardSlug: "prasad-raju-fulari78",
-    companyName: "Prasad Enterprises",
-    jobTitle: "Director",
-    cardDesign: sampleCardDesign(
-      "Prasad Raju Fulari",
-      "Director · Prasad Enterprises",
-      "9422460780",
-      "HC-48290521",
-      "9422460780",
-      "black",
-      "gold",
-    ),
-    cardUrl: "https://hexacards.com/prasad-raju-fulari8021",
-  },
-  {
-    id: "HC-48289104",
-    createdAt: "2026-08-13T16:45:00.000Z",
-    status: "placed",
-    paymentStatus: "pending",
-    ownerPhone: "9423242586",
-    customerName: "Pawan Bangad",
-    phone: "9423242586",
-    email: "pawanbangad@rocketmail.com",
-    address: "45 Station Road",
-    city: "Amravati",
-    postalCode: "444601",
-    country: "India",
-    packTitle: "Standard",
-    qty: 1,
-    subtotal: 1499,
-    discount: 0,
-    total: 1499,
-    productTitle: "Review Standee",
-    cardSlug: "pawan-shyamsunder-bangad15",
-    companyName: "Bangad Traders",
-    jobTitle: "Proprietor",
-    cardDesign: sampleCardDesign(
-      "Pawan Bangad",
-      "Proprietor · Bangad Traders",
-      "9423242586",
-      "HC-48289104",
-      "9423242586",
-      "black",
-      "silver",
-    ),
-    cardUrl: "https://hexacards.com/pawan-bangad8604",
-  },
-  {
-    id: "HC-48287002",
-    createdAt: "2026-08-13T11:20:00.000Z",
-    status: "delivered",
-    paymentStatus: "paid",
-    ownerPhone: "6291248682",
-    customerName: "Suvankar Purkait",
-    phone: "6291248682",
-    email: "Suvankarpurkait@gmail.com",
-    address: "Flat 302, Green Heights",
-    city: "Kolkata",
-    postalCode: "700091",
-    country: "India",
-    packTitle: "Standard",
-    qty: 1,
-    subtotal: 799,
-    discount: 0,
-    total: 799,
-    productTitle: "Instagram Card",
-    cardSlug: "suvankar-purkait71",
-    companyName: "Suvankar Digital",
-    jobTitle: "Creator",
-    cardDesign: sampleCardDesign(
-      "Suvankar Purkait",
-      "Creator · Suvankar Digital",
-      "6291248682",
-      "HC-48287002",
-      "6291248682",
-      "white",
-      "gold",
-    ),
-    cardUrl: "https://hexacards.com/suvankar-purkait8202",
-  },
-  {
-    id: "HC-48285019",
-    createdAt: "2026-08-12T09:05:00.000Z",
-    status: "placed",
-    paymentStatus: "failed",
-    ownerPhone: "8273366113",
-    customerName: "Anup Panwar",
-    phone: "8273366113",
-    email: "anuppanwar11@gmail.com",
-    address: "H.No. 18, Civil Lines",
-    city: "Jaipur",
-    postalCode: "302006",
-    country: "India",
-    packTitle: "Standard",
-    qty: 1,
-    subtotal: 999,
-    discount: 0,
-    total: 999,
-    productTitle: "Google Review Card",
-    cardSlug: "anup-panwar4",
-    companyName: "Panwar Services",
-    jobTitle: "Consultant",
-    cardDesign: sampleCardDesign(
-      "Anup Panwar",
-      "Consultant · Panwar Services",
-      "8273366113",
-      "HC-48285019",
-      "8273366113",
-      "black",
-      "gold",
-    ),
-    cardUrl: "https://hexacards.com/anup-panwar1319",
-  },
-];
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("en-IN", {
@@ -370,15 +175,28 @@ function printTable(rows: HexaOrder[]) {
 }
 
 export default function OrdersPanel({
-  orders = sampleOrders,
+  orders,
 }: {
   orders?: HexaOrder[];
 }) {
-  const [rows] = useState(orders);
+  const [rows, setRows] = useState<HexaOrder[]>(() => orders ?? getOrders());
   const [search, setSearch] = useState("");
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
   const [viewOrder, setViewOrder] = useState<HexaOrder | null>(null);
+
+  useEffect(() => {
+    function sync() {
+      setRows(getOrders());
+    }
+    sync();
+    window.addEventListener("hexa-orders-change", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("hexa-orders-change", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

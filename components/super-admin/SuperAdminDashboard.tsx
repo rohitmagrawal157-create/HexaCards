@@ -31,6 +31,7 @@ import {
   type SuperAdminUser,
 } from "@/lib/super-admin-auth";
 import { formatOrderDate, getOrders, statusLabel, type HexaOrder } from "@/lib/orders";
+import { getAdminUsers } from "@/lib/admin-directory";
 import {
   addAdminProduct,
   addAdminSection,
@@ -357,6 +358,7 @@ export default function SuperAdminDashboard() {
 
     window.addEventListener("hexa-super-admin-auth-change", onAuthChange);
     window.addEventListener("hexa-orders-change", onDataChange);
+    window.addEventListener("hexa-admin-directory-change", onDataChange);
     window.addEventListener("hexa-admin-products-change", onDataChange);
     window.addEventListener("focus", syncWorkspace);
     window.addEventListener("pointerdown", onActivity);
@@ -365,6 +367,7 @@ export default function SuperAdminDashboard() {
       window.clearInterval(sessionCheck);
       window.removeEventListener("hexa-super-admin-auth-change", onAuthChange);
       window.removeEventListener("hexa-orders-change", onDataChange);
+      window.removeEventListener("hexa-admin-directory-change", onDataChange);
       window.removeEventListener("hexa-admin-products-change", onDataChange);
       window.removeEventListener("focus", syncWorkspace);
       window.removeEventListener("pointerdown", onActivity);
@@ -377,9 +380,7 @@ export default function SuperAdminDashboard() {
   const overviewStats = useMemo(() => {
     const totalOrders = orders.length;
     const todaysOrders = orders.filter((o) => isSameLocalDay(o.createdAt)).length;
-    const totalUsers = new Set(
-      orders.map((o) => o.ownerPhone || o.phone).filter(Boolean),
-    ).size;
+    const totalUsers = getAdminUsers().length;
     const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
     return { todaysOrders, totalOrders, totalUsers, totalRevenue };
   }, [orders]);
@@ -1148,9 +1149,7 @@ export default function SuperAdminDashboard() {
           ) : null}
 
           {active === "orders" ? (
-            <OrdersPanel
-              orders={orders.length > 0 ? orders : undefined}
-            />
+            <OrdersPanel orders={orders} />
           ) : null}
 
           {active === "products" ? (

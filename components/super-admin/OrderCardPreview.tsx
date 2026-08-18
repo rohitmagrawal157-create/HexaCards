@@ -435,7 +435,7 @@ function pdfLogoImg(src?: string, black = false) {
   const filter = black
     ? `filter:${BLACK_LOGO_FILTER};-webkit-filter:${BLACK_LOGO_FILTER};`
     : "";
-  return `<img src='${escapeAttr(src)}' alt="" style="max-width:2.55in;max-height:1.48in;object-fit:contain;object-position:center;display:block;${filter}" />`;
+  return `<img src='${escapeAttr(src)}' alt="" style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;${filter}" />`;
 }
 
 function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
@@ -443,13 +443,12 @@ function pdf2BackPageHtml(design: ResolvedOrderCardDesign) {
     nfcIconSvg(PRINT_CARD_INK, 28, { id: "nfc-pdf2-back" }),
     `
       <div style="
-        width:100%;
-        height:100%;
+        position:absolute;
+        inset:0.14in;
         display:flex;
         align-items:center;
         justify-content:center;
-        padding:0.28in;
-        box-sizing:border-box;
+        overflow:hidden;
       ">
         ${pdfLogoImg(design.logoSrc, true)}
       </div>
@@ -466,13 +465,12 @@ function pdf3BackPageHtml(design: ResolvedOrderCardDesign) {
     nfcIconSvg(ink, 28, { gold, silver, id: "nfc-pdf3-back" }),
     `
       <div style="
-        width:100%;
-        height:100%;
+        position:absolute;
+        inset:0.14in;
         display:flex;
         align-items:center;
         justify-content:center;
-        padding:0.28in;
-        box-sizing:border-box;
+        overflow:hidden;
       ">
         ${pdfLogoImg(design.logoSrc)}
       </div>
@@ -597,7 +595,11 @@ export function orderLogoPrintHtml(
     <html>
       <head><title>Logo — ${escapeHtml(resolved.name)}</title></head>
       <body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff;">
-        <img src='${escapeAttr(resolved.logoSrc)}' alt="Uploaded logo" style="max-width:85%;max-height:85%;object-fit:contain;" />
+        <img
+          src='${escapeAttr(resolved.logoSrc)}'
+          alt="Uploaded logo"
+          style="max-width:98%;max-height:98%;object-fit:contain;object-position:center;display:block;"
+        />
       </body>
     </html>
   `;
@@ -629,7 +631,7 @@ function cardPrintDocument(
           }
           img {
             image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
+            image-rendering: high-quality;
           }
           .card-page {
             width: ${CARD_PRINT_WIDTH_IN}in;

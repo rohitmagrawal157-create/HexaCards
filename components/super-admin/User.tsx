@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   ChevronDown,
@@ -14,6 +14,14 @@ import {
   X,
   CalendarDays,
 } from "lucide-react";
+import {
+  addAdminUser,
+  deleteAdminUser,
+  getAdminUsers,
+  toggleAdminUser,
+  updateAdminUser,
+} from "@/lib/admin-directory";
+import { setAuthUser } from "@/lib/auth";
 
 export type AdminUserRow = {
   id: string;
@@ -90,109 +98,6 @@ function formatInputDateLabel(value: string) {
     year: "numeric",
   });
 }
-
-function splitName(name: string): { firstName: string; lastName: string } {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return { firstName: "", lastName: "" };
-  if (parts.length === 1) return { firstName: parts[0], lastName: "" };
-  return {
-    firstName: parts[0],
-    lastName: parts.slice(1).join(" "),
-  };
-}
-
-const sampleUsers: AdminUserRow[] = [
-  {
-    id: "9331",
-    srNo: 4988,
-    ...splitName("Dinesh Kothari"),
-    email: "dineshkothari280@gmail.com",
-    mobile: "9773970666",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9330",
-    srNo: 4987,
-    ...splitName("Prasad Raju Fulari"),
-    email: "fulari.prasad87@gmail.com",
-    mobile: "9422460780",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9329",
-    srNo: 4986,
-    ...splitName("Pawan Shyamsunder Bangad"),
-    email: "pawanbangad@rocketmail.com",
-    mobile: "9423242586",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9328",
-    srNo: 4985,
-    ...splitName("Suvankar Purkait"),
-    email: "Suvankarpurkait@gmail.com",
-    mobile: "6291248682",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9327",
-    srNo: 4984,
-    ...splitName("Anup Panwar"),
-    email: "anuppanwar11@gmail.com",
-    mobile: "8273366113",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9326",
-    srNo: 4983,
-    ...splitName("Gurpreet Singh Uppal"),
-    email: "uppalgs@7parallels.com",
-    mobile: "9867763550",
-    regDate: "14-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9325",
-    srNo: 4982,
-    ...splitName("Amit Moondal"),
-    email: "amitmondal091@gmail.com",
-    mobile: "9088049091",
-    regDate: "14-Aug-2026",
-    active: false,
-  },
-  {
-    id: "9324",
-    srNo: 4981,
-    ...splitName("Neeraj Kumar"),
-    email: "aceinterior.ranchi.design@gmail.com",
-    mobile: "8770381857",
-    regDate: "13-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9323",
-    srNo: 4980,
-    ...splitName("Nikhil Bhatia"),
-    email: "nikhilbhatiadhar@gmail.com",
-    mobile: "9009563470",
-    regDate: "13-Aug-2026",
-    active: true,
-  },
-  {
-    id: "9322",
-    srNo: 4979,
-    ...splitName("Nirmal Mandal"),
-    email: "nisazadi64@gmail.com",
-    mobile: "9434267669",
-    regDate: "13-Aug-2026",
-    active: true,
-  },
-];
 
 const PAGE_SIZE = 10;
 
@@ -279,7 +184,7 @@ function validateDraft(draft: UserDraft): string | null {
 }
 
 export default function UsersPanel({
-  users = sampleUsers,
+  users,
   onLoginAsUser,
   onDeleteUser,
   onToggleStatus,
@@ -293,7 +198,7 @@ export default function UsersPanel({
   onAddUser?: (user: AdminUserRow) => void;
   onUpdateUser?: (user: AdminUserRow) => void;
 }) {
-  const [rows, setRows] = useState(users);
+  const [rows, setRows] = useState<AdminUserRow[]>(() => users ?? getAdminUsers());
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -305,6 +210,21 @@ export default function UsersPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<UserDraft>(emptyDraft());
   const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    function sync() {
+      setRows(getAdminUsers());
+    }
+    sync();
+    window.addEventListener("hexa-orders-change", sync);
+    window.addEventListener("hexa-admin-directory-change", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("hexa-orders-change", sync);
+      window.removeEventListener("hexa-admin-directory-change", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -387,7 +307,10 @@ export default function UsersPanel({
       );
       const next = updated.find((u) => u.id === editingId);
       setRows(updated);
-      if (next) onUpdateUser?.(next);
+      if (next) {
+        updateAdminUser(next.id, next);
+        onUpdateUser?.(next);
+      }
     } else {
       const nextSr =
         rows.reduce((max, u) => Math.max(max, u.srNo), 0) + 1;
@@ -402,6 +325,7 @@ export default function UsersPanel({
         active: true,
       };
       setRows((prev) => [created, ...prev]);
+      addAdminUser(created);
       onAddUser?.(created);
       setPage(1);
     }
@@ -410,16 +334,31 @@ export default function UsersPanel({
   }
 
   function handleLogin(id: string) {
+    const user = rows.find((row) => row.id === id);
+    if (!user) return;
+
     if (onLoginAsUser) {
       onLoginAsUser(id);
-    } else {
-      window.alert(`Login as user ${id}`);
+      return;
+    }
+
+    const phone = user.mobile.replace(/\D/g, "").slice(-10);
+    if (!phone) {
+      window.alert("This user has no mobile number, so the dashboard cannot be opened.");
+      return;
+    }
+
+    setAuthUser(phone, fullName(user) || "User");
+    const dashboard = window.open("/dashboard", "_blank", "noopener,noreferrer");
+    if (!dashboard) {
+      // window.alert("Please allow pop-ups to open this user’s dashboard in a new tab.");
     }
   }
 
   function handleDelete(id: string) {
     setRows((prev) => prev.filter((u) => u.id !== id));
     setDeleteTarget(null);
+    deleteAdminUser(id);
     onDeleteUser?.(id);
   }
 
@@ -427,6 +366,7 @@ export default function UsersPanel({
     setRows((prev) =>
       prev.map((u) => (u.id === id ? { ...u, active: next } : u)),
     );
+    toggleAdminUser(id, next);
     onToggleStatus?.(id, next);
   }
 
