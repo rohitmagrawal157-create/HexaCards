@@ -87,6 +87,12 @@ function currency(amount: number) {
   return `₹${amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
 
+const NON_CARD_PRODUCT_IDS_CHECKOUT = new Set([
+  "google-standee", "instagram-standee", "youtube-standee", "review-stand",
+  "google-stand", "instagram-card", "youtube-card", "google-review-card",
+  "google-reviews", "social-media-card", "review-keychain-qr",
+]);
+
 export default function Checkout() {
   const router = useRouter();
   const [authReady, setAuthReady] = useState(false);
@@ -116,6 +122,14 @@ export default function Checkout() {
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<HexaOrder | null>(null);
+  const [orderProductId, setOrderProductId] = useState<string | undefined>(undefined);
+  const [orderDetails, setOrderDetails] = useState<{
+    productTitle?: string;
+    image?: string;
+    businessName?: string;
+    link?: string;
+    logoDataUrl?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -156,8 +170,32 @@ export default function Checkout() {
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem("hexaCardDesign");
-      if (!raw) return;
-      setDesign(JSON.parse(raw) as SavedDesign);
+      if (raw) setDesign(JSON.parse(raw) as SavedDesign);
+    } catch {
+      // ignore
+    }
+    try {
+      const detailsRaw = sessionStorage.getItem("hexaOrderDetails");
+      if (detailsRaw) {
+        const details = JSON.parse(detailsRaw) as {
+          productId?: string;
+          productTitle?: string;
+          image?: string;
+          businessName?: string;
+          link?: string;
+          logoDataUrl?: string;
+        };
+        if (details.productId) setOrderProductId(details.productId);
+        if (details.productTitle || details.image) {
+          setOrderDetails({
+            productTitle: details.productTitle,
+            image: details.image,
+            businessName: details.businessName,
+            link: details.link,
+            logoDataUrl: details.logoDataUrl,
+          });
+        }
+      }
     } catch {
       // ignore
     }
@@ -171,6 +209,20 @@ export default function Checkout() {
 
   const cartItems = useMemo((): CartItem[] => {
     const name = design?.title?.trim();
+    // For standee/social media orders, use the real product title + image
+    if (orderDetails?.productTitle) {
+      return [
+        {
+          id: orderProductId ?? "hexa-product",
+          title: name
+            ? `${orderDetails.productTitle} — ${name}`
+            : orderDetails.productTitle,
+          image: orderDetails.image ?? "/Images/Products/digitalCard.jpg",
+          price: linePrice,
+          qty: lineQty,
+        },
+      ];
+    }
     return [
       {
         id: "hexa-nfc-card",
@@ -180,7 +232,7 @@ export default function Checkout() {
         qty: lineQty,
       },
     ];
-  }, [design, linePrice, lineQty]);
+  }, [design, orderDetails, orderProductId, linePrice, lineQty]);
 
   function updateField<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -260,9 +312,17 @@ export default function Checkout() {
         total,
         coupon: appliedCoupon?.label ?? null,
         productTitle,
+        productId: orderProductId,
         status: "placed",
-        cardDesign,
+        // Only NFC / business card orders carry a digital card design
+        cardDesign: orderProductId && NON_CARD_PRODUCT_IDS_CHECKOUT.has(orderProductId)
+          ? undefined
+          : cardDesign,
         jobTitle: design?.subTitle?.trim() || undefined,
+        // Standee / social-media order details
+        businessName: orderDetails?.businessName || undefined,
+        reviewLink: orderDetails?.link || undefined,
+        orderLogoSrc: orderDetails?.logoDataUrl || undefined,
       });
 
       const finalSlug = buildOrderCardSlug(cardName, contactPhone, order.id);

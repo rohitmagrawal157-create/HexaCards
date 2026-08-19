@@ -45,7 +45,7 @@ function StepCard({ item }: { item: Step }) {
           ancestor), so both this element and the content below can read
           it via group-hover:text-[color:var(--step-accent)]. */}
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-[15rem] font-black text-gray-50/50 transition-all duration-700 group-hover:text-[color:var(--step-accent)] group-hover:opacity-[0.06]"
+        className="pointer-events-none absolute bottom-4 left-1/2 z-0 -translate-x-1/2 text-[12rem] font-black leading-none text-gray-100 transition-all duration-700 group-hover:text-[color:var(--step-accent)] group-hover:opacity-[0.12]"
         aria-hidden
       >
         {item.number}
@@ -65,12 +65,9 @@ function StepCard({ item }: { item: Step }) {
 
         {/* Numbered badge — background fades in on hover behind the
             number, text switches from accent to white at the same time */}
-        <div className="relative mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-gray-50">
-          <span
-            className="absolute inset-0 rounded-full opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-            style={{ backgroundColor: ACCENT }}
-            aria-hidden
-          />
+        <div
+          className="relative mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full border border-gray-100 bg-gray-50 transition-colors duration-500 group-hover:border-transparent group-hover:bg-[#BC7C10]"
+        >
           <span
             className="relative z-10 text-lg font-bold transition-colors duration-500 group-hover:text-white"
             style={{ color: ACCENT }}

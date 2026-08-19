@@ -30,12 +30,20 @@ export type HexaOrder = {
   total: number;
   coupon?: string | null;
   productTitle: string;
+  /** Product ID from product catalog (e.g. "google-standee", "instagram-card") */
+  productId?: string;
   /** Digital card slug — used for QR / live URL */
   cardSlug?: string;
   /** Full live card URL */
   cardUrl?: string;
   companyName?: string;
   jobTitle?: string;
+  /** For standee / social-media card orders: business/brand name entered at order time */
+  businessName?: string;
+  /** For standee / social-media card orders: the review/social link entered at order time */
+  reviewLink?: string;
+  /** For standee / social-media card orders: logo data URL or ref */
+  orderLogoSrc?: string;
   /** Card customizer data saved at checkout */
   cardDesign?: OrderCardDesignData;
 };

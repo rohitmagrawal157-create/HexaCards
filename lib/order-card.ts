@@ -135,6 +135,14 @@ function isWhitePaper(pixel: LogoPixel) {
   return lum > 236 && sat < 0.12;
 }
 
+/** Looser paper detection for foil prep — clears JPEG mats and grey halos. */
+function isPaperBackdrop(pixel: LogoPixel) {
+  if (pixel.a < 8) return true;
+  const lum = logoPixelLuminance(pixel);
+  const sat = logoPixelSaturation(pixel);
+  return lum > 168 && sat < 0.14;
+}
+
 function isBlackBox(pixel: LogoPixel) {
   if (pixel.a < 8) return true;
   const lum = logoPixelLuminance(pixel);
@@ -212,6 +220,521 @@ function punchEdgeBackdrop(
   }
 }
 
+function clampChannel(value: number) {
+  return Math.max(0, Math.min(255, Math.round(value)));
+}
+
+function hasSaturatedNeighbor(
+  data: Uint8ClampedArray,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius = 4,
+  minSat = 0.16,
+) {
+  for (let dy = -radius; dy <= radius; dy += 1) {
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      if (!dx && !dy) continue;
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      const pixel = readLogoPixel(data, pixelIndex(nx, ny, width));
+      if (pixel.a < 20) continue;
+      if (logoPixelSaturation(pixel) >= minSat) return true;
+    }
+  }
+  return false;
+}
+
+function hasArtworkInkNeighbor(
+  data: Uint8ClampedArray,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius = 5,
+) {
+  for (let dy = -radius; dy <= radius; dy += 1) {
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      if (!dx && !dy) continue;
+      const nx = x + dx;
+      const ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+      const pixel = readLogoPixel(data, pixelIndex(nx, ny, width));
+      if (pixel.a < 16) continue;
+      const lum = logoPixelLuminance(pixel);
+      const sat = logoPixelSaturation(pixel);
+      if (sat > 0.1 || lum < 88) return true;
+    }
+  }
+  return false;
+}
+
+function isSourceInkPixel(pixel: LogoPixel) {
+  if (pixel.a < 8) return false;
+  const lum = logoPixelLuminance(pixel) / 255;
+  const sat = logoPixelSaturation(pixel);
+  return lum < 0.74 || sat > 0.05;
+}
+
+function isGreyMat(pixel: LogoPixel) {
+  if (pixel.a < 12) return false;
+  const lum = logoPixelLuminance(pixel);
+  const sat = logoPixelSaturation(pixel);
+  return lum > 90 && lum < 198 && sat < 0.12;
+}
+
+/** Remove interior white mats (not part of colored artwork) before foil. */
+function punchWhiteMatForFoil(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = pixelIndex(x, y, width);
+      const pixel = readLogoPixel(data, i);
+      if (!isPaperBackdrop(pixel)) continue;
+      if (hasArtworkInkNeighbor(data, x, y, width, height)) continue;
+      data[i + 3] = 0;
+    }
+  }
+}
+
+/** Remove flat grey JPEG halos that create a visible box on foil cards. */
+function punchGreyMatForFoil(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = pixelIndex(x, y, width);
+      const pixel = readLogoPixel(data, i);
+      if (!isGreyMat(pixel)) continue;
+      if (hasArtworkInkNeighbor(data, x, y, width, height)) continue;
+      data[i + 3] = 0;
+    }
+  }
+}
+
+/** Remove black JPEG boxes / frames connected to the image edge. */
+function punchEdgeConnectedBlack(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const seen = new Uint8Array(width * height);
+  const stack: number[] = [];
+
+  const enqueue = (x: number, y: number) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return;
+    const idx = y * width + x;
+    if (seen[idx]) return;
+    const pixel = readLogoPixel(data, pixelIndex(x, y, width));
+    if (!isBlackBox(pixel)) return;
+    seen[idx] = 1;
+    stack.push(idx);
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    enqueue(x, 0);
+    enqueue(x, height - 1);
+  }
+  for (let y = 0; y < height; y += 1) {
+    enqueue(0, y);
+    enqueue(width - 1, y);
+  }
+
+  while (stack.length) {
+    const idx = stack.pop()!;
+    const x = idx % width;
+    const y = (idx / width) | 0;
+    data[idx * 4 + 3] = 0;
+    enqueue(x + 1, y);
+    enqueue(x - 1, y);
+    enqueue(x, y + 1);
+    enqueue(x, y - 1);
+  }
+}
+
+function logoContentBounds(data: Uint8ClampedArray, width: number, height: number) {
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      if (data[pixelIndex(x, y, width) + 3] < 12) continue;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < minX || maxY < minY) return null;
+  return { minX, minY, maxX, maxY };
+}
+
+/** Drop thin black rectangle frames — never remove text rows with letter gaps. */
+function punchThinPerimeterFrame(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const bounds = logoContentBounds(data, width, height);
+  if (!bounds) return;
+  const { minX, minY, maxX, maxY } = bounds;
+  const spanX = maxX - minX + 1;
+  const spanY = maxY - minY + 1;
+  if (spanX < 12 || spanY < 12) return;
+
+  const maxThickness = Math.max(3, Math.round(Math.min(spanX, spanY) * 0.035));
+
+  const lineDarkStats = (fixed: number, horizontal: boolean) => {
+    let dark = 0;
+    let gaps = 0;
+    let inGap = false;
+    const len = horizontal ? spanX : spanY;
+    for (let step = 0; step < len; step += 1) {
+      const x = horizontal ? minX + step : fixed;
+      const y = horizontal ? fixed : minY + step;
+      const pixel = readLogoPixel(data, pixelIndex(x, y, width));
+      const isDark =
+        pixel.a >= 12 &&
+        (isBlackBox(pixel) || logoPixelLuminance(pixel) < 72);
+      if (isDark) {
+        dark += 1;
+        inGap = false;
+        continue;
+      }
+      if (pixel.a < 12) {
+        if (!inGap) gaps += 1;
+        inGap = true;
+      }
+    }
+    return { dark, gaps, len };
+  };
+
+  const isSolidFrameLine = (fixed: number, horizontal: boolean) => {
+    const { dark, gaps, len } = lineDarkStats(fixed, horizontal);
+    return dark / len > 0.8 && gaps < 4;
+  };
+
+  const clearIfFrameLine = (x: number, y: number, horizontal: boolean) => {
+    const i = pixelIndex(x, y, width);
+    const pixel = readLogoPixel(data, i);
+    if (pixel.a < 12) return;
+    if (!isBlackBox(pixel) && logoPixelLuminance(pixel) >= 72) return;
+    const fixed = horizontal ? y : x;
+    if (!isSolidFrameLine(fixed, horizontal)) return;
+    data[i + 3] = 0;
+  };
+
+  for (let t = 0; t < maxThickness; t += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      clearIfFrameLine(x, minY + t, true);
+      clearIfFrameLine(x, maxY - t, true);
+    }
+    for (let y = minY; y <= maxY; y += 1) {
+      clearIfFrameLine(minX + t, y, false);
+      clearIfFrameLine(maxX - t, y, false);
+    }
+  }
+}
+
+function prepareLogoMaskForFoil(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  punchWhiteMatForFoil(data, width, height);
+  punchGreyMatForFoil(data, width, height);
+  punchEdgeConnectedBlack(data, width, height);
+  punchThinPerimeterFrame(data, width, height);
+  defringeLogoData(data);
+}
+
+/**
+ * Only run the bottom-tagline restoration on logos that actually contain
+ * multi-line text in the lower area.
+ *
+ * Monogram-style logos (like the AS case) don't need this pass and it can
+ * reintroduce the rectangular frame artifact.
+ */
+function shouldRestoreBottomTaglines(
+  source: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const xStep = width > 700 ? 3 : 2;
+  const densities = new Uint32Array(height);
+
+  let max = 0;
+  for (let y = 0; y < height; y += 1) {
+    let count = 0;
+    for (let x = 0; x < width; x += xStep) {
+      const i = pixelIndex(x, y, width);
+      const px = readLogoPixel(source, i);
+      if (isSourceInkPixel(px)) count += 1;
+    }
+    densities[y] = count;
+    if (count > max) max = count;
+  }
+
+  const threshold = Math.max(6, Math.floor(max * 0.22));
+  const segments: Array<{ start: number; end: number }> = [];
+  let inSeg = false;
+  let start = 0;
+
+  for (let y = 0; y < height; y += 1) {
+    const active = densities[y] > threshold;
+    if (active && !inSeg) {
+      inSeg = true;
+      start = y;
+    } else if (!active && inSeg) {
+      inSeg = false;
+      segments.push({ start, end: y - 1 });
+    }
+  }
+  if (inSeg) segments.push({ start, end: height - 1 });
+
+  // Need at least 2 separate ink bands: top logo + bottom tagline.
+  if (segments.length < 2) return false;
+
+  const mid = Math.floor(height * 0.55);
+  const hasTop = segments.some((s) => s.end < mid);
+  const hasBottom = segments.some(
+    (s) => s.start > mid && s.end - s.start >= 2,
+  );
+
+  return hasTop && hasBottom;
+}
+
+/** Bring back thin taglines removed by backdrop / frame passes. */
+function restoreLostFineInk(
+  data: Uint8ClampedArray,
+  source: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const bounds = logoContentBounds(source, width, height);
+  if (!bounds) return;
+  const { minX, maxX, minY, maxY } = bounds;
+  const taglineStart = minY + Math.floor((maxY - minY) * 0.62);
+
+  for (let y = minY; y <= maxY; y += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      const i = pixelIndex(x, y, width);
+      const src = readLogoPixel(source, i);
+      if (!isSourceInkPixel(src)) continue;
+      const cur = readLogoPixel(data, i);
+      const isTaglineRow = y >= taglineStart;
+      if (!isTaglineRow && cur.a >= 64) continue;
+
+      data[i] = src.r;
+      data[i + 1] = src.g;
+      data[i + 2] = src.b;
+      data[i + 3] = clampChannel(Math.max(cur.a, src.a, isTaglineRow ? 230 : 180));
+    }
+  }
+}
+
+/** Lift thin strokes, small type, and bottom taglines before foil tint. */
+function boostFineInkForFoil(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+) {
+  const bounds = logoContentBounds(data, width, height);
+  if (!bounds) return;
+  const taglineStart = bounds.minY + Math.floor((bounds.maxY - bounds.minY) * 0.62);
+
+  for (let y = bounds.minY; y <= bounds.maxY; y += 1) {
+    for (let x = bounds.minX; x <= bounds.maxX; x += 1) {
+      const i = pixelIndex(x, y, width);
+      const pixel = readLogoPixel(data, i);
+      if (pixel.a < 6) continue;
+
+      const lum = logoPixelLuminance(pixel) / 255;
+      const sat = logoPixelSaturation(pixel);
+      const isTaglineRow = y >= taglineStart;
+      const isFineInk = lum < 0.62 || (sat > 0.04 && lum < 0.78);
+
+      if (!isFineInk && !isTaglineRow) continue;
+
+      if (pixel.a < 240) {
+        const lift = isTaglineRow ? 1.45 : lum < 0.35 ? 1.32 : 1.18;
+        data[i + 3] = clampChannel(Math.min(255, pixel.a * lift + (isTaglineRow ? 28 : 12)));
+      }
+
+      if (lum < 0.72) {
+        const target = Math.min(0.94, lum + (isTaglineRow ? 0.34 : 0.22) + sat * 0.16);
+        const scale = lum > 0.001 ? target / lum : 1;
+        data[i] = clampChannel(pixel.r * scale);
+        data[i + 1] = clampChannel(pixel.g * scale);
+        data[i + 2] = clampChannel(pixel.b * scale);
+      }
+    }
+  }
+}
+
+function sharpenFoilAlpha(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha < 10) {
+      data[i + 3] = 0;
+      continue;
+    }
+    if (alpha > 72) {
+      data[i + 3] = 255;
+      continue;
+    }
+    data[i + 3] = clampChannel(alpha * 1.55);
+  }
+}
+
+function isLogoInkPixel(pixel: LogoPixel) {
+  if (pixel.a < 6) return false;
+  if (isPaperBackdrop(pixel) || isGreyMat(pixel) || isBlackBox(pixel)) return false;
+  const lum = logoPixelLuminance(pixel) / 255;
+  const sat = logoPixelSaturation(pixel);
+  // On uploaded logos, leftover black frames/mats can survive cleanup.
+  // Those should never get foiled as "ink".
+  return sat > 0.04 || lum > 0.15;
+}
+
+/** Remove white/grey JPEG halos on soft edges — keeps interior artwork intact. */
+function defringeLogoData(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha === 0 || alpha === 255) continue;
+
+    const pixel = readLogoPixel(data, i);
+    const lum = logoPixelLuminance(pixel) / 255;
+    const sat = logoPixelSaturation(pixel);
+
+    if (lum > 0.9 && sat < 0.14) {
+      data[i + 3] = 0;
+      continue;
+    }
+
+    if (lum > 0.78 && sat < 0.22 && alpha < 235) {
+      const fringe = ((lum - 0.78) / 0.22) * (1 - alpha / 255);
+      data[i + 3] = clampChannel(alpha * (1 - fringe * 0.95));
+    }
+  }
+}
+
+/** Lift thin strokes and small type so they survive foil conversion. */
+function strengthenFineLogoDetails(data: Uint8ClampedArray) {
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha < 8) continue;
+
+    const pixel = readLogoPixel(data, i);
+    const lum = logoPixelLuminance(pixel) / 255;
+    const sat = logoPixelSaturation(pixel);
+    const ink = sat > 0.16 ? lum * 0.45 + sat * 0.55 : lum;
+
+    if (ink > 0.04 && ink < 0.78 && alpha < 252) {
+      const lift =
+        ink < 0.5
+          ? 1.24 + (0.5 - ink) * 0.42
+          : 1.08 + (0.55 - ink) * 0.18;
+      data[i + 3] = clampChannel(Math.min(255, alpha * lift));
+    }
+
+    if (sat > 0.05 && lum < 0.7) {
+      const target = Math.min(0.9, lum + 0.24 + sat * 0.2);
+      const scale = lum > 0.001 ? target / lum : 1;
+      data[i] = clampChannel(pixel.r * scale);
+      data[i + 1] = clampChannel(pixel.g * scale);
+      data[i + 2] = clampChannel(pixel.b * scale);
+      continue;
+    }
+
+    if (ink < 0.82) {
+      const contrast = Math.min(1, Math.max(0, (ink - 0.5) * 1.28 + 0.5));
+      const boosted = 0.5 + (contrast - 0.5) * 1.22;
+      const next = lum + (boosted - lum) * 0.55;
+      const scale = lum > 0.001 ? next / lum : 1;
+      data[i] = clampChannel(data[i] * scale);
+      data[i + 1] = clampChannel(data[i + 1] * scale);
+      data[i + 2] = clampChannel(data[i + 2] * scale);
+    }
+  }
+}
+
+function logoInkStrength(r: number, g: number, b: number) {
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  const sat = logoPixelSaturation({ r, g, b, a: 255 });
+  let colorful = sat > 0.14 ? lum * 0.42 + sat * 0.58 : lum;
+  if (sat > 0.04 && lum < 0.68) {
+    colorful = Math.max(colorful, 0.58 + sat * 0.34);
+  }
+  if (lum < 0.28) {
+    colorful = Math.max(colorful, 0.52);
+  }
+  return Math.min(1, Math.max(0, Math.pow(colorful, 0.62)));
+}
+
+function foilGradientAt(
+  finish: LogoFoilFinish,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): [number, number, number] {
+  const tx = width <= 1 ? 0 : x / (width - 1);
+  const ty = height <= 1 ? 0 : y / (height - 1);
+  return foilGradientColorAt(finish, tx * 0.68 + ty * 0.32);
+}
+
+function applyFoilTintToLogoData(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  finish: LogoFoilFinish,
+) {
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const pixel = readLogoPixel(data, i);
+      if (!isLogoInkPixel(pixel)) {
+        data[i + 3] = 0;
+        continue;
+      }
+
+      const ink = logoInkStrength(pixel.r, pixel.g, pixel.b);
+      let [fr, fg, fb] = foilGradientAt(finish, x, y, width, height);
+
+      let shade = Math.max(ink < 0.55 ? 0.72 : 0.62, 0.36 + ink * 0.64);
+      const sat = logoPixelSaturation(pixel);
+
+      if (sat > 0.1) {
+        if (pixel.r > pixel.b * 1.1) {
+          fr = clampChannel(fr * 1.06 + 16);
+          fg = clampChannel(fg * 1.03 + 10);
+          shade = Math.max(shade, 0.7);
+        } else if (pixel.b > pixel.r * 1.08) {
+          fb = clampChannel(fb * 1.08 + 18);
+          fr = clampChannel(fr * 0.94 + 10);
+          shade = Math.max(shade, 0.74);
+        }
+      }
+
+      const shine =
+        ink > 0.68 ? (ink - 0.68) * 2.8 : ink > 0.32 ? 0.1 + ink * 0.08 : 0.04;
+      data[i] = clampChannel(fr * shade + 255 * shine * 0.46);
+      data[i + 1] = clampChannel(fg * shade + 255 * shine * 0.46);
+      data[i + 2] = clampChannel(fb * shade + 255 * shine * 0.46);
+      data[i + 3] = 255;
+    }
+  }
+}
+
 /** Keep every logo mark; only the outer backdrop becomes transparent. */
 export async function prepareCardLogoDataUrl(
   src: string,
@@ -245,6 +768,7 @@ export async function prepareCardLogoDataUrl(
       ctx.drawImage(img, 0, 0, width, height);
       const image = ctx.getImageData(0, 0, width, height);
       punchEdgeBackdrop(image.data, width, height);
+      defringeLogoData(image.data);
       ctx.putImageData(image, 0, 0);
       resolve(canvas.toDataURL("image/png"));
     };
@@ -273,6 +797,54 @@ const LOGO_FOIL_STOPS: Record<LogoFoilFinish, readonly { offset: number; color: 
     { offset: 1, color: "#DEE1E4" },
   ],
 };
+
+function hexToRgb(hex: string): [number, number, number] {
+  const raw = hex.replace("#", "");
+  const full =
+    raw.length === 3
+      ? raw
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : raw.padEnd(6, "0").slice(0, 6);
+  return [
+    parseInt(full.slice(0, 2), 16),
+    parseInt(full.slice(2, 4), 16),
+    parseInt(full.slice(4, 6), 16),
+  ];
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function foilGradientColorAt(
+  finish: LogoFoilFinish,
+  t: number,
+): [number, number, number] {
+  const stops = LOGO_FOIL_STOPS[finish];
+  if (stops.length === 0) return [200, 200, 200];
+  if (t <= stops[0].offset) return hexToRgb(stops[0].color);
+  if (t >= stops[stops.length - 1].offset) {
+    return hexToRgb(stops[stops.length - 1].color);
+  }
+
+  for (let i = 1; i < stops.length; i += 1) {
+    const left = stops[i - 1];
+    const right = stops[i];
+    if (t > right.offset) continue;
+    const span = Math.max(0.0001, right.offset - left.offset);
+    const local = (t - left.offset) / span;
+    const [lr, lg, lb] = hexToRgb(left.color);
+    const [rr, rg, rb] = hexToRgb(right.color);
+    return [
+      clampChannel(lerp(lr, rr, local)),
+      clampChannel(lerp(lg, rg, local)),
+      clampChannel(lerp(lb, rb, local)),
+    ];
+  }
+  return hexToRgb(stops[stops.length - 1].color);
+}
 
 /** Prepare backdrop then tint the logo to the selected gold or silver foil — full size kept. */
 export async function logoForCardFinish(
@@ -303,13 +875,38 @@ export async function logoForCardFinish(
       }
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
-      ctx.globalCompositeOperation = "source-in";
-      const gradient = ctx.createLinearGradient(0, 0, width, 0);
-      for (const stop of LOGO_FOIL_STOPS[finish]) {
-        gradient.addColorStop(stop.offset, stop.color);
+      const image = ctx.getImageData(0, 0, width, height);
+      const d = image.data;
+
+      // The input is already cleaned by prepareCardLogoDataUrl:
+      // white/black edge backdrop is transparent, only logo ink remains.
+      // Simply tint every opaque pixel with the foil gradient.
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const i = (y * width + x) * 4;
+          const a = d[i + 3];
+          if (a < 10) { d[i + 3] = 0; continue; }
+
+          const ty = height <= 1 ? 0 : y / (height - 1);
+          const tx = width <= 1 ? 0 : x / (width - 1);
+          const t = tx * 0.55 + ty * 0.45;
+          const [fr, fg, fb] = foilGradientColorAt(finish, t);
+
+          // Use original luminance for depth — dark ink gets rich foil,
+          // light edges get brighter highlights
+          const lum = (0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) / 255;
+          const inkVal = Math.min(1, Math.max(0, 1 - lum));
+          const shade = 0.58 + inkVal * 0.42;
+          const shine = inkVal > 0.65 ? (inkVal - 0.65) * 1.4 : 0;
+
+          d[i]     = clampChannel(fr * shade + 255 * shine * 0.28);
+          d[i + 1] = clampChannel(fg * shade + 255 * shine * 0.28);
+          d[i + 2] = clampChannel(fb * shade + 255 * shine * 0.28);
+          d[i + 3] = a;
+        }
       }
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+
+      ctx.putImageData(image, 0, 0);
       resolve(canvas.toDataURL("image/png"));
     };
     img.onerror = () => resolve(cleaned);

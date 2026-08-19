@@ -43,6 +43,7 @@ import {
 import {
   getUserDashboardCardsFromOrders,
   isCardProductOrder,
+  orderCardImage,
   type UserDashboardCard,
 } from "@/lib/user-cards";
 import { ensureOrderCardProfile } from "@/lib/order-card-profile";
@@ -541,6 +542,7 @@ function CardsPanel({
   orders: HexaOrder[];
 }) {
   const [qrCard, setQrCard] = useState<UserDashboardCard | null>(null);
+  const [detailsOrder, setDetailsOrder] = useState<HexaOrder | null>(null);
   const [copied, setCopied] = useState(false);
   const [profileTick, setProfileTick] = useState(0);
 
@@ -640,13 +642,18 @@ function CardsPanel({
             className="overflow-hidden rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
           >
             <div className="relative aspect-[16/10] bg-[#111]">
-              <Image
-                src="/Images/Products/digitalCard.jpg"
-                alt="Hexa NFC card"
-                fill
-                className="object-cover opacity-90"
-                sizes="(max-width: 1024px) 100vw, 480px"
-              />
+              {(() => {
+                const img = orderCardImage(card.productTitle, card.productId);
+                return (
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    className="object-cover opacity-90"
+                    sizes="(max-width: 1024px) 100vw, 480px"
+                  />
+                );
+              })()}
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
               <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                 {card.isLatest ? (
@@ -663,38 +670,56 @@ function CardsPanel({
                   {card.name}
                 </p>
                 <p className="mt-0.5 text-sm text-white/80">{card.subtitle}</p>
-                <p className="mt-1 truncate font-mono text-[11px] text-white/60">
-                  {card.publicUrl.replace(/^https:\/\//, "")}
-                </p>
+                {card.isEditable ? (
+                  <p className="mt-1 truncate font-mono text-[11px] text-white/60">
+                    {card.publicUrl.replace(/^https:\/\//, "")}
+                  </p>
+                ) : null}
               </div>
             </div>
 
             <div className="flex items-center justify-between gap-2 border-t border-black/[0.06] px-3 py-2.5">
-              <button
-                type="button"
-                onClick={() => setQrCard(card)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
-              >
-                <QrCode className="h-4 w-4" />
-                QR Code
-              </button>
-              <div className="flex items-center gap-2">
-                <Link
-                  href={card.publicPath}
-                  target="_blank"
+              {card.isEditable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setQrCard(card)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    QR Code
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={card.publicPath}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
+                    >
+                      <Eye className="h-4 w-4" strokeWidth={2} />
+                      View
+                    </Link>
+                    <Link
+                      href={`/dashboard/edit-card?order=${encodeURIComponent(card.orderId)}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#BC7C10] px-3 py-2 text-xs font-semibold text-white hover:bg-[#9a650d]"
+                    >
+                      <Pencil className="h-4 w-4" strokeWidth={2} />
+                      Edit
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const order = orders.find((o) => o.id === card.orderId) ?? null;
+                    setDetailsOrder(order);
+                  }}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-[#FAFAF8] px-3 py-2 text-xs font-semibold text-[#141414] ring-1 ring-black/[0.05] hover:bg-[#F3F4F6]"
                 >
-                  <Eye className="h-4 w-4" strokeWidth={2} />
-                  View
-                </Link>
-                <Link
-                  href={`/dashboard/edit-card?order=${encodeURIComponent(card.orderId)}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#BC7C10] px-3 py-2 text-xs font-semibold text-white hover:bg-[#9a650d]"
-                >
-                  <Pencil className="h-4 w-4" strokeWidth={2} />
-                  Edit
-                </Link>
-              </div>
+                  <Package className="h-4 w-4" />
+                  Details
+                </button>
+              )}
             </div>
           </article>
         ))}
@@ -787,6 +812,123 @@ function CardsPanel({
               >
                 Open link
               </a>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {detailsOrder ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="details-modal-title"
+          onClick={() => setDetailsOrder(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p id="details-modal-title" className="text-[15px] font-bold text-[#141414]">
+                  Order Details
+                </p>
+                <p className="mt-0.5 text-xs text-[#6b6560]">
+                  {detailsOrder.productTitle}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailsOrder(null)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#5c5346] hover:bg-[#FAFAF8]"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {(() => {
+              // New orders store details directly; old orders store them in cardDesign
+              const logoSrc =
+                detailsOrder.orderLogoSrc ||
+                detailsOrder.cardDesign?.logoSrc ||
+                null;
+              const brandName =
+                detailsOrder.businessName ||
+                detailsOrder.cardDesign?.name ||
+                detailsOrder.customerName ||
+                null;
+              // extraLine is saved as "Platform: url" — extract just the URL portion
+              const rawExtra = detailsOrder.reviewLink || detailsOrder.cardDesign?.extraLine || null;
+              const reviewLink = rawExtra
+                ? rawExtra.includes(": ")
+                  ? rawExtra.split(": ").slice(1).join(": ").trim()
+                  : rawExtra.trim()
+                : null;
+
+              const hasAny = logoSrc || brandName || reviewLink;
+
+              return (
+                <div className="mt-4 space-y-4">
+                  {/* Logo */}
+                  {logoSrc ? (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9a9a9a]">
+                        Business Logo
+                      </span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={logoSrc}
+                        alt="Business logo"
+                        className="h-16 w-auto max-w-[160px] rounded-xl border border-black/[0.06] bg-[#FAFAF8] object-contain p-2"
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* Business / brand name */}
+                  {brandName ? (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9a9a9a]">
+                        Business / Brand Name
+                      </span>
+                      <p className="text-sm font-semibold text-[#141414]">
+                        {brandName}
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {/* Review / social link */}
+                  {reviewLink ? (
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9a9a9a]">
+                        Your Link
+                      </span>
+                      <a
+                        href={reviewLink.startsWith("http") ? reviewLink : `https://${reviewLink}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="break-all text-sm font-medium text-[#BC7C10] underline-offset-2 hover:underline"
+                      >
+                        {reviewLink}
+                      </a>
+                    </div>
+                  ) : null}
+
+                  {!hasAny ? (
+                    <p className="text-sm text-[#8a8174]">
+                      No additional details were saved for this order.
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })()}
+
+            <div className="mt-5 border-t border-black/[0.06] pt-4">
+              <div className="flex items-center justify-between text-xs text-[#8a8174]">
+                <span>Order ID: {detailsOrder.id}</span>
+                <span>{formatOrderDate(detailsOrder.createdAt)}</span>
+              </div>
             </div>
           </div>
         </div>

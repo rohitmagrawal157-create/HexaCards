@@ -19,6 +19,8 @@ export type SavedCardDesign = {
 
 export type UserDashboardCard = {
   orderId: string;
+  productTitle: string;
+  productId?: string;
   name: string;
   subtitle: string;
   slug: string;
@@ -28,17 +30,103 @@ export type UserDashboardCard = {
   createdAt: string;
   accentColor: string;
   isLatest: boolean;
+  /** true for NFC / business cards that have an editable digital profile */
+  isEditable: boolean;
 };
 
 
+const NON_CARD_PRODUCT_IDS = new Set([
+  "google-standee",
+  "instagram-standee",
+  "youtube-standee",
+  "review-stand",
+  "google-stand",
+  "instagram-card",
+  "youtube-card",
+  "google-review-card",
+  "google-reviews",
+  "social-media-card",
+  "review-keychain-qr",
+]);
+
+const NON_CARD_PRODUCT_TITLE_KEYWORDS = [
+  "standee",
+  "standy",
+  "instagram card",
+  "youtube card",
+  "google review card",
+  "social media card",
+  "keychain qr",
+  "review stand",
+  "pvc card",
+  "wooden card",
+];
+
 export function isCardProductOrder(order: HexaOrder): boolean {
-  if (order.cardDesign) return true;
+  // Use productId as the primary source of truth when available
+  if (order.productId) {
+    return !NON_CARD_PRODUCT_IDS.has(order.productId);
+  }
+  // Fall back to title matching for older orders
   const title = order.productTitle.toLowerCase();
+  for (const kw of NON_CARD_PRODUCT_TITLE_KEYWORDS) {
+    if (title.includes(kw)) return false;
+  }
   return (
     title.includes("nfc") ||
     title.includes("business card") ||
-    title.includes("hexa card")
+    title.includes("hexa card") ||
+    title.includes("metal card") ||
+    title.includes("hexa nfc")
   );
+}
+
+const STANDEE_IDS = new Set([
+  "google-standee",
+  "instagram-standee",
+  "youtube-standee",
+  "review-stand",
+  "google-stand",
+]);
+
+const SOCIAL_CARD_IDS = new Set([
+  "instagram-card",
+  "youtube-card",
+  "google-review-card",
+  "google-reviews",
+  "social-media-card",
+  "review-keychain-qr",
+]);
+
+/** Returns the product image src and alt for a dashboard card tile. */
+export function orderCardImage(
+  productTitle: string,
+  productId?: string,
+): { src: string; alt: string } {
+  if (productId) {
+    if (STANDEE_IDS.has(productId)) {
+      return { src: "/Images/Products/reviewStandy.jpg", alt: "Standee" };
+    }
+    if (SOCIAL_CARD_IDS.has(productId)) {
+      return { src: "/Images/Products/googleReview.jpg", alt: "Social Media Card" };
+    }
+    return { src: "/Images/Products/digitalCard.jpg", alt: "Hexa NFC card" };
+  }
+  // Fallback for older orders without productId
+  const title = productTitle.toLowerCase();
+  if (title.includes("standee") || title.includes("standy") || title.includes("review stand")) {
+    return { src: "/Images/Products/reviewStandy.jpg", alt: "Standee" };
+  }
+  if (
+    title.includes("instagram card") ||
+    title.includes("youtube card") ||
+    title.includes("google review card") ||
+    title.includes("social media card") ||
+    title.includes("keychain qr")
+  ) {
+    return { src: "/Images/Products/googleReview.jpg", alt: "Social Media Card" };
+  }
+  return { src: "/Images/Products/digitalCard.jpg", alt: "Hexa NFC card" };
 }
 
 export function savedDesignToCardDesign(
@@ -78,7 +166,8 @@ export function orderToDashboardCard(
   order: HexaOrder,
   isLatest: boolean,
 ): UserDashboardCard {
-  const savedProfile = getOrderCardProfile(order.id);
+  const editable = isCardProductOrder(order);
+  const savedProfile = editable ? getOrderCardProfile(order.id) : null;
   const name =
     savedProfile?.contact.cardName?.trim() ||
     order.cardDesign?.name?.trim() ||
@@ -93,6 +182,8 @@ export function orderToDashboardCard(
 
   return {
     orderId: order.id,
+    productTitle: order.productTitle,
+    productId: order.productId,
     name,
     subtitle,
     slug,
@@ -105,6 +196,7 @@ export function orderToDashboardCard(
       order.cardDesign?.accentColor ||
       "#BC7C10",
     isLatest,
+    isEditable: editable,
   };
 }
 
@@ -116,9 +208,7 @@ export function getUserDashboardCards(phone: string): UserDashboardCard[] {
 export function getUserDashboardCardsFromOrders(
   orders: HexaOrder[],
 ): UserDashboardCard[] {
-  return orders
-    .filter(isCardProductOrder)
-    .map((order, index) => orderToDashboardCard(order, index === 0));
+  return orders.map((order, index) => orderToDashboardCard(order, index === 0));
 }
 
 /** @deprecated use initOrderCardProfile — each order keeps its own profile */
