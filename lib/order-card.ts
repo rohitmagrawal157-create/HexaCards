@@ -82,6 +82,9 @@ export async function resolveOrderLogoSrc(
   const staticSrc = pickStaticLogoSrc(stored);
   if (staticSrc) return staticSrc;
 
+  // Standee / social-media orders store the logo in orderLogoSrc
+  if (order.orderLogoSrc) return order.orderLogoSrc;
+
   const blobCandidates = [order.cardDesign?.logoSrc].filter(
     (src): src is string => Boolean(src?.startsWith("blob:")),
   );
@@ -1201,7 +1204,9 @@ export function buildOrderCardDesign(order: HexaOrder): ResolvedOrderCardDesign 
       undefined,
     logoSrc:
       getCachedOrderLogo(order.id) ||
-      pickStaticLogoSrc(order.cardDesign?.logoSrc),
+      pickStaticLogoSrc(order.cardDesign?.logoSrc) ||
+      order.orderLogoSrc ||
+      undefined,
     logoLayout: order.cardDesign?.logoLayout ?? { size: 120, x: 0, y: 0 },
     slug,
     liveUrl,

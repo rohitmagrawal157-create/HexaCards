@@ -639,6 +639,25 @@ export default function OrdersPanel({
                     </div>
                   </section>
 
+                  {(viewOrder.businessName || viewOrder.reviewLink || viewOrder.orderLogoSrc) ? (
+                    <section className="rounded-xl border border-black/[0.06] bg-[#FFFCF7] p-4">
+                      <p className="text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
+                        Standee / Social card details
+                      </p>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        {viewOrder.businessName ? (
+                          <DetailField label="Business / Brand name" value={viewOrder.businessName} />
+                        ) : null}
+                        {viewOrder.reviewLink ? (
+                          <DetailField label="Review / Social link" value={viewOrder.reviewLink} className="sm:col-span-2" />
+                        ) : null}
+                        {viewOrder.productId ? (
+                          <DetailField label="Product ID" value={viewOrder.productId} />
+                        ) : null}
+                      </div>
+                    </section>
+                  ) : null}
+
                   <section className="rounded-xl border border-black/[0.06] bg-white p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="text-[10px] font-bold tracking-[0.14em] text-[#BC7C10] uppercase">
