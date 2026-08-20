@@ -265,9 +265,9 @@ export const productCatalog: Record<string, CatalogProduct> = {
       "Free design assistance on WhatsApp",
       "Ready-to-hand packaging",
     ],
-    ctaLabel: "Design Your Card",
-    ctaHref: "/design-your-card#card-studio",
-    designable: true,
+    ctaLabel: "Order Now",
+    ctaHref: "/order/digital-profile-qr",
+    designable: false,
   },
   "social-media-cards": {
     id: "social-media-cards",

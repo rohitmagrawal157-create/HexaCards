@@ -104,6 +104,9 @@ export function orderCardImage(
   productId?: string,
 ): { src: string; alt: string } {
   if (productId) {
+    if (productId === "digital-profile-qr") {
+      return { src: "/Images/banner.png", alt: "Digital Profile + QR" };
+    }
     if (STANDEE_IDS.has(productId)) {
       return { src: "/Images/Products/reviewStandy.jpg", alt: "Standee" };
     }
@@ -114,6 +117,9 @@ export function orderCardImage(
   }
   // Fallback for older orders without productId
   const title = productTitle.toLowerCase();
+  if (title.includes("digital profile") || title.includes("digital qr")) {
+    return { src: "/Images/banner.png", alt: "Digital Profile + QR" };
+  }
   if (title.includes("standee") || title.includes("standy") || title.includes("review stand")) {
     return { src: "/Images/Products/reviewStandy.jpg", alt: "Standee" };
   }
