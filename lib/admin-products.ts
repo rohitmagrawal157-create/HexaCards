@@ -3,11 +3,10 @@ import {
   type CatalogProduct,
   type ProductMedia,
 } from "@/lib/product-catalog";
+import { apiFetch } from "@/lib/api-config";
 
 const ADMIN_STORE_KEY = "hexaAdminProductStore";
 const ADMIN_PRODUCTS_CHANGE = "hexa-admin-products-change";
-
-/** @deprecated legacy key — migrated once into ADMIN_STORE_KEY */
 const LEGACY_CATALOG_KEY = "hexaAdminProducts";
 
 export type AdminProductDraft = {
@@ -46,6 +45,35 @@ type AdminStore = {
   orders: Record<string, string[]>;
 };
 
+type ApiCategory = {
+  id: string;
+  title: string;
+  subtitle: string;
+  imageSrc?: string | null;
+  sortOrder?: number;
+};
+
+type ApiProduct = {
+  id: string;
+  categoryId?: string | null;
+  category: string;
+  title: string;
+  shortTitle: string;
+  description: string;
+  price: number;
+  compareAtPrice: number;
+  media: ProductMedia[];
+  highlights: string[];
+  finishes: { name: string; hint: string }[];
+  included: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  designable: boolean;
+  imageSrc?: string | null;
+  sortOrder?: number;
+  active?: boolean;
+};
+
 const DEFAULT_SECTIONS: AdminProductSection[] = [
   {
     id: "business-card",
@@ -73,13 +101,24 @@ const DEFAULT_SECTIONS: AdminProductSection[] = [
   },
 ];
 
-/** Preferred display order for default catalog sections */
 const SECTION_DISPLAY_ORDER = [
   "business-card",
   "digital-profile-qr",
   "social-media-card",
   "standee",
 ] as const;
+
+const DEFAULT_ORDERS: Record<string, string[]> = {
+  "business-card": ["nfc-business-card", "pvc-card", "metal-card"],
+  "digital-profile-qr": ["digital-profile-qr"],
+  standee: ["google-standee", "instagram-standee", "youtube-standee"],
+  "social-media-card": [
+    "google-review-card",
+    "instagram-card",
+    "youtube-card",
+    "review-keychain-qr",
+  ],
+};
 
 function normalizeSectionOrder(
   sections: AdminProductSection[],
@@ -103,60 +142,6 @@ function normalizeSectionOrder(
   }
 
   return ordered;
-}
-
-const DEFAULT_ORDERS: Record<string, string[]> = {
-  "business-card": ["nfc-business-card", "pvc-card", "metal-card"],
-  "digital-profile-qr": ["digital-profile-qr"],
-  standee: ["google-standee", "instagram-standee", "youtube-standee"],
-  "social-media-card": [
-    "google-review-card",
-    "instagram-card",
-    "youtube-card",
-    "review-keychain-qr",
-  ],
-};
-
-const DIGITAL_PROFILE_QR_SECTION: AdminProductSection = {
-  id: "digital-profile-qr",
-  title: "Digital Profile + QR",
-  subtitle: "Print-ready QR cards that open your digital profile instantly.",
-  imageSrc: "/Images/Products/digitalQR.jpg",
-};
-
-/** Move Digital Profile + QR into its own section for existing admin stores. */
-function migrateDigitalProfileSection(store: AdminStore): AdminStore {
-  if (store.sections.some((s) => s.id === "digital-profile-qr")) {
-    return store;
-  }
-
-  const next: AdminStore = structuredClone(store);
-  const businessIndex = next.sections.findIndex((s) => s.id === "business-card");
-
-  if (businessIndex >= 0) {
-    next.sections.splice(businessIndex + 1, 0, structuredClone(DIGITAL_PROFILE_QR_SECTION));
-    next.sections[businessIndex] = {
-      ...next.sections[businessIndex],
-      subtitle: "NFC, PVC, and metal card products.",
-    };
-  } else {
-    next.sections.unshift(structuredClone(DIGITAL_PROFILE_QR_SECTION));
-  }
-
-  const businessProducts = next.orders["business-card"] ?? [];
-  const hasDigitalProduct = businessProducts.includes("digital-profile-qr");
-
-  next.orders["digital-profile-qr"] = hasDigitalProduct
-    ? ["digital-profile-qr"]
-    : (next.orders["digital-profile-qr"] ?? ["digital-profile-qr"]);
-
-  if (hasDigitalProduct) {
-    next.orders["business-card"] = businessProducts.filter(
-      (id) => id !== "digital-profile-qr",
-    );
-  }
-
-  return next;
 }
 
 function cloneBaseCatalog(): Record<string, CatalogProduct> {
@@ -189,6 +174,56 @@ function uniqueId(preferred: string, existing: Set<string>): string {
     n += 1;
   }
   return id;
+}
+
+function notifyProductsChanged() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(ADMIN_PRODUCTS_CHANGE));
+}
+
+function mapApiCategory(row: ApiCategory): AdminProductSection {
+  return {
+    id: row.id,
+    title: row.title,
+    subtitle: row.subtitle ?? "",
+    imageSrc: row.imageSrc || undefined,
+  };
+}
+
+function mapApiProduct(row: ApiProduct): CatalogProduct {
+  return {
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    shortTitle: row.shortTitle,
+    description: row.description ?? "",
+    price: Number(row.price) || 0,
+    compareAtPrice: Number(row.compareAtPrice) || 0,
+    media: Array.isArray(row.media) ? row.media : [],
+    highlights: Array.isArray(row.highlights) ? row.highlights : [],
+    finishes: Array.isArray(row.finishes) ? row.finishes : [],
+    included: Array.isArray(row.included) ? row.included : [],
+    ctaLabel: row.ctaLabel || "Order Now",
+    ctaHref: row.ctaHref || `/product/${row.id}`,
+    designable: Boolean(row.designable),
+  };
+}
+
+function draftToApiBody(draft: AdminProductDraft, categoryId?: string) {
+  return {
+    title: draft.title.trim(),
+    shortTitle: draft.shortTitle.trim() || draft.title.trim(),
+    category: draft.category.trim() || "General",
+    categoryId: categoryId || undefined,
+    description: draft.description.trim(),
+    price: Number(draft.price) || 0,
+    compareAtPrice: Number(draft.compareAtPrice) || 0,
+    ctaLabel: draft.ctaLabel.trim() || "Order Now",
+    ctaHref: draft.ctaHref.trim(),
+    imageSrc: draft.imageSrc.trim() || undefined,
+    highlights: draft.highlights.map((h) => h.trim()).filter(Boolean),
+    media: buildMediaFromDraft(draft),
+  };
 }
 
 /** Accepts a full YouTube URL or a bare 11-char id. */
@@ -253,6 +288,8 @@ export function buildMediaFromDraft(draft: AdminProductDraft): ProductMedia[] {
   return media;
 }
 
+// ── Local fallback (used only if backend is unreachable) ────────────────────
+
 function readStore(): AdminStore {
   if (typeof window === "undefined") return defaultStore();
 
@@ -260,97 +297,121 @@ function readStore(): AdminStore {
     const raw = localStorage.getItem(ADMIN_STORE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as AdminStore;
-      if (
-        parsed?.catalog &&
-        Array.isArray(parsed.sections) &&
-        parsed.orders &&
-        typeof parsed.orders === "object"
-      ) {
-        const store = migrateDigitalProfileSection({
-          catalog: parsed.catalog,
+      if (parsed?.catalog && parsed?.sections && parsed?.orders) {
+        return {
+          ...parsed,
           sections: normalizeSectionOrder(parsed.sections),
-          orders: parsed.orders,
-        });
-        if (
-          !parsed.sections.some((s) => s.id === "digital-profile-qr")
-        ) {
-          writeStore(store);
-        }
-        return store;
+        };
       }
     }
-  } catch {
-    /* fall through */
-  }
 
-  // Migrate legacy catalog-only storage
-  try {
     const legacy = localStorage.getItem(LEGACY_CATALOG_KEY);
     if (legacy) {
       const catalog = JSON.parse(legacy) as Record<string, CatalogProduct>;
-      if (catalog && typeof catalog === "object") {
-        const store: AdminStore = {
-          catalog,
-          sections: structuredClone(DEFAULT_SECTIONS),
-          orders: structuredClone(DEFAULT_ORDERS),
-        };
-        writeStore(store);
-        localStorage.removeItem(LEGACY_CATALOG_KEY);
-        return store;
-      }
+      const store: AdminStore = {
+        catalog,
+        sections: structuredClone(DEFAULT_SECTIONS),
+        orders: structuredClone(DEFAULT_ORDERS),
+      };
+      writeStoreLocal(store);
+      return store;
     }
   } catch {
-    /* ignore */
+    // ignore
   }
 
   return defaultStore();
 }
 
-function writeStore(store: AdminStore) {
+function writeStoreLocal(store: AdminStore) {
+  if (typeof window === "undefined") return;
   localStorage.setItem(ADMIN_STORE_KEY, JSON.stringify(store));
-  window.dispatchEvent(new Event(ADMIN_PRODUCTS_CHANGE));
+  notifyProductsChanged();
 }
 
-/** Kept for dashboard imports that still expect this name */
-export type AdminProductSectionId = string;
-
-export function getAdminSections(): AdminProductSection[] {
+function localGetSections(): AdminProductSection[] {
   return normalizeSectionOrder(readStore().sections);
 }
 
-/** @deprecated use getAdminSections() */
-export const ADMIN_PRODUCT_SECTIONS = DEFAULT_SECTIONS;
-
-export function getAdminProducts(): CatalogProduct[] {
-  return Object.values(readStore().catalog);
-}
-
-export function getAdminProductsBySection(): Record<string, CatalogProduct[]> {
+function localGetProductsBySection(): Record<string, CatalogProduct[]> {
   const store = readStore();
   const result: Record<string, CatalogProduct[]> = {};
-
   for (const section of store.sections) {
     const ids = store.orders[section.id] ?? [];
     result[section.id] = ids
       .map((id) => store.catalog[id])
       .filter((p): p is CatalogProduct => Boolean(p));
   }
-
   return result;
 }
 
-export function getAdminProduct(id: string): CatalogProduct | null {
+// ── Public API (backend-first, same names used by SuperAdminDashboard) ──────
+
+export type AdminProductSectionId = string;
+
+/** @deprecated use getAdminSections() */
+export const ADMIN_PRODUCT_SECTIONS = DEFAULT_SECTIONS;
+
+export async function getAdminSections(): Promise<AdminProductSection[]> {
+  const res = await apiFetch<ApiCategory[]>("/api/categories");
+  if (!res.ok || !res.data) return localGetSections();
+  return normalizeSectionOrder(res.data.map(mapApiCategory));
+}
+
+export async function getAdminProducts(): Promise<CatalogProduct[]> {
+  const res = await apiFetch<ApiProduct[]>("/api/products");
+  if (!res.ok || !res.data) return Object.values(readStore().catalog);
+  return res.data.map(mapApiProduct);
+}
+
+export async function getAdminProductsBySection(): Promise<
+  Record<string, CatalogProduct[]>
+> {
+  const res = await apiFetch<{
+    categories: ApiCategory[];
+    productsByCategory: Record<string, ApiProduct[]>;
+  }>("/api/products/by-category");
+
+  if (!res.ok || !res.data) return localGetProductsBySection();
+
+  const result: Record<string, CatalogProduct[]> = {};
+  for (const cat of res.data.categories) {
+    result[cat.id] = (res.data.productsByCategory[cat.id] ?? []).map(
+      mapApiProduct,
+    );
+  }
+  return result;
+}
+
+export async function getAdminProduct(
+  id: string,
+): Promise<CatalogProduct | null> {
+  const res = await apiFetch<ApiProduct>(`/api/products/${encodeURIComponent(id)}`);
+  if (res.ok && res.data) return mapApiProduct(res.data);
   return readStore().catalog[id] ?? null;
 }
 
-export function updateAdminProduct(
+export async function updateAdminProduct(
   id: string,
   draft: AdminProductDraft,
-): CatalogProduct | null {
+): Promise<CatalogProduct | null> {
+  const res = await apiFetch<ApiProduct>(
+    `/api/products/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(draftToApiBody(draft)),
+    },
+  );
+
+  if (res.ok && res.data) {
+    notifyProductsChanged();
+    return mapApiProduct(res.data);
+  }
+
+  // Local fallback
   const store = readStore();
   const existing = store.catalog[id];
   if (!existing) return null;
-
   store.catalog[id] = {
     ...existing,
     title: draft.title.trim(),
@@ -364,24 +425,32 @@ export function updateAdminProduct(
     highlights: draft.highlights.map((h) => h.trim()).filter(Boolean),
     media: buildMediaFromDraft(draft),
   };
-
-  writeStore(store);
+  writeStoreLocal(store);
   return store.catalog[id];
 }
 
-export function addAdminProduct(
+export async function addAdminProduct(
   sectionId: string,
   draft: AdminProductDraft,
-): CatalogProduct | null {
+): Promise<CatalogProduct | null> {
+  const res = await apiFetch<ApiProduct>("/api/products", {
+    method: "POST",
+    body: JSON.stringify(draftToApiBody(draft, sectionId)),
+  });
+
+  if (res.ok && res.data) {
+    notifyProductsChanged();
+    return mapApiProduct(res.data);
+  }
+
+  // Local fallback
   const store = readStore();
   if (!store.sections.some((s) => s.id === sectionId)) return null;
-
   const existingIds = new Set(Object.keys(store.catalog));
   const id = uniqueId(
     slugify(draft.shortTitle || draft.title),
     existingIds,
   );
-
   const product: CatalogProduct = {
     id,
     title: draft.title.trim(),
@@ -394,103 +463,150 @@ export function addAdminProduct(
     highlights: draft.highlights.map((h) => h.trim()).filter(Boolean),
     finishes: [],
     included: [],
-    ctaLabel: draft.ctaLabel.trim() || "Order now",
+    ctaLabel: draft.ctaLabel.trim() || "Order Now",
     ctaHref: draft.ctaHref.trim() || `/product/${id}`,
     designable: false,
   };
-
   store.catalog[id] = product;
   store.orders[sectionId] = [...(store.orders[sectionId] ?? []), id];
-  writeStore(store);
+  writeStoreLocal(store);
   return product;
 }
 
-export function deleteAdminProduct(id: string): boolean {
+export async function deleteAdminProduct(id: string): Promise<boolean> {
+  const res = await apiFetch<{ deleted: string }>(
+    `/api/products/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+
+  if (res.ok) {
+    notifyProductsChanged();
+    return true;
+  }
+
   const store = readStore();
   if (!store.catalog[id]) return false;
   delete store.catalog[id];
   for (const sectionId of Object.keys(store.orders)) {
     store.orders[sectionId] = store.orders[sectionId].filter((pid) => pid !== id);
   }
-  writeStore(store);
+  writeStoreLocal(store);
   return true;
 }
 
-export function addAdminSection(input: {
+export async function addAdminSection(input: {
   title: string;
   subtitle?: string;
   imageSrc?: string;
-}): AdminProductSection | null {
+}): Promise<AdminProductSection | null> {
   const title = input.title.trim();
   if (!title) return null;
+
+  const res = await apiFetch<ApiCategory>("/api/categories", {
+    method: "POST",
+    body: JSON.stringify({
+      title,
+      subtitle: input.subtitle?.trim() || `Products in ${title}.`,
+      imageSrc: input.imageSrc?.trim() || undefined,
+    }),
+  });
+
+  if (res.ok && res.data) {
+    notifyProductsChanged();
+    return mapApiCategory(res.data);
+  }
 
   const store = readStore();
   const existingIds = new Set(store.sections.map((s) => s.id));
   const id = uniqueId(slugify(title), existingIds);
-
   const section: AdminProductSection = {
     id,
     title,
     subtitle: input.subtitle?.trim() || `Products in ${title}.`,
     imageSrc: input.imageSrc?.trim() || undefined,
   };
-
   store.sections.push(section);
   store.orders[id] = [];
-  writeStore(store);
+  writeStoreLocal(store);
   return section;
 }
 
-export function updateAdminSection(
+export async function updateAdminSection(
   sectionId: string,
   input: {
     title: string;
     subtitle?: string;
     imageSrc?: string;
   },
-): AdminProductSection | null {
+): Promise<AdminProductSection | null> {
   const title = input.title.trim();
   if (!title) return null;
+
+  const res = await apiFetch<ApiCategory>(
+    `/api/categories/${encodeURIComponent(sectionId)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        title,
+        subtitle: input.subtitle?.trim() || `Products in ${title}.`,
+        imageSrc: input.imageSrc?.trim() || undefined,
+      }),
+    },
+  );
+
+  if (res.ok && res.data) {
+    notifyProductsChanged();
+    return mapApiCategory(res.data);
+  }
 
   const store = readStore();
   const index = store.sections.findIndex((s) => s.id === sectionId);
   if (index < 0) return null;
-
   const next: AdminProductSection = {
     ...store.sections[index],
     title,
     subtitle: input.subtitle?.trim() || `Products in ${title}.`,
     imageSrc: input.imageSrc?.trim() || undefined,
   };
-
   store.sections[index] = next;
-  writeStore(store);
+  writeStoreLocal(store);
   return next;
 }
 
-/** Removes a section and optionally deletes its products from the catalog. */
-export function deleteAdminSection(
+export async function deleteAdminSection(
   sectionId: string,
   options?: { deleteProducts?: boolean },
-): boolean {
+): Promise<boolean> {
+  const deleteProducts = options?.deleteProducts !== false;
+
+  if (deleteProducts) {
+    const bySection = await getAdminProductsBySection();
+    const products = bySection[sectionId] ?? [];
+    await Promise.all(products.map((p) => deleteAdminProduct(p.id)));
+  }
+
+  const res = await apiFetch<{ deleted: string }>(
+    `/api/categories/${encodeURIComponent(sectionId)}`,
+    { method: "DELETE" },
+  );
+
+  if (res.ok) {
+    notifyProductsChanged();
+    return true;
+  }
+
   const store = readStore();
   const index = store.sections.findIndex((s) => s.id === sectionId);
   if (index < 0) return false;
-
   const productIds = store.orders[sectionId] ?? [];
-  const deleteProducts = options?.deleteProducts !== false;
-
   if (deleteProducts) {
     for (const productId of productIds) {
       delete store.catalog[productId];
     }
-  } else {
-    // Drop products from this section only; keep catalog entries orphaned-free by removing ids
   }
-
   store.sections.splice(index, 1);
   delete store.orders[sectionId];
-  writeStore(store);
+  writeStoreLocal(store);
   return true;
 }
 
@@ -498,7 +614,7 @@ export function resetAdminProducts() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(ADMIN_STORE_KEY);
   localStorage.removeItem(LEGACY_CATALOG_KEY);
-  window.dispatchEvent(new Event(ADMIN_PRODUCTS_CHANGE));
+  notifyProductsChanged();
 }
 
 export function productImageSrc(product: CatalogProduct): string | null {

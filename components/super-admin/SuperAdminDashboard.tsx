@@ -300,7 +300,7 @@ export default function SuperAdminDashboard() {
       return;
     }
 
-    function syncWorkspace() {
+    async function syncWorkspace() {
       const auth = getSuperAdminUser();
       if (!auth) {
         setAuthReady(false);
@@ -310,21 +310,21 @@ export default function SuperAdminDashboard() {
       const touched = touchSuperAdminSession() ?? auth;
       setUser(touched);
       setOrders(getOrders());
-      const nextSections = getAdminSections();
-      const bySection = getAdminProductsBySection();
+      const nextSections = await getAdminSections();
+      const bySection = await getAdminProductsBySection();
       setSections(nextSections);
       setProductsBySection(bySection);
       setProducts(nextSections.flatMap((s) => bySection[s.id] ?? []));
       setAuthReady(true);
     }
 
-    syncWorkspace();
+    void syncWorkspace();
 
     function onAuthChange() {
-      syncWorkspace();
+      void syncWorkspace();
     }
 
-    function onDataChange() {
+    async function onDataChange() {
       if (!getSuperAdminUser()) {
         setAuthReady(false);
         router.replace(superAdminLoginPathWithNext("/super-admin"));
@@ -332,8 +332,8 @@ export default function SuperAdminDashboard() {
       }
       touchSuperAdminSession();
       setOrders(getOrders());
-      const nextSections = getAdminSections();
-      const bySection = getAdminProductsBySection();
+      const nextSections = await getAdminSections();
+      const bySection = await getAdminProductsBySection();
       setSections(nextSections);
       setProductsBySection(bySection);
       setProducts(nextSections.flatMap((s) => bySection[s.id] ?? []));
@@ -393,9 +393,9 @@ export default function SuperAdminDashboard() {
     router.replace("/super-admin/login");
   }
 
-  function syncProducts() {
-    const nextSections = getAdminSections();
-    const bySection = getAdminProductsBySection();
+  async function syncProducts() {
+    const nextSections = await getAdminSections();
+    const bySection = await getAdminProductsBySection();
     setSections(nextSections);
     setProductsBySection(bySection);
     setProducts(nextSections.flatMap((s) => bySection[s.id] ?? []));
@@ -404,8 +404,9 @@ export default function SuperAdminDashboard() {
   function handleRefresh() {
     setRefreshing(true);
     setOrders(getOrders());
-    syncProducts();
-    window.setTimeout(() => setRefreshing(false), 500);
+    void syncProducts().finally(() => {
+      window.setTimeout(() => setRefreshing(false), 500);
+    });
   }
 
   function selectNav(key: NavKey) {
@@ -430,7 +431,7 @@ export default function SuperAdminDashboard() {
     setEditError("");
   }
 
-  function saveEdit(e: React.FormEvent) {
+  async function saveEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingId) return;
     if (!draft.title.trim()) {
@@ -445,12 +446,12 @@ export default function SuperAdminDashboard() {
       setEditError("Price cannot be negative.");
       return;
     }
-    const updated = updateAdminProduct(editingId, draft);
+    const updated = await updateAdminProduct(editingId, draft);
     if (!updated) {
       setEditError("Product not found.");
       return;
     }
-    syncProducts();
+    await syncProducts();
     closeEdit();
   }
 
@@ -691,7 +692,7 @@ export default function SuperAdminDashboard() {
     );
   }
 
-  function saveAddProduct(e: React.FormEvent) {
+  async function saveAddProduct(e: React.FormEvent) {
     e.preventDefault();
     if (!addProductSectionId) {
       setAddProductError("Choose a category.");
@@ -705,7 +706,7 @@ export default function SuperAdminDashboard() {
       setAddProductError("Price cannot be negative.");
       return;
     }
-    const created = addAdminProduct(addProductSectionId, {
+    const created = await addAdminProduct(addProductSectionId, {
       ...addProductDraft,
       shortTitle:
         addProductDraft.shortTitle.trim() || addProductDraft.title.trim(),
@@ -716,7 +717,7 @@ export default function SuperAdminDashboard() {
       setAddProductError("Could not add product.");
       return;
     }
-    syncProducts();
+    await syncProducts();
     closeAddProduct();
   }
 
@@ -762,7 +763,7 @@ export default function SuperAdminDashboard() {
     }
   }
 
-  function saveAddSection(e: React.FormEvent) {
+  async function saveAddSection(e: React.FormEvent) {
     e.preventDefault();
     if (!sectionTitle.trim()) {
       setSectionError("Category name is required.");
@@ -770,7 +771,7 @@ export default function SuperAdminDashboard() {
     }
 
     if (editingSectionId) {
-      const updated = updateAdminSection(editingSectionId, {
+      const updated = await updateAdminSection(editingSectionId, {
         title: sectionTitle,
         subtitle: sectionSubtitle,
         imageSrc: sectionImageSrc,
@@ -780,7 +781,7 @@ export default function SuperAdminDashboard() {
         return;
       }
     } else {
-      const created = addAdminSection({
+      const created = await addAdminSection({
         title: sectionTitle,
         subtitle: sectionSubtitle,
         imageSrc: sectionImageSrc,
@@ -791,7 +792,7 @@ export default function SuperAdminDashboard() {
       }
     }
 
-    syncProducts();
+    await syncProducts();
     closeAddSection();
   }
 
@@ -803,10 +804,10 @@ export default function SuperAdminDashboard() {
     setDeleteConfirmId(null);
   }
 
-  function runDelete() {
+  async function runDelete() {
     if (!deleteConfirmId) return;
-    deleteAdminProduct(deleteConfirmId);
-    syncProducts();
+    await deleteAdminProduct(deleteConfirmId);
+    await syncProducts();
     if (editingId === deleteConfirmId) closeEdit();
     setDeleteConfirmId(null);
   }
@@ -819,10 +820,10 @@ export default function SuperAdminDashboard() {
     setDeleteSectionId(null);
   }
 
-  function runDeleteSection() {
+  async function runDeleteSection() {
     if (!deleteSectionId) return;
-    deleteAdminSection(deleteSectionId, { deleteProducts: true });
-    syncProducts();
+    await deleteAdminSection(deleteSectionId, { deleteProducts: true });
+    await syncProducts();
     if (addProductSectionId === deleteSectionId) {
       setAddProductSectionId("");
     }
